@@ -18,9 +18,9 @@ def main(args_):
 
     d_set = DataSet(df, cfg.color_coding)
     tag_set = d_set.load()
-    train_set, validation_set = d_set.split(tag_set, random=cfg.randomized_split)
+    train_set, validation_set = d_set.split(tag_set, percentage=cfg.train_test_ratio, random=cfg.randomized_split)
 
-    s_clf.fit(train_set, validation_set)
+    s_clf.fit(train_set, validation_set, data_reduction_factor=cfg.data_reduction_factor)
     s_clf.save()
 
 

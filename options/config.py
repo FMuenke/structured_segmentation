@@ -2,6 +2,8 @@ import os
 import json
 from data_structure.folder import Folder
 
+from utils import parameter_grid as pg
+
 
 class Config:
     def __init__(self):
@@ -19,16 +21,18 @@ class Config:
 
         self.opt = {
             "features_to_use": ["gray-lm"],
-            "down_scale": 2,
+            "down_scale": 1,
             "look_up_window": None,
             "look_up_window_gradient": None,
             "classifier_opt": {
-                "type": "random_forrest",
-                "n_estimators": 600,
-                # "param_grid": pg.random_forrest_grid(),
+                "type": "rf",
+                "n_estimators": 200,
+                # "param_grid": pg.decision_tree_grid(),
             }
-            }
+        }
 
+        self.data_reduction_factor = 200
+        self.train_test_ratio = 0.4
         self.randomized_split = False
 
 

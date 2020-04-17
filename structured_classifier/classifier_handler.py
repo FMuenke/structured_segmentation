@@ -12,6 +12,8 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
+from sklearn.cluster import MiniBatchKMeans
+
 from imblearn.ensemble import BalancedRandomForestClassifier
 from imblearn.ensemble import BalancedBaggingClassifier
 from imblearn.ensemble import RUSBoostClassifier
@@ -121,20 +123,16 @@ class ClassifierHandler:
 
     def _init_classifier(self, pipeline_opt):
         opt = pipeline_opt["classifier_opt"]
+
+        if "base_estimator" in opt:
+            b_est = self._init_classifier({"classifier_opt": opt["base_estimator"]})
+        else:
+            b_est = None
+
         if opt["type"] == "random_forrest":
-            if "n_estimators" in opt:
-                return RandomForestClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
-            else:
-                return RandomForestClassifier(class_weight="balanced", n_jobs=-1)
+            return RandomForestClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "ada_boost":
-            if "base_estimator" in opt:
-                b_est = self._init_classifier({"classifier_opt": opt["base_estimator"]})
-            else:
-                b_est = None
-            if "n_estimators" in opt:
-                return AdaBoostClassifier(base_estimator=b_est, n_estimators=opt["n_estimators"])
-            else:
-                return AdaBoostClassifier(base_estimator=b_est)
+            return AdaBoostClassifier(base_estimator=b_est, n_estimators=opt["n_estimators"])
         elif opt["type"] in ["logistic_regression", "lr"]:
             return LogisticRegression()
         elif opt["type"] == "sgd":
@@ -150,26 +148,17 @@ class ClassifierHandler:
         elif opt["type"] in ["neighbours", "knn"]:
             return KNeighborsClassifier(n_neighbors=opt["n_neighbours"])
         elif opt["type"] == "extra_tree":
-            if "n_estimators" in opt:
-                return ExtraTreesClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
-            else:
-                return ExtraTreesClassifier(class_weight="balanced", n_jobs=-1)
+            return ExtraTreesClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "xgboost":
             return XGBClassifier(objective='binary:logistic', n_jobs=-1)
         elif opt["type"] in ["b_random_forrest", "rf"]:
             return BalancedRandomForestClassifier(n_jobs=-1)
         elif opt["type"] == "b_bagging":
-            if "base_estimator" in opt:
-                b_est = self._init_classifier({"classifier_opt": opt["base_estimator"]})
-            else:
-                b_est = None
             return BalancedBaggingClassifier(base_estimator=b_est)
         elif opt["type"] == "b_boosting":
-            if "base_estimator" in opt:
-                b_est = self._init_classifier({"classifier_opt": opt["base_estimator"]})
-            else:
-                b_est = None
             return RUSBoostClassifier(base_estimator=b_est)
+        elif opt["type"] in ["kmeans", "k_means"]:
+            return MiniBatchKMeans(n_clusters=opt["n_clusters"])
         else:
             raise ValueError("type: {} not recognised".format(opt["type"]))
 

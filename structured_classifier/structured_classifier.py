@@ -79,10 +79,22 @@ class StructuredClassifier:
         y = np.concatenate(y, axis=0)
         return x, y
 
-    def fit(self, train_set, validation_set):
+    def fit(self, train_set, validation_set, data_reduction_factor=None):
         x_train, y_train = self.get_x_y(train_set)
         x_val, y_val = self.get_x_y(validation_set)
 
-        self.clf.fit(x_train, y_train)
-        self.clf.evaluate(x_val, y_val)
+        if data_reduction_factor is not None:
+            x_train, y_train = x_train[::data_reduction_factor, :], y_train[::data_reduction_factor]
+
+        n_samples_train, n_features = x_train.shape
+        n_samples_val = x_val.shape[0]
+        print("DataSet has {} Samples (Train: {}/ Validation: {}) with {} features.".format(
+            n_samples_train+n_samples_val, n_samples_train, n_samples_val, n_features
+        ))
+        if "param_grid" in self.opt["classifier_opt"]:
+            param_set = self.opt["classifier_opt"]["param_grid"]
+            self.clf.fit_inc_hyper_parameter(x_train, y_train, param_set, n_iter=300)
+        else:
+            self.clf.fit(x_train, y_train)
+        self.clf.evaluate(x_val, y_val, save_path=os.path.join(self.model_folder, "classifier_report.txt"))
 

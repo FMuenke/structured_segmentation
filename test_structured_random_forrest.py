@@ -42,6 +42,7 @@ def main(args_):
     t_set = d_set.load()
 
     sh = StatsHandler(cfg.color_coding)
+    print("Processing Images...")
     for tid in tqdm(t_set):
         cls_map = s_clf.inference(t_set[tid].load_x())
         color_map = convert_cls_to_color(cls_map, cfg.color_coding)

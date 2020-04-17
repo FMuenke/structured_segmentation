@@ -30,12 +30,16 @@ class FeatureExtractor:
                             continue
                     look = np.zeros((self.look_up_window_gradient, self.look_up_window_gradient, 1))
                     look[j, i, 0] = -1
-                    look[(self.look_up_window_gradient - 1) / 2, (self.look_up_window_gradient - 1) / 2, 0] = 1
+                    look[int((self.look_up_window_gradient - 1) / 2),
+                         int((self.look_up_window_gradient - 1) / 2),
+                         0] = 1
                     self.look_ups.append(look)
 
     def build_feature_tensor(self, image):
         tensors = []
         for f_type in self.features_to_use:
+            if "raw" in f_type:
+                tensors.append(image)
             if "lbp" in f_type:
                 color_space, descriptor_type = f_type.split("-")
                 lbp = LocalBinaryPattern(color_space=color_space)
