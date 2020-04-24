@@ -10,7 +10,6 @@ class FeatureExtractor:
     def __init__(self, opt):
         self.features_to_use = opt["features_to_use"]
         self.look_up_window = opt["look_up_window"]
-        self.look_up_window_gradient = opt["look_up_window_gradient"]
         self.look_ups = []
         if self.look_up_window is not None:
             for i in range(self.look_up_window):
@@ -22,23 +21,12 @@ class FeatureExtractor:
                     look[j, i, 0] = 1
                     self.look_ups.append(look)
 
-        if self.look_up_window_gradient is not None:
-            for i in range(self.look_up_window_gradient):
-                for j in range(self.look_up_window_gradient):
-                    if i == j:
-                        if i == (self.look_up_window_gradient - 1) / 2:
-                            continue
-                    look = np.zeros((self.look_up_window_gradient, self.look_up_window_gradient, 1))
-                    look[j, i, 0] = -1
-                    look[int((self.look_up_window_gradient - 1) / 2),
-                         int((self.look_up_window_gradient - 1) / 2),
-                         0] = 1
-                    self.look_ups.append(look)
-
     def build_feature_tensor(self, image):
         tensors = []
         for f_type in self.features_to_use:
             if "raw" in f_type:
+                if len(image.shape) < 3:
+                    image = np.expand_dims(image, axis=2)
                 tensors.append(image)
             if "lbp" in f_type:
                 color_space, descriptor_type = f_type.split("-")

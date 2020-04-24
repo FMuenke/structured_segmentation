@@ -1,66 +1,48 @@
 import os
-import cv2
 import numpy as np
 from tqdm import tqdm
-from data_structure.image_handler import ImageHandler
-from utils.utils import save_dict, load_dict
-from features.feature_extractor import FeatureExtractor
 
 from structured_classifier.classifier_handler import ClassifierHandler
+from features.feature_extractor import FeatureExtractor
+
+from utils.utils import save_dict, load_dict
 
 
-class StructuredClassifier:
+class StructuredBoosting:
     def __init__(self, model_folder):
         self.model_folder = model_folder
+
         self.opt_path = os.path.join(self.model_folder, "config.json")
         self.clf_path = os.path.join(self.model_folder, "clf")
 
         self.opt = None
+        self.structured_classifier = None
         self.fex = None
         self.clf = None
 
-    def build(self, cfg):
+    def build(self, cfg, structured_classifier):
+        self.structured_classifier = structured_classifier
         self.opt = cfg.opt
-        self.fex = FeatureExtractor(cfg.opt)
-        self.clf = ClassifierHandler(self.opt)
+        self.opt["features_to_use"] = ["raw"]
+        self.opt["look_up_window_gradient"] = None
+        self.fex = FeatureExtractor(self.opt)
+        self.clf = ClassifierHandler(self.clf_path, self.opt)
         self.clf.new_classifier()
 
     def save(self):
         save_dict(self.opt, self.opt_path)
         self.clf.save()
 
-    def load(self):
+    def load(self, structured_classifier):
+        self.structured_classifier = structured_classifier
         self.opt = load_dict(self.opt_path)
         self.fex = FeatureExtractor(self.opt)
         self.clf = ClassifierHandler(self.clf_path)
         self.clf.load()
 
-    def inference(self, image, interpolation="nearest"):
-        o_height, o_width = image.shape[:2]
-        x_img = self.pre_process(image)
-        x_height, x_width = x_img.shape[:2]
-        x_img = self.extract_features(x_img)
-        x_img = np.reshape(x_img, (x_height * x_width, -1))
-        y_img = self.clf.predict(x_img)
-        y_img = np.reshape(y_img, (x_height, x_width))
-        if interpolation == "nearest":
-            y_img = cv2.resize(y_img, (o_width, o_height), interpolation=cv2.INTER_NEAREST)
-        elif interpolation == "linear":
-            y_img = cv2.resize(y_img, (o_width, o_height), interpolation=cv2.INTER_LINEAR)
-        return y_img
-
     def extract_features(self, image):
-        return self.fex.extract(image)
-
-    def pre_process(self, image):
-        height, width = image.shape[:2]
-        new_height = int(height / 2**self.opt["down_scale"])
-        new_width = int(width / 2**self.opt["down_scale"])
-        img_h = ImageHandler(image)
-        img_resized = img_h.resize(height=new_height, width=new_width)
-        img_h = ImageHandler(img_resized)
-        img_norm = img_h.normalize()
-        return img_norm
+        x_img = self.structured_classifier.inference(image, interpolation="linear")
+        return self.fex.extract(x_img)
 
     def get_x_y(self, tag_set):
         x = []
@@ -68,9 +50,8 @@ class StructuredClassifier:
         print("Feature Extraction...")
         for t in tqdm(tag_set):
             x_img = t.load_x()
-            x_img = self.pre_process(x_img)
-            h_img, w_img = x_img.shape[:2]
             x_img = self.extract_features(x_img)
+            h_img, w_img = x_img.shape[:2]
             y_img = t.load_y([h_img, w_img])
 
             x_img = np.reshape(x_img, (h_img * w_img, -1))
@@ -92,7 +73,7 @@ class StructuredClassifier:
         n_samples_train, n_features = x_train.shape
         n_samples_val = x_val.shape[0]
         print("DataSet has {} Samples (Train: {}/ Validation: {}) with {} features.".format(
-            n_samples_train+n_samples_val, n_samples_train, n_samples_val, n_features
+            n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
         ))
         if "param_grid" in self.opt["classifier_opt"]:
             param_set = self.opt["classifier_opt"]["param_grid"]
@@ -100,4 +81,3 @@ class StructuredClassifier:
         else:
             self.clf.fit(x_train, y_train)
         self.clf.evaluate(x_val, y_val, save_path=os.path.join(self.model_folder, "classifier_report.txt"))
-

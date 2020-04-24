@@ -16,9 +16,9 @@ class Config:
 
 def build_cfg():
     color_coding = {
-        # "man_hole": [[1, 1, 1], [0, 255, 0]],
+        "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
-        "heart": [[4, 4, 4], [0, 255, 0]],
+        # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
@@ -27,9 +27,7 @@ def build_cfg():
     }
 
     opt = {
-        "features_to_use": ["gray-lm"],
-        "down_scale": 2,
-        "look_up_window": 3,
+        "look_up_window": 7,
         "classifier_opt": {
             "type": "rf",
             "n_estimators": 200,
@@ -38,7 +36,7 @@ def build_cfg():
     }
 
     cfg = Config(opt, color_coding)
-    cfg.data_reduction_factor = 2
+    cfg.data_reduction_factor = 100
     cfg.train_test_ratio = 0.25
     cfg.randomized_split = False
     return cfg
@@ -48,9 +46,9 @@ def load_config(model_dir):
     print("Load cfg from model directory")
     color_coding_path = os.path.join(model_dir, "color_coding.json")
     opt_path = os.path.join(model_dir, "opt.json")
-    cfg = Config()
-    cfg.color_coding = load_dict(color_coding_path)
-    cfg.opt = load_dict(opt_path)
+    color_coding = load_dict(color_coding_path)
+    opt = load_dict(opt_path)
+    cfg = Config(opt, color_coding)
     return cfg
 
 

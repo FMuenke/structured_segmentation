@@ -23,16 +23,13 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.calibration import CalibratedClassifierCV
 
 from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
 
 from utils.utils import check_n_make_dir, save_dict, load_dict
-from utils.plot import plot_calibration_curve
 
 
 class ClassifierHandler:
-    def __init__(self, model_path, opt=None):
-        self.model_path = model_path
+    def __init__(self, opt=None):
         self.opt = opt
 
         self.classifier = None
@@ -40,18 +37,13 @@ class ClassifierHandler:
         self.best_params = None
         self.best_score = None
 
-        self.path_to_pipeline_opt = os.path.join(self.model_path, "pipeline_opt.json")
-        self.path_to_classifier = os.path.join(self.model_path, "classifier.pkl")
-
     def __str__(self):
         s = ""
-        s += "Classifier: {}, Score: {}\n".format(self.opt["classifier_opt"]["type"], self.best_score)
-        s += "Parameters: \n"
-        s += "{}\n".format(self.best_params)
+        s += "Classifier: {}".format(self.opt["type"])
         return s
 
     def fit(self, x_train, y_train):
-        print("Fitting the {} to the training set".format(self.opt["classifier_opt"]["type"]))
+        print("Fitting the {} to the training set".format(self.opt["type"]))
         t0 = time()
         self.classifier.fit(x_train, y_train)
         print("done in %0.3fs" % (time() - t0))
@@ -92,16 +84,13 @@ class ClassifierHandler:
                 self.classifier = clf
         print("done in %0.3fs" % (time() - t0))
 
-        plot_calibration_curve(est_list, x_test, y_test, path=self.model_path)
+        # plot_calibration_curve(est_list, x_test, y_test, path=self.model_path)
 
-    def predict(self, x, get_confidence=False):
-        if get_confidence:
-            try:
-                prob = self.classifier.predict_proba(x)
-                return [np.argmax(prob)], np.max(prob)
-            except:
-                return self.classifier.predict(x), 1.00
+    def predict(self, x):
         return self.classifier.predict(x)
+
+    def predict_proba(self, x):
+        return self.classifier.predict_proba(x)
 
     def evaluate(self, x_test, y_test, save_path=None):
         print("Predicting on the test set")
@@ -110,8 +99,6 @@ class ClassifierHandler:
         print("done in %0.3fs" % (time() - t0))
 
         print(classification_report(y_test, y_pred))
-        print("Confusion Matrix:")
-        print(confusion_matrix(y_test, y_pred))
         if save_path is not None:
             d = os.path.dirname(save_path)
             if not os.path.isdir(d):
@@ -121,15 +108,13 @@ class ClassifierHandler:
 
         return f1_score(y_true=y_test, y_pred=y_pred, average="macro")
 
-    def _init_classifier(self, pipeline_opt):
-        opt = pipeline_opt["classifier_opt"]
-
+    def _init_classifier(self, opt):
         if "base_estimator" in opt:
             b_est = self._init_classifier({"classifier_opt": opt["base_estimator"]})
         else:
             b_est = None
 
-        if opt["type"] == "random_forrest":
+        if opt["type"] in ["random_forrest", "rf"]:
             return RandomForestClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "ada_boost":
             return AdaBoostClassifier(base_estimator=b_est, n_estimators=opt["n_estimators"])
@@ -151,7 +136,7 @@ class ClassifierHandler:
             return ExtraTreesClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "xgboost":
             return XGBClassifier(objective='binary:logistic', n_jobs=-1)
-        elif opt["type"] in ["b_random_forrest", "rf"]:
+        elif opt["type"] in ["b_random_forrest", "b_rf"]:
             return BalancedRandomForestClassifier(n_jobs=-1)
         elif opt["type"] == "b_bagging":
             return BalancedBaggingClassifier(base_estimator=b_est)
@@ -163,21 +148,15 @@ class ClassifierHandler:
             raise ValueError("type: {} not recognised".format(opt["type"]))
 
     def new_classifier(self):
-        if "classifier_opt" in self.opt:
-            self.classifier = self._init_classifier(self.opt)
-        else:
-            raise ValueError("No Classifier Option was defined.")
+        self.classifier = self._init_classifier(self.opt)
 
-    def load(self):
-        self.opt = load_dict(self.path_to_pipeline_opt)
-        self.classifier = joblib.load(os.path.join(self.model_path, "classifier.pkl"))
-        print("Classifier was loaded!")
+    def load(self, model_path):
+        self.opt = load_dict(os.path.join(model_path, "clf_opt.json"))
+        self.classifier = joblib.load(os.path.join(model_path, "classifier.pkl"))
 
-    def save(self):
-        check_n_make_dir(self.model_path, clean=True)
-        save_dict(self.opt, self.path_to_pipeline_opt)
+    def save(self, model_path):
+        check_n_make_dir(model_path)
+        save_dict(self.opt, os.path.join(model_path, "clf_opt.json"))
         if self.classifier is not None:
-            joblib.dump(self.classifier, os.path.join(self.model_path, "classifier.pkl"))
-
-        print("machine_learning-Pipeline was saved to: {}".format(self.model_path))
+            joblib.dump(self.classifier, os.path.join(model_path, "classifier.pkl"))
 
