@@ -3,6 +3,7 @@ from utils.utils import check_n_make_dir, load_dict
 
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.input_layer import InputLayer
+from structured_classifier.global_context_layer import GlobalContextLayer
 
 
 class Model:
@@ -52,6 +53,12 @@ class Model:
             layer = InputLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
+            return layer
+
+        if opt["layer_type"] == "GLOBAL_CONTEXT_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = GlobalContextLayer(prev_layer, opt["name"], opt["down_scale"])
+            layer.set_index(int(opt["index"]))
             return layer
 
         print(opt)

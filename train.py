@@ -21,20 +21,20 @@ def main(args_):
     }
 
     randomized_split = False
-    train_test_ratio = 0.3
+    train_test_ratio = 0.25
 
     df = args_.dataset_folder
     mf = args_.model_folder
 
     input_1 = InputLayer("input_1", "gray-color")
     x1 = DecisionLayer(INPUTS=input_1, name="decision_1", kernel=(5, 5), down_scale=1)
-    x1 = GlobalContextLayer(INPUTS=x1, name="glob_context")
+    x1 = GlobalContextLayer(INPUTS=x1, name="glob_context", down_scale=2)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(5, 5), down_scale=2)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(5, 5), down_scale=3)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=4)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), down_scale=3)
 
-    f1 = DecisionLayer(INPUTS=x1, name="final_decision", kernel=(5, 5), down_scale=2)
+    f1 = DecisionLayer(INPUTS=x1, name="final_decision", kernel=(1, 1), down_scale=2)
 
     model = Model(graph=f1)
 
