@@ -150,13 +150,13 @@ class ClassifierHandler:
     def new_classifier(self):
         self.classifier = self._init_classifier(self.opt)
 
-    def load(self, model_path):
-        self.opt = load_dict(os.path.join(model_path, "clf_opt.json"))
-        self.classifier = joblib.load(os.path.join(model_path, "classifier.pkl"))
+    def load(self, model_path, name="clf"):
+        self.opt = load_dict(os.path.join(model_path, "{}_opt.json".format(name)))
+        self.classifier = joblib.load(os.path.join(model_path, "{}.pkl".format(name)))
 
-    def save(self, model_path):
+    def save(self, model_path, name="clf"):
         check_n_make_dir(model_path)
-        save_dict(self.opt, os.path.join(model_path, "clf_opt.json"))
+        save_dict(self.opt, os.path.join(model_path, "{}_opt.json".format(name)))
         if self.classifier is not None:
-            joblib.dump(self.classifier, os.path.join(model_path, "classifier.pkl"))
+            joblib.dump(self.classifier, os.path.join(model_path, "{}.pkl".format(name)))
 

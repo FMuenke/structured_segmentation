@@ -27,6 +27,14 @@ class GlobalContextLayer:
 
         self.index = 0
 
+    def __str__(self):
+        s = ""
+        s += "{} - {}\n".format(self.layer_type, self.name)
+        s += "---------------------------\n"
+        for p in self.previous:
+            s += "--> {}\n".format(p)
+        return s
+
     def fit(self, train_tags, validation_tags):
         for p in self.previous:
             p.fit(train_tags, validation_tags)
@@ -42,8 +50,8 @@ class GlobalContextLayer:
         x_int_pm = np.zeros((h, w, num_f))
         for i in range(1, w - 1, 1):
             for j in range(1, h - 1, 1):
-                n = w - i
-                k = h - j
+                n = w - 1 - i
+                k = h - 1 - j
 
                 i_m = i - 1
                 j_m = j - 1

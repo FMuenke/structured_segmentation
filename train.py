@@ -5,6 +5,7 @@ from structured_classifier.model import Model
 
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.input_layer import InputLayer
+from structured_classifier.global_context_layer import GlobalContextLayer
 
 
 def main(args_):
@@ -20,25 +21,22 @@ def main(args_):
     }
 
     randomized_split = False
-    train_test_ratio = 0.2
+    train_test_ratio = 0.3
 
     df = args_.dataset_folder
     mf = args_.model_folder
 
     input_1 = InputLayer("input_1", "gray-color")
     x1 = DecisionLayer(INPUTS=input_1, name="decision_1", kernel=(5, 5), down_scale=1)
+    x1 = GlobalContextLayer(INPUTS=x1, name="glob_context")
+    # x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(5, 5), down_scale=2)
+    # x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(5, 5), down_scale=3)
+    # x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=4)
+    # x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), down_scale=3)
 
-    x2 = DecisionLayer(INPUTS=input_1, name="decision_2", kernel=(5, 5), down_scale=2)
+    f1 = DecisionLayer(INPUTS=x1, name="final_decision", kernel=(5, 5), down_scale=2)
 
-    x3 = DecisionLayer(INPUTS=input_1, name="decision_3", kernel=(5, 5), down_scale=3)
-
-    x4 = DecisionLayer(INPUTS=input_1, name="decision_4", kernel=(5, 5), down_scale=4)
-
-    m = DecisionLayer(INPUTS=[x1, x2, x3, x4], name="merge_1234", kernel=(2, 2), down_scale=2)
-
-    f1 = DecisionLayer(INPUTS=m, name="final_decision", kernel=(9, 9), down_scale=4)
-
-    model = Model(graph=x1)
+    model = Model(graph=f1)
 
     d_set = DataSet(df, color_coding)
     tag_set = d_set.load()
