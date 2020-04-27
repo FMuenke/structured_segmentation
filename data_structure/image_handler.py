@@ -34,9 +34,10 @@ class ImageHandler:
             raise ValueError("Color Space {} unknown.".format_map(color_space))
 
     def log_geometric_mean_chromaticity(self):
-        B = self.image[:, :, 0]
-        G = self.image[:, :, 1]
-        R = self.image[:, :, 2]
+        image = self.image.astype(np.int)
+        B = np.add(image[:, :, 0], 1)
+        G = np.add(image[:, :, 1], 1)
+        R = np.add(image[:, :, 2], 1)
         geometric_mean = np.cbrt(np.multiply(np.multiply(B, G), R))
         bm = np.divide(B, geometric_mean)
         gm = np.divide(G, geometric_mean)

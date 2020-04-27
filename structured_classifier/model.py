@@ -4,6 +4,7 @@ from utils.utils import check_n_make_dir, load_dict
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
+from structured_classifier.normalization_layer import NormalizationLayer
 
 
 class Model:
@@ -59,6 +60,12 @@ class Model:
         if opt["layer_type"] == "GLOBAL_CONTEXT_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = GlobalContextLayer(prev_layer, opt["name"], opt["down_scale"])
+            layer.set_index(int(opt["index"]))
+            return layer
+
+        if opt["layer_type"] == "NORMALIZATION_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = NormalizationLayer(prev_layer, opt["name"])
             layer.set_index(int(opt["index"]))
             return layer
 

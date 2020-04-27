@@ -55,14 +55,12 @@ class GlobalContextLayer:
         return x_img
 
     def inference(self, x_input, interpolation="nearest"):
-        o_h, o_w = x_input.shape[:2]
-
         x_img = self.get_features(x_input)
+        o_h, o_w = x_img.shape[:2]
         x_img = resize(x_img,
                        height=int(o_h / 2**self.down_scale),
                        width=int(o_w / 2**self.down_scale))
 
-        o_h, o_w = x_img.shape[:2]
         x_img = normalize(x_img)
 
         h, w = x_img.shape[:2]

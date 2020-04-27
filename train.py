@@ -7,6 +7,7 @@ from structured_classifier.model import Model
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
+from structured_classifier.normalization_layer import NormalizationLayer
 
 from utils import parameter_grid as pg
 
@@ -31,12 +32,24 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    input_1 = InputLayer("input_1", "gray-color", initial_down_scale=1)
-    x1 = DecisionLayer(INPUTS=input_1, name="decision_1", kernel=(5, 5), kernel_shape="ellipse", down_scale=1,
+    input_1 = InputLayer("input_1", ["gray-color"], initial_down_scale=2)
+    x1 = NormalizationLayer(INPUTS=input_1, name="nom_0")
+    x2 = InputLayer("input_2", ["gray-color"], initial_down_scale=2)
+    x1 = DecisionLayer(INPUTS=[x1], name="decision_0", kernel=(5, 5), kernel_shape="ellipse", down_scale=0,
                        n_estimators=25)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(4, 4), kernel_shape="ellipse", down_scale=2,
+    x1 = DecisionLayer(INPUTS=x1, name="decision_1", kernel=(5, 5), kernel_shape="ellipse", down_scale=2,
                        n_estimators=25)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(3, 3), kernel_shape="ellipse", down_scale=3,
+    x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
+                       n_estimators=25)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(5, 5), kernel_shape="ellipse", down_scale=4,
+                       n_estimators=25)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(15, 15), kernel_shape="cross", down_scale=4,
+                       n_estimators=25)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), kernel_shape="ellipse", down_scale=4,
+                       n_estimators=25)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_6", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
+                       n_estimators=25)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_7", kernel=(5, 5), kernel_shape="ellipse", down_scale=2,
                        n_estimators=25)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=4)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), down_scale=3)
@@ -48,7 +61,9 @@ def main(args_):
                        name="final_decision",
                        kernel=(3, 3),
                        kernel_shape="ellipse",
-                       down_scale=2)
+                       down_scale=2,
+                       n_estimators=250,
+                       param_grid=pg.random_forrest_grid_fixed_estimators())
 
     model = Model(graph=f1)
 

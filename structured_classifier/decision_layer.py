@@ -139,6 +139,7 @@ class DecisionLayer:
     def get_x_y(self, tag_set, reduction_factor=0):
         x = []
         y = []
+        n = 0
         for t in tqdm(tag_set):
             use_sample = True
             if reduction_factor > 1:
@@ -155,13 +156,17 @@ class DecisionLayer:
                 y_img = np.reshape(y_img, h_img * w_img)
 
                 n_samples_train, n_features = x_img.shape
-                if n_samples_train > self.max_num_samples / len(tag_set):
-                    data_reduction_factor = int(n_samples_train / (self.max_num_samples / len(tag_set)))
+                num_allowed_data = self.max_num_samples / len(tag_set)
+                if n_samples_train > num_allowed_data:
+                    data_reduction_factor = int(n_samples_train / num_allowed_data)
                 else:
                     data_reduction_factor = None
 
                 if data_reduction_factor is not None:
                     x_img, y_img = x_img[::data_reduction_factor, :], y_img[::data_reduction_factor]
+
+                n += x_img.shape[0]
+                # print(n)
 
                 x.append(x_img)
                 y.append(y_img)
@@ -184,7 +189,7 @@ class DecisionLayer:
             n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
         ))
         if self.param_grid is not None:
-            self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50)
+            self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50, n_jobs=1)
         else:
             self.clf.fit(x_train, y_train)
         self.clf.evaluate(x_val, y_val)

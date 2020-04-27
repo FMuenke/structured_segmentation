@@ -127,7 +127,7 @@ class ClassifierHandler:
             return SVC(kernel='rbf', class_weight='balanced', gamma="scale")
         elif opt["type"] in ["multilayer_perceptron", "mlp"]:
             return MLPClassifier()
-        elif opt["type"] == "decision_tree":
+        elif opt["type"] in ["decision_tree", "dt", "tree"]:
             return DecisionTreeClassifier()
         elif opt["type"] in ["neighbours", "knn"]:
             return KNeighborsClassifier(n_neighbors=opt["n_neighbours"])
