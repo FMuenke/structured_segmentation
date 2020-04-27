@@ -89,9 +89,9 @@ class DecisionLayer:
         return np.concatenate(look_up_tensors, axis=2)
 
     def inference(self, x_input, interpolation="nearest"):
-        o_height, o_width = x_input.shape[:2]
-        x_img = self.get_features(x_input)
+        x_img, o_height, o_width = self.get_features(x_input)
         x_height, x_width = x_img.shape[:2]
+        x_img_pass = np.copy(x_input)
         x_img = np.reshape(x_img, (x_height * x_width, -1))
         probs = self.clf.predict_proba(x_img)
         n_classes = probs.shape[1]
@@ -101,19 +101,19 @@ class DecisionLayer:
             y_img.append(y_i_img)
         y_img = np.concatenate(y_img, axis=2)
 
+        x_img_pass = resize(x_img_pass, width=o_width, height=o_height, interpolation="nearest")
         y_img = resize(y_img, width=o_width, height=o_height, interpolation=interpolation)
 
-        if len(x_input.shape) < 3:
-            x_input = np.expand_dims(x_input, axis=2)
+        if len(x_img_pass.shape) < 3:
+            x_img_pass = np.expand_dims(x_img_pass, axis=2)
         if len(y_img.shape) < 3:
             y_img = np.expand_dims(y_img, axis=2)
-        y_img = np.concatenate([x_input, y_img], axis=2)
+        y_img = np.concatenate([x_img_pass, y_img], axis=2)
 
         return y_img
 
     def predict(self, x_input):
-        o_height, o_width = x_input.shape[:2]
-        x_img = self.get_features(x_input)
+        x_img, o_height, o_width = self.get_features(x_input)
         x_height, x_width = x_img.shape[:2]
         x_img = np.reshape(x_img, (x_height * x_width, -1))
         y_img = self.clf.predict(x_img)
@@ -122,7 +122,6 @@ class DecisionLayer:
         return y_img
 
     def get_features(self, x_input):
-        o_height, o_width = x_input.shape[:2]
         x = []
         for p in self.previous:
             x_p = p.inference(x_input, interpolation="cubic")
@@ -130,11 +129,12 @@ class DecisionLayer:
                 x_p = np.expand_dims(x_p, axis=2)
             x.append(x_p)
         x = np.concatenate(x, axis=2)
+        o_height, o_width = x.shape[:2]
         new_height = int(o_height / 2**self.down_scale)
         new_width = int(o_width / 2 ** self.down_scale)
         x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
         x = self.get_kernel(x)
-        return x
+        return x, o_height, o_width
 
     def get_x_y(self, tag_set, reduction_factor=0):
         x = []
@@ -147,12 +147,21 @@ class DecisionLayer:
 
             if use_sample:
                 x_img = t.load_x()
-                x_img = self.get_features(x_img)
+                x_img, o_height, o_width = self.get_features(x_img)
                 h_img, w_img = x_img.shape[:2]
                 y_img = t.load_y([h_img, w_img])
 
                 x_img = np.reshape(x_img, (h_img * w_img, -1))
                 y_img = np.reshape(y_img, h_img * w_img)
+
+                n_samples_train, n_features = x_img.shape
+                if n_samples_train > self.max_num_samples / len(tag_set):
+                    data_reduction_factor = int(n_samples_train / (self.max_num_samples / len(tag_set)))
+                else:
+                    data_reduction_factor = None
+
+                if data_reduction_factor is not None:
+                    x_img, y_img = x_img[::data_reduction_factor, :], y_img[::data_reduction_factor]
 
                 x.append(x_img)
                 y.append(y_img)
@@ -162,22 +171,12 @@ class DecisionLayer:
 
     def fit(self, train_tags, validation_tags, reduction_factor):
         for p in self.previous:
-            p.fit(train_tags, validation_tags, reduction_factor=2)
+            p.fit(train_tags, validation_tags, reduction_factor=3)
 
         print("Collecting Features for Stage: {}".format(self))
         print("Data is reduced by factor: {}".format(reduction_factor))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=reduction_factor)
         x_val, y_val = self.get_x_y(validation_tags)
-
-        n_samples_train, n_features = x_train.shape
-
-        if n_samples_train > self.max_num_samples:
-            data_reduction_factor = int(n_samples_train / self.max_num_samples)
-        else:
-            data_reduction_factor = None
-
-        if data_reduction_factor is not None:
-            x_train, y_train = x_train[::data_reduction_factor, :], y_train[::data_reduction_factor]
 
         n_samples_train, n_features = x_train.shape
         n_samples_val = x_val.shape[0]

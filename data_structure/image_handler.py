@@ -27,8 +27,29 @@ class ImageHandler:
         elif color_space == "rgb":
             rgb = self.rgb()
             return [rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]]
+        elif color_space in ["log_geo_mean", "lgm"]:
+            lgm = self.log_geometric_mean_chromaticity()
+            return [lgm[:, :, 0], lgm[:, :, 1], lgm[:, :, 2]]
         else:
             raise ValueError("Color Space {} unknown.".format_map(color_space))
+
+    def log_geometric_mean_chromaticity(self):
+        B = self.image[:, :, 0]
+        G = self.image[:, :, 1]
+        R = self.image[:, :, 2]
+        geometric_mean = np.cbrt(np.multiply(np.multiply(B, G), R))
+        bm = np.divide(B, geometric_mean)
+        gm = np.divide(G, geometric_mean)
+        rm = np.divide(R, geometric_mean)
+
+        bm = np.log(bm)
+        gm = np.log(gm)
+        rm = np.log(rm)
+
+        bm = np.expand_dims(bm, axis=2)
+        gm = np.expand_dims(gm, axis=2)
+        rm = np.expand_dims(rm, axis=2)
+        return np.concatenate([rm, gm, bm], axis=2)
 
     def BGR(self):
         return self.image

@@ -11,13 +11,14 @@ from utils.utils import check_n_make_dir, save_dict
 class InputLayer:
     layer_type = "INPUT_LAYER"
 
-    def __init__(self, name, features_to_use, height=None, width=None):
+    def __init__(self, name, features_to_use, height=None, width=None, initial_down_scale=None):
         self.name = name
         if type(features_to_use) is not list:
             features_to_use = [features_to_use]
         self.features_to_use = features_to_use
         self.height = height
         self.width = width
+        self.down_scale = initial_down_scale
 
         self.index = 0
 
@@ -27,6 +28,7 @@ class InputLayer:
             "features_to_use": self.features_to_use,
             "height": height,
             "width": width,
+            "down_scale": initial_down_scale,
         }
 
     def __str__(self):
@@ -47,6 +49,15 @@ class InputLayer:
     def inference(self, image, interpolation="nearest"):
         if self.height is not None and self.width is not None:
             image = cv2.resize(image, (self.width, self.height), interpolation=cv2.INTER_CUBIC)
+
+        if self.down_scale is not None:
+            height, width = image.shape[:2]
+            new_height = int(height / 2**self.down_scale)
+            new_width = int(width / 2**self.down_scale)
+            assert new_height > 2 or new_width > 2, "ERROR: Image was scaled too small Height, Width: {}, {}".format(
+                new_height, new_width)
+            image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
+
         tensors = []
         for f_type in self.features_to_use:
             if "raw" in f_type:
@@ -68,7 +79,8 @@ class InputLayer:
                 lm = LeungMalik(color_space=color_space)
                 f = lm.compute(image)
                 tensors.append(f)
-        return np.concatenate(tensors, axis=2)
+        data = np.concatenate(tensors, axis=2)
+        return data
 
     def set_index(self, i):
         self.index = i

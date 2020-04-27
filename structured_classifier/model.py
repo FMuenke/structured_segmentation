@@ -50,7 +50,8 @@ class Model:
             return layer
 
         if opt["layer_type"] == "INPUT_LAYER":
-            layer = InputLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"])
+            layer = InputLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"],
+                               initial_down_scale=opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer

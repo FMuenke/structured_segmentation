@@ -6,7 +6,7 @@ from tqdm import tqdm
 from data_structure.data_set import DataSet
 from data_structure.folder import Folder
 from structured_classifier.model import Model
-from options.config import load_config
+from utils.utils import load_dict
 from data_structure.stats_handler import StatsHandler
 
 
@@ -27,16 +27,7 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    color_coding = {
-        # "man_hole": [[1, 1, 1], [0, 255, 0]],
-        # "crack": [[3, 3, 3], [255, 255, 0]],
-        "heart": [[4, 4, 4], [0, 255, 0]],
-        # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "heart": [[4, 4, 4], [0, 255, 0]],
-        # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "shadow": [[1, 1, 1], [255, 0, 0]],
-        # "filled_crack": [[2, 2, 2], [0, 255, 0]],
-    }
+    color_coding = load_dict(os.path.join(mf, "color_coding.json"))
 
     model = Model(mf)
     model.load(mf)

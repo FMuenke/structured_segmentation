@@ -31,6 +31,14 @@ def random_forrest_grid_estimators():
     return {'n_estimators': [10, 25, 50, 100, 250, 500, 1000, 2500, 5000]}
 
 
+def random_forrest_grid_fixed_estimators():
+    return {'max_features': ['auto'],
+            'max_depth': [None, 1, 2, 5, 10, 25],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4],
+            'bootstrap': [True, False]}
+
+
 def support_vector_machine_grid():
     return {"C": [0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
             "kernel": ["rbf", "linear", "poly", "sigmoid"],

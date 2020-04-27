@@ -19,7 +19,7 @@ class GlobalContextLayer:
             INPUTS = [INPUTS]
         self.previous = INPUTS
 
-        self.down_scale = 3
+        self.down_scale = down_scale
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
@@ -44,18 +44,30 @@ class GlobalContextLayer:
         for p in self.previous:
             p.fit(train_tags, validation_tags, reduction_factor)
 
+    def get_features(self, x_input):
+        x = []
+        for p in self.previous:
+            x_p = p.inference(x_input, interpolation="cubic")
+            if len(x_p.shape) < 3:
+                x_p = np.expand_dims(x_p, axis=2)
+            x.append(x_p)
+        x_img = np.concatenate(x, axis=2)
+        return x_img
+
     def inference(self, x_input, interpolation="nearest"):
         o_h, o_w = x_input.shape[:2]
 
-        x_img = resize(x_input,
+        x_img = self.get_features(x_input)
+        x_img = resize(x_img,
                        height=int(o_h / 2**self.down_scale),
                        width=int(o_w / 2**self.down_scale))
 
+        o_h, o_w = x_img.shape[:2]
         x_img = normalize(x_img)
 
         h, w = x_img.shape[:2]
         if len(x_img.shape) < 3:
-            x_img = np.expand_dims(x_input, axis=2)
+            x_img = np.expand_dims(x_img, axis=2)
         num_f = x_img.shape[2]
         x_int_mm = np.zeros((h, w, num_f))
         x_int_pp = np.zeros((h, w, num_f))

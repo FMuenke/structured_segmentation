@@ -63,6 +63,7 @@ class LbmTag:
                                 and lbm[y, x, 1] == self.color_coding[cls][0][1] \
                                 and lbm[y, x, 2] == self.color_coding[cls][0][0]:
                             y_img[y, x, :] = self.color_coding[cls][1]
+
         return y_img
 
     def load_y(self, label_size):

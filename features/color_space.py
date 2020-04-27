@@ -1,7 +1,6 @@
 import numpy as np
 
 from data_structure.image_handler import ImageHandler
-from data_structure.feature_map import FeatureMap
 
 
 class ColorSpace:
