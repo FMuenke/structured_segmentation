@@ -34,15 +34,15 @@ class GlobalContextLayer:
 
     def __str__(self):
         s = ""
-        s += "{} - {}\n".format(self.layer_type, self.name)
-        s += "---------------------------\n"
+        s += "\n{} - {}".format(self.layer_type, self.name)
+        s += "\n---------------------------"
         for p in self.previous:
-            s += "--> {}\n".format(p)
+            s += "\n--> {}".format(p)
         return s
 
-    def fit(self, train_tags, validation_tags):
+    def fit(self, train_tags, validation_tags, reduction_factor):
         for p in self.previous:
-            p.fit(train_tags, validation_tags)
+            p.fit(train_tags, validation_tags, reduction_factor)
 
     def inference(self, x_input, interpolation="nearest"):
         o_h, o_w = x_input.shape[:2]

@@ -27,6 +27,10 @@ def random_forrest_grid():
             'bootstrap': [True, False]}
 
 
+def random_forrest_grid_estimators():
+    return {'n_estimators': [10, 25, 50, 100, 250, 500, 1000, 2500, 5000]}
+
+
 def support_vector_machine_grid():
     return {"C": [0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
             "kernel": ["rbf", "linear", "poly", "sigmoid"],
@@ -53,6 +57,13 @@ def xgboost_grid():
             'n_estimators': [10, 100, 200, 1000, 2500, 5000],
             'subsample': [0.8, 0.9, 1],
             'max_delta_step': [0, 1, 2, 4]}
+
+
+def xgboost_grid_small():
+    return {"booster": ["gbtree"],
+            "tree_methode": ["hist"],
+            "num_parallel_tree": [1, 2, 5, 10, 25, 50, 100],
+            'n_estimators': [10, 25, 50, 100, 250, 500, 1000, 2500]}
 
 
 def boosting_grid():

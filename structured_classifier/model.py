@@ -16,7 +16,7 @@ class Model:
         print("===============================")
         print("=====Begin Model Training======")
         print("===============================")
-        self.graph.fit(train_tags, validation_tags)
+        self.graph.fit(train_tags, validation_tags, reduction_factor=0)
 
     def save(self, model_path):
         check_n_make_dir(model_path)
@@ -44,7 +44,7 @@ class Model:
 
         if opt["layer_type"] == "DECISION_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = DecisionLayer(prev_layer, opt["name"], opt["kernel"], opt["down_scale"])
+            layer = DecisionLayer(prev_layer, opt["name"], opt["kernel"], opt["kernel_shape"], opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer

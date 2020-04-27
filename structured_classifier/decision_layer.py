@@ -17,6 +17,7 @@ class DecisionLayer:
                  INPUTS,
                  name,
                  kernel=(1, 1),
+                 kernel_shape="square",
                  down_scale=0,
                  clf="b_rf",
                  n_estimators=200,
@@ -37,6 +38,7 @@ class DecisionLayer:
             "name": self.name,
             "layer_type": self.layer_type,
             "kernel": kernel,
+            "kernel_shape": kernel_shape,
             "down_scale": down_scale
         }
 
@@ -47,20 +49,32 @@ class DecisionLayer:
         self.param_grid = param_grid
 
         k_x, k_y = kernel
+        s_element = self.make_s_element(kernel, kernel_shape)
         self.look_ups = []
         if kernel is not None:
             for i in range(k_x):
                 for j in range(k_y):
-                    look = np.zeros((k_y, k_x, 1))
-                    look[j, i, 0] = 1
-                    self.look_ups.append(look)
+                    if s_element[j, i] == 1:
+                        look = np.zeros((k_y, k_x, 1))
+                        look[j, i, 0] = 1
+                        self.look_ups.append(look)
+
+    def make_s_element(self, kernel, kernel_shape):
+        k_x, k_y = kernel
+        if kernel_shape == "square":
+            return np.ones((k_y, k_x))
+        if kernel_shape == "ellipse":
+            return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_y, k_x))
+        if kernel_shape == "cross":
+            return cv2.getStructuringElement(cv2.MORPH_CROSS, (k_y, k_x))
+        raise ValueError("Kernel-Shape option: {} not known".format(kernel_shape))
 
     def __str__(self):
         s = ""
-        s += "{} - {} - {}\n".format(self.layer_type, self.name, self.clf)
-        s += "---------------------------\n"
+        s += "\n{} - {} - {}".format(self.layer_type, self.name, self.clf)
+        s += "\n---------------------------"
         for p in self.previous:
-            s += "--> {}\n".format(p)
+            s += "\n--> {}".format(p)
         return s
 
     def get_kernel(self, tensor):
@@ -122,30 +136,37 @@ class DecisionLayer:
         x = self.get_kernel(x)
         return x
 
-    def get_x_y(self, tag_set):
+    def get_x_y(self, tag_set, reduction_factor=0):
         x = []
         y = []
         for t in tqdm(tag_set):
-            x_img = t.load_x()
-            x_img = self.get_features(x_img)
-            h_img, w_img = x_img.shape[:2]
-            y_img = t.load_y([h_img, w_img])
+            use_sample = True
+            if reduction_factor > 1:
+                if not np.random.randint(0, reduction_factor):
+                    use_sample = False
 
-            x_img = np.reshape(x_img, (h_img * w_img, -1))
-            y_img = np.reshape(y_img, h_img * w_img)
+            if use_sample:
+                x_img = t.load_x()
+                x_img = self.get_features(x_img)
+                h_img, w_img = x_img.shape[:2]
+                y_img = t.load_y([h_img, w_img])
 
-            x.append(x_img)
-            y.append(y_img)
+                x_img = np.reshape(x_img, (h_img * w_img, -1))
+                y_img = np.reshape(y_img, h_img * w_img)
+
+                x.append(x_img)
+                y.append(y_img)
         x = np.concatenate(x, axis=0)
         y = np.concatenate(y, axis=0)
         return x, y
 
-    def fit(self, train_tags, validation_tags):
+    def fit(self, train_tags, validation_tags, reduction_factor):
         for p in self.previous:
-            p.fit(train_tags, validation_tags)
+            p.fit(train_tags, validation_tags, reduction_factor=2)
 
         print("Collecting Features for Stage: {}".format(self))
-        x_train, y_train = self.get_x_y(train_tags)
+        print("Data is reduced by factor: {}".format(reduction_factor))
+        x_train, y_train = self.get_x_y(train_tags, reduction_factor=reduction_factor)
         x_val, y_val = self.get_x_y(validation_tags)
 
         n_samples_train, n_features = x_train.shape
@@ -164,7 +185,7 @@ class DecisionLayer:
             n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
         ))
         if self.param_grid is not None:
-            self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=300)
+            self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50)
         else:
             self.clf.fit(x_train, y_train)
         self.clf.evaluate(x_val, y_val)

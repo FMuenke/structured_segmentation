@@ -7,6 +7,8 @@ from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
 
+from utils import parameter_grid as pg
+
 
 def main(args_):
     color_coding = {
@@ -27,14 +29,21 @@ def main(args_):
     mf = args_.model_folder
 
     input_1 = InputLayer("input_1", "gray-color")
-    x1 = DecisionLayer(INPUTS=input_1, name="decision_1", kernel=(5, 5), down_scale=1)
-    x1 = GlobalContextLayer(INPUTS=x1, name="glob_context", down_scale=2)
-    # x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(5, 5), down_scale=2)
-    # x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(5, 5), down_scale=3)
+    x1 = DecisionLayer(INPUTS=input_1, name="decision_1", kernel=(5, 5), kernel_shape="ellipse", down_scale=1, n_estimators=25)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(5, 5), kernel_shape="ellipse", down_scale=2, n_estimators=25)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(5, 5), kernel_shape="ellipse", down_scale=3, n_estimators=25)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=4)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), down_scale=3)
+    # x1 = DecisionLayer(INPUTS=x1, name="decision_6", kernel=(5, 5), down_scale=2)
 
-    f1 = DecisionLayer(INPUTS=x1, name="final_decision", kernel=(1, 1), down_scale=2)
+    # x1 = GlobalContextLayer(INPUTS=x1, name="glob_context", down_scale=2)
+
+    f1 = DecisionLayer(INPUTS=x1,
+                       name="final_decision",
+                       kernel=(3, 3),
+                       kernel_shape="ellipse",
+                       down_scale=2,
+                       param_grid=pg.random_forrest_grid_estimators())
 
     model = Model(graph=f1)
 
