@@ -17,7 +17,7 @@ class Model:
         print("===============================")
         print("=====Begin Model Training======")
         print("===============================")
-        self.graph.fit(train_tags, validation_tags, reduction_factor=0)
+        self.graph.fit(train_tags, validation_tags)
 
     def save(self, model_path):
         check_n_make_dir(model_path)

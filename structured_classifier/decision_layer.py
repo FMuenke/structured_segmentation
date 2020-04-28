@@ -21,7 +21,8 @@ class DecisionLayer:
                  down_scale=0,
                  clf="b_rf",
                  n_estimators=200,
-                 param_grid=None):
+                 param_grid=None,
+                 data_reduction=0):
 
         self.name = str(name)
         if type(INPUTS) is not list:
@@ -47,6 +48,7 @@ class DecisionLayer:
         self.clf = ClassifierHandler(opt={"type": clf, "n_estimators": n_estimators})
         self.clf.new_classifier()
         self.param_grid = param_grid
+        self.data_reduction = data_reduction
 
         k_x, k_y = kernel
         s_element = self.make_s_element(kernel, kernel_shape)
@@ -89,9 +91,9 @@ class DecisionLayer:
         return np.concatenate(look_up_tensors, axis=2)
 
     def inference(self, x_input, interpolation="nearest"):
-        x_img, o_height, o_width = self.get_features(x_input)
+        x_img, x_pass = self.get_features(x_input)
+        o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
-        x_img_pass = np.copy(x_input)
         x_img = np.reshape(x_img, (x_height * x_width, -1))
         probs = self.clf.predict_proba(x_img)
         n_classes = probs.shape[1]
@@ -101,7 +103,7 @@ class DecisionLayer:
             y_img.append(y_i_img)
         y_img = np.concatenate(y_img, axis=2)
 
-        x_img_pass = resize(x_img_pass, width=o_width, height=o_height, interpolation="nearest")
+        x_img_pass = resize(x_pass, width=o_width, height=o_height, interpolation="nearest")
         y_img = resize(y_img, width=o_width, height=o_height, interpolation=interpolation)
 
         if len(x_img_pass.shape) < 3:
@@ -109,11 +111,11 @@ class DecisionLayer:
         if len(y_img.shape) < 3:
             y_img = np.expand_dims(y_img, axis=2)
         y_img = np.concatenate([x_img_pass, y_img], axis=2)
-
         return y_img
 
     def predict(self, x_input):
-        x_img, o_height, o_width = self.get_features(x_input)
+        x_img, x_pass = self.get_features(x_input)
+        o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
         x_img = np.reshape(x_img, (x_height * x_width, -1))
         y_img = self.clf.predict(x_img)
@@ -129,12 +131,17 @@ class DecisionLayer:
                 x_p = np.expand_dims(x_p, axis=2)
             x.append(x_p)
         x = np.concatenate(x, axis=2)
+        x_pass = np.copy(x)
         o_height, o_width = x.shape[:2]
         new_height = int(o_height / 2**self.down_scale)
         new_width = int(o_width / 2 ** self.down_scale)
+        if new_width < 2:
+            new_width = 2
+        if new_height < 2:
+            new_height = 2
         x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
         x = self.get_kernel(x)
-        return x, o_height, o_width
+        return x, x_pass
 
     def get_x_y(self, tag_set, reduction_factor=0):
         x = []
@@ -148,7 +155,7 @@ class DecisionLayer:
 
             if use_sample:
                 x_img = t.load_x()
-                x_img, o_height, o_width = self.get_features(x_img)
+                x_img, _ = self.get_features(x_img)
                 h_img, w_img = x_img.shape[:2]
                 y_img = t.load_y([h_img, w_img])
 
@@ -174,13 +181,13 @@ class DecisionLayer:
         y = np.concatenate(y, axis=0)
         return x, y
 
-    def fit(self, train_tags, validation_tags, reduction_factor):
+    def fit(self, train_tags, validation_tags):
         for p in self.previous:
-            p.fit(train_tags, validation_tags, reduction_factor=3)
+            p.fit(train_tags, validation_tags)
 
         print("Collecting Features for Stage: {}".format(self))
-        print("Data is reduced by factor: {}".format(reduction_factor))
-        x_train, y_train = self.get_x_y(train_tags, reduction_factor=reduction_factor)
+        print("Data is reduced by factor: {}".format(self.data_reduction))
+        x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
         x_val, y_val = self.get_x_y(validation_tags)
 
         n_samples_train, n_features = x_train.shape

@@ -40,9 +40,9 @@ class NormalizationLayer:
         x_img = np.concatenate(x, axis=2)
         return x_img
 
-    def fit(self, train_tags, validation_tags, reduction_factor):
+    def fit(self, train_tags, validation_tags):
         for p in self.previous:
-            p.fit(train_tags, validation_tags, reduction_factor)
+            p.fit(train_tags, validation_tags)
 
     def inference(self, x_input, interpolation="nearest"):
         x_img = self.get_features(x_input)

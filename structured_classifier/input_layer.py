@@ -34,7 +34,7 @@ class InputLayer:
     def __str__(self):
         return "{}-{}-{}".format(self.layer_type, self.name, self.features_to_use)
 
-    def fit(self, train_tags, validation_tags, reduction_factor):
+    def fit(self, train_tags, validation_tags):
         pass
 
     def save(self, model_path):

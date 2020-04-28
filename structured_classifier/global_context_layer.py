@@ -40,9 +40,9 @@ class GlobalContextLayer:
             s += "\n--> {}".format(p)
         return s
 
-    def fit(self, train_tags, validation_tags, reduction_factor):
+    def fit(self, train_tags, validation_tags):
         for p in self.previous:
-            p.fit(train_tags, validation_tags, reduction_factor)
+            p.fit(train_tags, validation_tags)
 
     def get_features(self, x_input):
         x = []
