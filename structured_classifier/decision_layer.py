@@ -196,7 +196,7 @@ class DecisionLayer:
             n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
         ))
         if self.param_grid is not None:
-            self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50, n_jobs=1)
+            self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50, n_jobs=2)
         else:
             self.clf.fit(x_train, y_train)
         self.clf.evaluate(x_val, y_val)

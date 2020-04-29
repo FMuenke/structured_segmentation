@@ -70,8 +70,8 @@ def xgboost_grid():
 def xgboost_grid_small():
     return {"booster": ["gbtree"],
             "tree_methode": ["hist"],
-            "num_parallel_tree": [1, 2, 5, 10, 25, 50, 100],
-            'n_estimators': [10, 25, 50, 100, 250, 500, 1000, 2500]}
+            "num_parallel_tree": [5, 10, 15],
+            'n_estimators': [5, 10, 25, 50, 75]}
 
 
 def boosting_grid():
