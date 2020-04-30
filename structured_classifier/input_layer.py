@@ -50,6 +50,18 @@ class InputLayer:
         if self.height is not None and self.width is not None:
             image = cv2.resize(image, (self.width, self.height), interpolation=cv2.INTER_CUBIC)
 
+        if self.width is not None and self.height is None:
+            h, w = image.shape[:2]
+            s = self.width / w
+            h_new = int(h * s)
+            image = cv2.resize(image, (self.width, h_new), interpolation=cv2.INTER_CUBIC)
+
+        if self.height is not None and self.width is None:
+            h, w = image.shape[:2]
+            s = self.height / h
+            w_new = int(w * s)
+            image = cv2.resize(image, (w_new, self.height), interpolation=cv2.INTER_CUBIC)
+
         if self.down_scale is not None:
             height, width = image.shape[:2]
             new_height = int(height / 2**self.down_scale)

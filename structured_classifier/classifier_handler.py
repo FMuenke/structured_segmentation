@@ -113,10 +113,20 @@ class ClassifierHandler:
         else:
             b_est = None
 
+        if "n_estimators" in opt:
+            n_estimators = opt["n_estimators"]
+        else:
+            n_estimators = 200
+
+        if "num_parallel_tree" in opt:
+            num_parallel_tree = opt["num_parallel_tree"]
+        else:
+            num_parallel_tree = 5
+
         if opt["type"] in ["random_forrest", "rf"]:
-            return RandomForestClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
+            return RandomForestClassifier(n_estimators=n_estimators, class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "ada_boost":
-            return AdaBoostClassifier(base_estimator=b_est, n_estimators=opt["n_estimators"])
+            return AdaBoostClassifier(base_estimator=b_est, n_estimators=n_estimators)
         elif opt["type"] in ["logistic_regression", "lr"]:
             return LogisticRegression()
         elif opt["type"] == "sgd":
@@ -132,15 +142,20 @@ class ClassifierHandler:
         elif opt["type"] in ["neighbours", "knn"]:
             return KNeighborsClassifier(n_neighbors=opt["n_neighbours"])
         elif opt["type"] == "extra_tree":
-            return ExtraTreesClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
+            return ExtraTreesClassifier(n_estimators=n_estimators, class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "xgboost":
-            return XGBClassifier(objective='binary:logistic', n_jobs=-1)
+            return XGBClassifier(objective='binary:logistic',
+                                 n_estimators=n_estimators,
+                                 num_parallel_tree=num_parallel_tree,
+                                 tree_method="hist",
+                                 booster="gbtree",
+                                 n_jobs=-1)
         elif opt["type"] in ["b_random_forrest", "b_rf"]:
-            return BalancedRandomForestClassifier(n_jobs=-1)
+            return BalancedRandomForestClassifier(n_estimators=n_estimators, n_jobs=-1)
         elif opt["type"] == "b_bagging":
-            return BalancedBaggingClassifier(base_estimator=b_est)
+            return BalancedBaggingClassifier(base_estimator=b_est, n_estimators=n_estimators)
         elif opt["type"] == "b_boosting":
-            return RUSBoostClassifier(base_estimator=b_est)
+            return RUSBoostClassifier(base_estimator=b_est, n_estimators=n_estimators)
         elif opt["type"] in ["kmeans", "k_means"]:
             return MiniBatchKMeans(n_clusters=opt["n_clusters"])
         else:

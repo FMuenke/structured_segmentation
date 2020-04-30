@@ -34,10 +34,7 @@ class GlobalContextLayer:
 
     def __str__(self):
         s = ""
-        s += "\n{} - {}".format(self.layer_type, self.name)
-        s += "\n---------------------------"
-        for p in self.previous:
-            s += "\n--> {}".format(p)
+        s += "{} - {}".format(self.layer_type, self.name)
         return s
 
     def fit(self, train_tags, validation_tags):

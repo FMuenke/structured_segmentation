@@ -73,10 +73,7 @@ class DecisionLayer:
 
     def __str__(self):
         s = ""
-        s += "\n{} - {} - {}".format(self.layer_type, self.name, self.clf)
-        s += "\n---------------------------"
-        for p in self.previous:
-            s += "\n--> {}".format(p)
+        s += "{} - {} - {}".format(self.layer_type, self.name, self.clf)
         return s
 
     def get_kernel(self, tensor):

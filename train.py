@@ -26,15 +26,16 @@ def main(args_):
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
     }
 
-    randomized_split = False
+    randomized_split = True
     train_test_ratio = 0.20
 
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    base_clf = "xgboost"
+    base_clf = "b_rf"
 
-    x1 = InputLayer("input_1", ["hsv-color"], initial_down_scale=2)
+    x1 = InputLayer("input_1", ["hsv-color"], width=1200)
+    x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
     x1 = DecisionLayer(INPUTS=x1, name="decision_0", kernel=(5, 5), kernel_shape="ellipse", down_scale=1,
                        clf=base_clf, n_estimators=25, data_reduction=3)
     x1 = DecisionLayer(INPUTS=x1, name="decision_1", kernel=(5, 5), kernel_shape="ellipse", down_scale=2,
@@ -42,13 +43,15 @@ def main(args_):
     x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
                        clf=base_clf, n_estimators=25, data_reduction=3)
     x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(5, 5), kernel_shape="ellipse", down_scale=4,
-                       clf=base_clf, n_estimators=25)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=5,
-                       clf=base_clf, param_grid=pg.xgboost_grid_small())
+                       clf=base_clf, n_estimators=25, data_reduction=3)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=6,
+                       clf=base_clf, data_reduction=2)
     x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), kernel_shape="ellipse", down_scale=4,
                        clf=base_clf, n_estimators=25, data_reduction=3)
     x1 = DecisionLayer(INPUTS=x1, name="decision_6", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
                        clf=base_clf, n_estimators=25, data_reduction=3)
+    x1 = DecisionLayer(INPUTS=x1, name="decision_6", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
+                       n_estimators=25, data_reduction=3)
     x1 = DecisionLayer(INPUTS=x1, name="decision_7", kernel=(5, 5), kernel_shape="ellipse", down_scale=2,
                        clf=base_clf, n_estimators=25, data_reduction=3)
     # x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=4)
@@ -62,8 +65,8 @@ def main(args_):
                        kernel=(3, 3),
                        kernel_shape="ellipse",
                        down_scale=2,
-                       clf=base_clf,
-                       n_estimators=500, param_grid=pg.xgboost_grid_small())
+                       clf="b_rf",
+                       n_estimators=500)
 
     model = Model(graph=f1)
 

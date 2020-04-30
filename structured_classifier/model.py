@@ -23,6 +23,7 @@ class Model:
         check_n_make_dir(model_path)
         check_n_make_dir(os.path.join(model_path, "graph"))
         self.graph.save(os.path.join(model_path, "graph"))
+        print("Model was saved to: {}".format(model_path))
 
     def load(self, model_path):
         if os.path.isdir(model_path):
@@ -65,7 +66,7 @@ class Model:
 
         if opt["layer_type"] == "NORMALIZATION_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = NormalizationLayer(prev_layer, opt["name"])
+            layer = NormalizationLayer(prev_layer, opt["name"], norm_option=opt["norm_option"])
             layer.set_index(int(opt["index"]))
             return layer
 

@@ -3,13 +3,13 @@ import numpy as np
 
 from utils.utils import check_n_make_dir, save_dict
 
-from structured_classifier.layer_operations import normalize_and_standardize
+from structured_classifier.layer_operations import normalize_and_standardize, normalize
 
 
 class NormalizationLayer:
     layer_type = "NORMALIZATION_LAYER"
 
-    def __init__(self, INPUTS, name):
+    def __init__(self, INPUTS, name, norm_option="normalize_and_standardize"):
         self.name = str(name)
         if type(INPUTS) is not list:
             INPUTS = [INPUTS]
@@ -20,14 +20,13 @@ class NormalizationLayer:
         self.opt = {
             "name": self.name,
             "layer_type": self.layer_type,
+            "norm_option": norm_option
         }
+        self.norm_option = norm_option
 
     def __str__(self):
         s = ""
-        s += "\n{} - {}".format(self.layer_type, self.name)
-        s += "\n---------------------------"
-        for p in self.previous:
-            s += "\n--> {}".format(p)
+        s += "{} - {}".format(self.layer_type, self.name)
         return s
 
     def get_features(self, x_input):
@@ -46,8 +45,19 @@ class NormalizationLayer:
 
     def inference(self, x_input, interpolation="nearest"):
         x_img = self.get_features(x_input)
-        x_img = normalize_and_standardize(x_img)
-        return x_img
+        if self.norm_option == "normalize_and_standardize":
+            return normalize_and_standardize(x_img)
+        if self.norm_option == "min_max_scaling":
+            return normalize(x_img)
+        if self.norm_option == "normalize_media":
+            median_mat = np.median(np.median(x_img, axis=0), axis=0)
+            x_img = x_img - median_mat
+            return x_img
+        if self.norm_option == "normalize_mean":
+            median_mat = np.mean(np.mean(x_img, axis=0), axis=0)
+            x_img = x_img - median_mat
+            return x_img
+        raise ValueError("Option: {} unknown".format(self.norm_option))
 
     def save(self, model_path):
         model_path = os.path.join(model_path, self.layer_type + "-" + self.name)
