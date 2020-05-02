@@ -36,12 +36,19 @@ def main(args_):
 
     clf_opt = {"n_estimators": 50}
 
-    x1 = InputLayer("input_1", ["gray-color"], width=400)
+    x1 = InputLayer("input_1", ["gray-color"], width=200)
     x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
 
-    f1 = u_layer(x1, "u_s_clf", depth=3, repeat=3, kernel=(4, 4), clf="b_rf", clf_options=clf_opt)
+    x1 = u_layer(x1, "u_s_clf", depth=5, repeat=1, kernel=(5, 5), clf="b_rf", clf_options=clf_opt)
 
-    model = Model(graph=f1)
+    x1 = DecisionLayer(INPUTS=x1,
+                       name="final_decision",
+                       kernel=(3, 3),
+                       kernel_shape="ellipse",
+                       clf="b_rf",
+                       clf_options={"n_estimators": 200})
+
+    model = Model(graph=x1)
 
     d_set = DataSet(df, color_coding)
     tag_set = d_set.load()

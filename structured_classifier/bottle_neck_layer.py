@@ -25,10 +25,7 @@ class BottleNeckLayer:
 
     def __str__(self):
         s = ""
-        s += "\n{} - {}".format(self.layer_type, self.name)
-        s += "\n---------------------------"
-        for p in self.previous:
-            s += "\n--> {}".format(p)
+        s += "{} - {}".format(self.layer_type, self.name)
         return s
 
     def get_features(self, x_input):
