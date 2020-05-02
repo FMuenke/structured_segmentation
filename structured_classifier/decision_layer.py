@@ -20,7 +20,7 @@ class DecisionLayer:
                  kernel_shape="square",
                  down_scale=0,
                  clf="b_rf",
-                 n_estimators=200,
+                 clf_options=None,
                  param_grid=None,
                  data_reduction=0):
 
@@ -44,8 +44,11 @@ class DecisionLayer:
         }
 
         self.down_scale = down_scale
-
-        self.clf = ClassifierHandler(opt={"type": clf, "n_estimators": n_estimators})
+        if clf_options is None:
+            clf_options = {"type": clf}
+        else:
+            clf_options["type"] = clf
+        self.clf = ClassifierHandler(opt=clf_options)
         self.clf.new_classifier()
         self.param_grid = param_grid
         self.data_reduction = data_reduction
@@ -73,7 +76,7 @@ class DecisionLayer:
 
     def __str__(self):
         s = ""
-        s += "{} - {} - {}".format(self.layer_type, self.name, self.clf)
+        s += "{} - {} - {} - DownScale {}".format(self.layer_type, self.name, self.clf, self.down_scale)
         return s
 
     def get_kernel(self, tensor):

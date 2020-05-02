@@ -9,6 +9,8 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 
+from base_elements.u_structure import u_layer
+
 from utils import parameter_grid as pg
 
 from utils.utils import save_dict
@@ -20,9 +22,9 @@ def main(args_):
         # "crack": [[3, 3, 3], [255, 255, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "heart": [[4, 4, 4], [0, 255, 0]],
+        "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        "shadow": [[1, 1, 1], [255, 0, 0]],
+        # "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
     }
 
@@ -32,41 +34,12 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    base_clf = "b_rf"
+    clf_opt = {"n_estimators": 50}
 
-    x1 = InputLayer("input_1", ["hsv-color"], width=1200)
+    x1 = InputLayer("input_1", ["gray-color"], width=400)
     x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
-    x1 = DecisionLayer(INPUTS=x1, name="decision_0", kernel=(5, 5), kernel_shape="ellipse", down_scale=1,
-                       clf=base_clf, n_estimators=25, data_reduction=3)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_1", kernel=(5, 5), kernel_shape="ellipse", down_scale=2,
-                       clf=base_clf, n_estimators=25, data_reduction=3)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_2", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
-                       clf=base_clf, n_estimators=25, data_reduction=3)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_3", kernel=(5, 5), kernel_shape="ellipse", down_scale=4,
-                       clf=base_clf, n_estimators=25, data_reduction=3)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=6,
-                       clf=base_clf, data_reduction=2)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), kernel_shape="ellipse", down_scale=4,
-                       clf=base_clf, n_estimators=25, data_reduction=3)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_6", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
-                       clf=base_clf, n_estimators=25, data_reduction=3)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_6", kernel=(5, 5), kernel_shape="ellipse", down_scale=3,
-                       n_estimators=25, data_reduction=3)
-    x1 = DecisionLayer(INPUTS=x1, name="decision_7", kernel=(5, 5), kernel_shape="ellipse", down_scale=2,
-                       clf=base_clf, n_estimators=25, data_reduction=3)
-    # x1 = DecisionLayer(INPUTS=x1, name="decision_4", kernel=(5, 5), down_scale=4)
-    # x1 = DecisionLayer(INPUTS=x1, name="decision_5", kernel=(5, 5), down_scale=3)
-    # x1 = DecisionLayer(INPUTS=x1, name="decision_6", kernel=(5, 5), down_scale=2)
 
-    # x1 = GlobalContextLayer(INPUTS=x1, name="glob_context", down_scale=2)
-
-    f1 = DecisionLayer(INPUTS=x1,
-                       name="final_decision",
-                       kernel=(3, 3),
-                       kernel_shape="ellipse",
-                       down_scale=2,
-                       clf="b_rf",
-                       n_estimators=500)
+    f1 = u_layer(x1, "u_s_clf", depth=3, repeat=3, kernel=(4, 4), clf="b_rf", clf_options=clf_opt)
 
     model = Model(graph=f1)
 
