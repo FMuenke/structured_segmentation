@@ -19,8 +19,6 @@ from imblearn.ensemble import RUSBoostClassifier
 
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
-from sklearn.calibration import CalibratedClassifierCV
-
 from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
 
@@ -63,27 +61,6 @@ class ClassifierHandler:
         self.best_params = searcher.best_params_
         self.best_score = searcher.best_score_
         self.classifier = searcher.best_estimator_
-
-    def calibrate(self, x_train, y_train, x_test, y_test, scoring):
-        print("Calibrating Classifier...")
-        t0 = time()
-        est = self.classifier
-        est.fit(x_train, y_train)
-        isotonic = CalibratedClassifierCV(est, cv=5, method='isotonic')
-        isotonic.fit(x_train, y_train)
-        sigmoid = CalibratedClassifierCV(est, cv=5, method='sigmoid')
-        sigmoid.fit(x_train, y_train)
-
-        est_list = [(est, "base"), (isotonic, "isotonic"), (sigmoid, "sigmoid")]
-        score = 0
-        for clf, name in est_list:
-            clf_score = scoring(y_test, clf.predict(x_test))
-            if clf_score > score:
-                score = clf_score
-                self.classifier = clf
-        print("done in %0.3fs" % (time() - t0))
-
-        # plot_calibration_curve(est_list, x_test, y_test, path=self.model_path)
 
     def predict(self, x):
         return self.classifier.predict(x)

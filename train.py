@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from data_structure.data_set import DataSet
+from data_structure.segmentation_data_set import SegmentationDataSet
 from structured_classifier.model import Model
 
 from structured_classifier.decision_layer import DecisionLayer
@@ -9,7 +9,7 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 
-from base_elements.u_structure import u_layer
+from base_elements.base_structures import u_layer, up_pyramid, down_pyramid
 
 from utils import parameter_grid as pg
 
@@ -19,12 +19,13 @@ from utils.utils import save_dict
 def main(args_):
     color_coding = {
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
+        # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        "heart": [[4, 4, 4], [0, 255, 0]],
+        # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "shadow": [[1, 1, 1], [255, 0, 0]],
+        "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
     }
 
@@ -36,21 +37,23 @@ def main(args_):
 
     clf_opt = {"n_estimators": 50}
 
-    x1 = InputLayer("input_1", ["gray-color"], width=200)
+    x1 = InputLayer("input_1", ["hsv-color"], width=600)
     x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
 
-    x1 = u_layer(x1, "u_s_clf", depth=5, repeat=1, kernel=(5, 5), clf="b_rf", clf_options=clf_opt)
+    # x11 = u_layer(x1, "u_s_clf_1", depth=3, repeat=1, kernel=(3, 3), clf="b_rf", clf_options=clf_opt)
 
-    x1 = DecisionLayer(INPUTS=x1,
+    # x12 = u_layer(x1, "u_s_clf_2", depth=3, repeat=1, kernel=(3, 3), clf="b_rf", clf_options=clf_opt)
+
+    f1 = DecisionLayer(INPUTS=x1,
                        name="final_decision",
-                       kernel=(3, 3),
+                       kernel=(5, 5),
                        kernel_shape="ellipse",
-                       clf="b_rf",
-                       clf_options={"n_estimators": 200})
+                       clf="tree",
+                       clf_options={"n_estimators": 10})
 
-    model = Model(graph=x1)
+    model = Model(graph=f1)
 
-    d_set = DataSet(df, color_coding)
+    d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()
     train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
 

@@ -75,9 +75,7 @@ class DecisionLayer:
         raise ValueError("Kernel-Shape option: {} not known".format(kernel_shape))
 
     def __str__(self):
-        s = ""
-        s += "{} - {} - {} - DownScale {}".format(self.layer_type, self.name, self.clf, self.down_scale)
-        return s
+        return "{} - {} - {} - DownScale: {}".format(self.layer_type, self.name, self.clf, self.down_scale)
 
     def get_kernel(self, tensor):
         if len(tensor.shape) < 3:
@@ -192,7 +190,7 @@ class DecisionLayer:
 
         n_samples_train, n_features = x_train.shape
         n_samples_val = x_val.shape[0]
-        print("DataSet has {} Samples (Train: {}/ Validation: {}) with {} features.".format(
+        print("DataSet has {} Samples (Train: {} / Validation: {}) with {} features.".format(
             n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
         ))
         if self.param_grid is not None:

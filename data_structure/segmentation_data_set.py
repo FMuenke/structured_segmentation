@@ -6,7 +6,7 @@ from data_structure.folder import Folder
 from data_structure.lbm_tag import LbmTag
 
 
-class DataSet:
+class SegmentationDataSet:
     def __init__(self, path_to_data_set, color_coding):
         self.path_to_data_set = path_to_data_set
 

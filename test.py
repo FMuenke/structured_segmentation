@@ -3,7 +3,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 
-from data_structure.data_set import DataSet
+from data_structure.segmentation_data_set import SegmentationDataSet
 from data_structure.folder import Folder
 from structured_classifier.model import Model
 from utils.utils import load_dict
@@ -38,7 +38,7 @@ def main(args_):
     vis_fol = Folder(os.path.join(mf, "overlays"))
     vis_fol.check_n_make_dir(clean=True)
 
-    d_set = DataSet(df, color_coding)
+    d_set = SegmentationDataSet(df, color_coding)
     t_set = d_set.load()
 
     sh = StatsHandler(color_coding)
