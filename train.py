@@ -9,6 +9,7 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
+from structured_classifier.bottle_neck_layer import BottleNeckLayer
 
 from base_elements.base_structures import u_layer, up_pyramid, down_pyramid
 
@@ -36,12 +37,18 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf_opt = {"n_estimators": 50}
+    clf_opt = {"n_estimators": 100}
 
-    x1 = InputLayer("input_1", ["hsv-color"], width=300)
+    x1 = InputLayer("input_1", ["hsv-color"], width=150)
     x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
-    x1 = DecisionLayer(INPUTS=x1, name="d1", kernel=(3, 3), kernel_shape="ellipse", down_scale=2)
-    x1 = ShapeRefinementLayer(INPUTS=x1, name="s1", down_scale=2)
+    x1 = u_layer(x1, "u_structure", kernel=(5, 5), depth=3)
+    x1 = BottleNeckLayer(x1, name="b1")
+    x1 = ShapeRefinementLayer(INPUTS=x1,
+                              name="s1",
+                              down_scale=2,
+                              shape="rectangle",
+                              clf="extra",
+                              clf_options=clf_opt)
 
     # x11 = u_layer(x1, "u_s_clf_1", depth=3, repeat=1, kernel=(3, 3), clf="b_rf", clf_options=clf_opt)
 
@@ -54,7 +61,7 @@ def main(args_):
                        clf="tree",
                        clf_options={"n_estimators": 10})
 
-    model = Model(graph=f1)
+    model = Model(graph=x1)
 
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()

@@ -4,6 +4,8 @@ import numpy as np
 from tqdm import tqdm
 
 from geometric_shapes.circle import Circle
+from geometric_shapes.ellipse import Ellipse
+from geometric_shapes.rectangle import Rectangle
 
 from structured_classifier.regressor_handler import RegressorHandler
 from structured_classifier.layer_operations import resize
@@ -18,6 +20,7 @@ class ShapeRefinementLayer:
                  name,
                  shape="circle",
                  down_scale=0,
+                 data_reduction=0,
                  clf="rf",
                  clf_options=None,
                  param_grid=None):
@@ -28,6 +31,7 @@ class ShapeRefinementLayer:
         self.previous = INPUTS
 
         self.index = 0
+        self.data_reduction = data_reduction
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
@@ -104,6 +108,10 @@ class ShapeRefinementLayer:
     def get_shape(self):
         if self.shape == "circle":
             return Circle()
+        if self.shape == "ellipse":
+            return Ellipse()
+        if self.shape == "rectangle":
+            return Rectangle()
         raise ValueError("Shape: {} not known!".format(self.shape))
 
     def label_map_to_shape_parameters(self, label_map):
@@ -116,30 +124,37 @@ class ShapeRefinementLayer:
         return s.get_label_map(shape_parameters, height, width)
 
     def transform_features(self, x_img):
-        height, width = x_img.shape[:2]
-        x1 = np.sum(x_img, axis=0)
-        x2 = np.sum(x_img, axis=1)
+        # height, width = x_img.shape[:2]
+        # x1 = np.sum(x_img, axis=0)
+        # x2 = np.sum(x_img, axis=1)
 
-        x = np.concatenate([x1, x2])
+        # x = np.concatenate([x1, x2])
+        x = resize(x_img, width=20, height=20, interpolation="cubic")
         x = np.reshape(x, (1, -1))
 
         return x
 
-    def get_x_y(self, tag_set):
+    def get_x_y(self, tag_set, reduction_factor=0):
         x = []
         y = []
         for t in tqdm(tag_set):
+            use_sample = True
+            if reduction_factor > 1:
+                if not np.random.randint(0, reduction_factor):
+                    use_sample = False
 
-            x_img = t.load_x()
-            x_img, _ = self.get_features(x_img)
-            h_img, w_img = x_img.shape[:2]
-            y_img = t.load_y([h_img, w_img])
+            if use_sample:
 
-            x_img = self.transform_features(x_img)
-            y_img = self.label_map_to_shape_parameters(y_img)
+                x_img = t.load_x()
+                x_img, _ = self.get_features(x_img)
+                h_img, w_img = x_img.shape[:2]
+                y_img = t.load_y([h_img, w_img])
 
-            x.append(x_img)
-            y.append(y_img)
+                x_img = self.transform_features(x_img)
+                y_img = self.label_map_to_shape_parameters(y_img)
+
+                x.append(x_img)
+                y.append(y_img)
         x = np.concatenate(x, axis=0)
         y = np.concatenate(y, axis=0)
         return x, y
@@ -149,7 +164,8 @@ class ShapeRefinementLayer:
             p.fit(train_tags, validation_tags)
 
         print("Collecting Features for Stage: {}".format(self))
-        x_train, y_train = self.get_x_y(train_tags)
+        print("Data is reduced by factor: {}".format(self.data_reduction))
+        x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
         x_val, y_val = self.get_x_y(validation_tags)
 
         n_samples_train, n_features = x_train.shape

@@ -100,3 +100,10 @@ def mlp_grid():
             "solver": ["adam"],
             "learning_rate": ["adaptive"],
             "max_iter": [50, 100, 200, 500]}
+
+
+def gradient_boosting_grid():
+    return {'learning_rate': [0.01, 0.02, 0.03],
+            'subsample': [0.9, 0.5, 0.2],
+            'n_estimators': [100, 500, 1000],
+            'max_depth': [4, 6, 8]}
