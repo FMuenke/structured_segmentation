@@ -4,9 +4,6 @@ import os
 from utils.utils import check_n_make_dir, save_dict
 
 
-from umap import UMAP
-
-
 class BottleNeckLayer:
     layer_type = "BOTTLE_NECK_LAYER"
 
@@ -31,16 +28,16 @@ class BottleNeckLayer:
     def get_features(self, x_input):
         x = []
         for p in self.previous:
-            x_p = p.predict(x_input, interpolation="cubic")
+            x_p = p.predict(x_input)
             if len(x_p.shape) < 3:
                 x_p = np.expand_dims(x_p, axis=2)
             x.append(x_p)
         x_img = np.concatenate(x, axis=2)
         return x_img
 
-    def fit(self, train_tags, validation_tags, reduction_factor):
+    def fit(self, train_tags, validation_tags):
         for p in self.previous:
-            p.fit(train_tags, validation_tags, reduction_factor)
+            p.fit(train_tags, validation_tags)
 
     def inference(self, x_input, interpolation="nearest"):
         x_img = self.get_features(x_input)

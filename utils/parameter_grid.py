@@ -99,3 +99,11 @@ def mlp_grid():
             "activation": ["logistic", "tanh", "relu"],
             "solver": ["adam"],
             "learning_rate": ["adaptive"]}
+
+
+def gradient_boosting_grid():
+    return {'learning_rate': [0.01, 0.02, 0.03],
+            'subsample': [0.9, 0.5, 0.2],
+            'n_estimators': [100, 500, 1000],
+            'max_depth': [4, 6, 8]}
+
