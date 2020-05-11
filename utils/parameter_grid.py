@@ -98,5 +98,4 @@ def mlp_grid():
     return {"hidden_layer_sizes": [(30,), (50,), (100,), (100, 50), (100, 50, 30)],
             "activation": ["logistic", "tanh", "relu"],
             "solver": ["adam"],
-            "learning_rate": ["adaptive"],
-            "max_iter": [50, 100, 200, 500]}
+            "learning_rate": ["adaptive"]}

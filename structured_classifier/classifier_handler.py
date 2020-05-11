@@ -4,14 +4,12 @@ from time import time
 
 from xgboost import XGBClassifier
 from sklearn.svm import SVC
-from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-
-from sklearn.cluster import MiniBatchKMeans
 
 from imblearn.ensemble import BalancedRandomForestClassifier
 from imblearn.ensemble import BalancedBaggingClassifier
@@ -100,22 +98,29 @@ class ClassifierHandler:
         else:
             num_parallel_tree = 5
 
+        if "layer_structure" in opt:
+            layer_structure = opt["layer_structure"]
+        else:
+            layer_structure = (100,)
+
         if opt["type"] in ["random_forrest", "rf"]:
             return RandomForestClassifier(n_estimators=n_estimators, class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "ada_boost":
             return AdaBoostClassifier(base_estimator=b_est, n_estimators=n_estimators)
         elif opt["type"] in ["logistic_regression", "lr"]:
-            return LogisticRegression()
+            return LogisticRegression(class_weight='balanced')
         elif opt["type"] == "sgd":
-            return SGDClassifier()
-        elif opt["type"] in ["bernoulli_bayes", "bayes"]:
-            return BernoulliNB()
+            return SGDClassifier(class_weight='balanced')
+        elif opt["type"] in ["gaussian_bayes", "bayes"]:
+            return GaussianNB()
         elif opt["type"] in ["support_vector_machine", "svm"]:
             return SVC(kernel='rbf', class_weight='balanced', gamma="scale")
         elif opt["type"] in ["multilayer_perceptron", "mlp"]:
-            return MLPClassifier()
+            return MLPClassifier(hidden_layer_sizes=layer_structure)
         elif opt["type"] in ["decision_tree", "dt", "tree"]:
             return DecisionTreeClassifier()
+        elif opt["type"] in ["b_decision_tree", "b_dt", "b_tree"]:
+            return DecisionTreeClassifier(class_weight="balanced")
         elif opt["type"] in ["neighbours", "knn"]:
             return KNeighborsClassifier(n_neighbors=opt["n_neighbours"])
         elif opt["type"] == "extra_tree":
@@ -133,8 +138,6 @@ class ClassifierHandler:
             return BalancedBaggingClassifier(base_estimator=b_est, n_estimators=n_estimators)
         elif opt["type"] == "b_boosting":
             return RUSBoostClassifier(base_estimator=b_est, n_estimators=n_estimators)
-        elif opt["type"] in ["kmeans", "k_means"]:
-            return MiniBatchKMeans(n_clusters=opt["n_clusters"])
         else:
             raise ValueError("type: {} not recognised".format(opt["type"]))
 

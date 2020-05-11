@@ -35,12 +35,13 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
+    clf = "b_rf"
     clf_opt = {"n_estimators": 50}
 
-    x1 = InputLayer("input_1", ["hsv-color"], width=600)
+    x1 = InputLayer("input_1", ["hsv-color"], width=300)
     x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
 
-    # x11 = u_layer(x1, "u_s_clf_1", depth=3, repeat=1, kernel=(3, 3), clf="b_rf", clf_options=clf_opt)
+    x1 = u_layer(x1, "u_s_clf_1", depth=4, repeat=1, kernel=(5, 5), clf=clf, clf_options=clf_opt)
 
     # x12 = u_layer(x1, "u_s_clf_2", depth=3, repeat=1, kernel=(3, 3), clf="b_rf", clf_options=clf_opt)
 
@@ -48,10 +49,12 @@ def main(args_):
                        name="final_decision",
                        kernel=(5, 5),
                        kernel_shape="ellipse",
-                       clf="tree",
-                       clf_options={"n_estimators": 10})
+                       clf=clf,
+                       clf_options=clf_opt,
+                       down_scale=1,
+                       )
 
-    model = Model(graph=f1)
+    model = Model(graph=x1)
 
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()
