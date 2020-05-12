@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from data_structure.segmentation_data_set import SegmentationDataSet
+from data_structure.video_set import VideoSet
 from structured_classifier.model import Model
 
 from structured_classifier.decision_layer import DecisionLayer
@@ -44,7 +44,9 @@ def main(args_):
         "max_iter": 10000000
     }
 
-    x1 = InputLayer("input_1", ["gray-color"], width=150)
+    x1 = InputLayer("input_1", ["raw"], width=150)
+
+    x1 = DecisionLayer(INPUTS=x1, name="d1", kernel=(3, 3), kernel_shape="ellipse")
 
     # x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
     # x1 = u_layer(x1, "u_structure", kernel=(5, 5), depth=5)
@@ -71,9 +73,9 @@ def main(args_):
                        down_scale=1,
                        )
 
-    model = Model(graph=s1)
+    model = Model(graph=x1)
 
-    d_set = SegmentationDataSet(df, color_coding)
+    d_set = VideoSet(df, color_coding)
     tag_set = d_set.load()
     train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
 

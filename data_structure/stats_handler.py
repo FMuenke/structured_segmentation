@@ -10,6 +10,9 @@ class StatsHandler:
                 "fp": 0,
             }
 
+    def __str__(self):
+        return self.generate_r_string()
+
     def count(self, cls, t):
         self.s[cls][t] += 1
 

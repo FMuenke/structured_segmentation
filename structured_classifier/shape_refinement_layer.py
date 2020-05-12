@@ -1,4 +1,4 @@
-import cv2
+from copy import copy
 import os
 import numpy as np
 from tqdm import tqdm
@@ -8,7 +8,7 @@ from geometric_shapes.ellipse import Ellipse
 from geometric_shapes.rectangle import Rectangle
 
 from structured_classifier.regressor_handler import RegressorHandler
-from structured_classifier.layer_operations import resize
+from structured_classifier.layer_operations import resize, dropout, augment_tag
 from utils.utils import check_n_make_dir, save_dict
 
 
@@ -19,7 +19,7 @@ class ShapeRefinementLayer:
                  INPUTS,
                  name,
                  shape="circle",
-                 down_scale=0,
+                 global_kernel=(20, 20),
                  data_reduction=0,
                  clf="rf",
                  clf_options=None,
@@ -41,22 +41,23 @@ class ShapeRefinementLayer:
             "name": self.name,
             "layer_type": self.layer_type,
             "shape": shape,
-            "down_scale": down_scale
+            "global_kernel": global_kernel
         }
 
         self.shape = shape
 
-        self.down_scale = down_scale
+        self.global_kernel = global_kernel
         if clf_options is None:
-            clf_options = {"type": clf}
+            clf_opt = {"type": clf}
         else:
-            clf_options["type"] = clf
-        self.clf = RegressorHandler(opt=clf_options)
+            clf_opt = copy(clf_options)
+            clf_opt["type"] = clf
+        self.clf = RegressorHandler(opt=clf_opt)
         self.clf.new_regressor()
         self.param_grid = param_grid
 
     def __str__(self):
-        return "{} - {} - {} - DownScale: {}".format(self.layer_type, self.name, self.clf, self.down_scale)
+        return "{} - {} - {} - GlobalKernel: {}".format(self.layer_type, self.name, self.clf, self.global_kernel)
 
     def inference(self, x_input, interpolation="nearest"):
         x_img, x_pass = self.get_features(x_input)
@@ -95,14 +96,6 @@ class ShapeRefinementLayer:
             x.append(x_p)
         x = np.concatenate(x, axis=2)
         x_pass = np.copy(x)
-        o_height, o_width = x.shape[:2]
-        new_height = int(o_height / 2 ** self.down_scale)
-        new_width = int(o_width / 2 ** self.down_scale)
-        if new_width < 2:
-            new_width = 2
-        if new_height < 2:
-            new_height = 2
-        x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
         return x, x_pass
 
     def get_shape(self):
@@ -125,16 +118,12 @@ class ShapeRefinementLayer:
 
     def transform_features(self, x_img):
         # height, width = x_img.shape[:2]
-        # x1 = np.sum(x_img, axis=0)
-        # x2 = np.sum(x_img, axis=1)
-
-        # x = np.concatenate([x1, x2])
-        x = resize(x_img, width=20, height=20, interpolation="cubic")
+        x = resize(x_img, width=self.global_kernel[0], height=self.global_kernel[1], interpolation="cubic")
         x = np.reshape(x, (1, -1))
 
         return x
 
-    def get_x_y(self, tag_set, reduction_factor=0):
+    def get_x_y(self, tag_set, reduction_factor=0, augment=0):
         x = []
         y = []
         for t in tqdm(tag_set):
@@ -150,11 +139,19 @@ class ShapeRefinementLayer:
                 h_img, w_img = x_img.shape[:2]
                 y_img = t.load_y([h_img, w_img])
 
-                x_img = self.transform_features(x_img)
-                y_img = self.label_map_to_shape_parameters(y_img)
+                if augment > 0:
+                    for a in range(augment):
+                        x_img_a, y_img_a = augment_tag(x_img, y_img)
+                        x_img_a = self.transform_features(x_img_a)
+                        y_img_a = self.label_map_to_shape_parameters(y_img_a)
+                        x.append(x_img_a)
+                        y.append(y_img_a)
 
-                x.append(x_img)
-                y.append(y_img)
+                x_img_a = self.transform_features(x_img)
+                y_img_a = self.label_map_to_shape_parameters(y_img)
+
+                x.append(x_img_a)
+                y.append(y_img_a)
         x = np.concatenate(x, axis=0)
         y = np.concatenate(y, axis=0)
         return x, y
@@ -165,7 +162,8 @@ class ShapeRefinementLayer:
 
         print("Collecting Features for Stage: {}".format(self))
         print("Data is reduced by factor: {}".format(self.data_reduction))
-        x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
+        x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction, augment=200)
+        x_train = dropout(x_train, drop_rate=0.5)
         x_val, y_val = self.get_x_y(validation_tags)
 
         n_samples_train, n_features = x_train.shape

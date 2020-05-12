@@ -12,9 +12,10 @@ class Rectangle:
         label_map = self.binarize_map(label_map)
         regions = regionprops(label_map.astype(np.int))
         if len(regions) < 1:
-            prop["centroid"] = [0, 0]
-            prop["height"] = 1
-            prop["width"] = 1
+            prop["cy"] = 0
+            prop["cx"] = 0
+            prop["height"] = 0
+            prop["width"] = 0
             return prop
         centroid = regions[0].centroid
         prop["cy"] = centroid[0] / height

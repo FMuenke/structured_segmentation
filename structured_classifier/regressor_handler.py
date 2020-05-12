@@ -92,6 +92,11 @@ class RegressorHandler:
         else:
             max_iter = 1000
 
+        if "layer_structure" in opt:
+            layer_structure = opt["layer_structure"]
+        else:
+            layer_structure = (100,)
+
         if opt["type"] in ["random_forrest", "rf"]:
             return RandomForestRegressor(n_estimators=n_estimators, n_jobs=-1)
         if opt["type"] in ["sgd"]:
@@ -101,7 +106,7 @@ class RegressorHandler:
         if opt["type"] in ["tree", "decision_tree", "dt"]:
             return DecisionTreeRegressor()
         if opt["type"] in ["mlp"]:
-            return MLPRegressor(max_iter=max_iter)
+            return MLPRegressor(max_iter=max_iter, hidden_layer_sizes=layer_structure)
         elif opt["type"] == "ada_boost":
             return MultiOutputRegressor(AdaBoostRegressor(base_estimator=b_est, n_estimators=n_estimators))
         elif opt["type"] in ["extra_tree", "extra"]:

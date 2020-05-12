@@ -33,7 +33,7 @@ def up_pyramid(input_layer, name, kernel=(5, 5), clf="b_rf", depth=5, repeat=1, 
     return x1
 
 
-def u_layer(input_layer, name, kernel=(5, 5), clf="b_rf", depth=5, repeat=1, clf_options=None):
+def u_layer(input_layer: object, name: object, kernel: object = (5, 5), clf: object = "b_rf", depth: object = 5, repeat: object = 1, clf_options: object = None) -> object:
     x1 = input_layer
 
     for d in range(depth):

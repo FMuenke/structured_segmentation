@@ -2,7 +2,9 @@ import os
 from utils.utils import check_n_make_dir, load_dict
 
 from structured_classifier.decision_layer import DecisionLayer
+from structured_classifier.decision_3d_layer import Decision3DLayer
 from structured_classifier.input_layer import InputLayer
+from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
@@ -53,8 +55,22 @@ class Model:
             layer.load(model_folder)
             return layer
 
+        if opt["layer_type"] == "DECISION3D_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = Decision3DLayer(prev_layer, opt["name"], opt["kernel"], opt["kernel_shape"], opt["down_scale"])
+            layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
+            return layer
+
         if opt["layer_type"] == "INPUT_LAYER":
             layer = InputLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"],
+                               initial_down_scale=opt["down_scale"])
+            layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
+            return layer
+
+        if opt["layer_type"] == "INPUT3D_LAYER":
+            layer = Input3DLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"],
                                initial_down_scale=opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
@@ -74,7 +90,7 @@ class Model:
 
         if opt["layer_type"] == "SHAPE_REFINEMENT_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = ShapeRefinementLayer(prev_layer, opt["name"], shape=opt["shape"], down_scale=opt["down_scale"])
+            layer = ShapeRefinementLayer(prev_layer, opt["name"], shape=opt["shape"], global_kernel=opt["global_kernel"])
             layer.load(model_folder)
             layer.set_index(int(opt["index"]))
             return layer
