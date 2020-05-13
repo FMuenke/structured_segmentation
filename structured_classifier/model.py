@@ -9,6 +9,7 @@ from structured_classifier.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
+from structured_classifier.voting_3d_layer import Voting3DLayer
 
 
 class Model:
@@ -98,6 +99,12 @@ class Model:
         if opt["layer_type"] == "BOTTLE_NECK_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = BottleNeckLayer(prev_layer, opt["name"])
+            layer.set_index(int(opt["index"]))
+            return layer
+
+        if opt["layer_type"] == "VOTING3D_Layer":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = Voting3DLayer(prev_layer, opt["name"])
             layer.set_index(int(opt["index"]))
             return layer
 

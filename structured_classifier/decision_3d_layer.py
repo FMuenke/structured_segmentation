@@ -54,7 +54,9 @@ class Decision3DLayer:
         self.data_reduction = data_reduction
 
         k_t, k_x, k_y = kernel
-        self.time_range = k_t
+        self.time_range = int(k_t / 2)
+        if self.time_range < 1:
+            self.time_range = 1
         s_element = self.make_s_element(kernel, kernel_shape)
         self.look_ups = []
         for i in range(k_x):
