@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 from skimage.measure import regionprops
 from skimage.draw import ellipse
-from skimage.transform import rotate
 
 
 class Ellipse:

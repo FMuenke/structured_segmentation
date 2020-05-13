@@ -10,6 +10,7 @@ from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
+from structured_classifier.voting_layer import VotingLayer
 
 
 class Model:
@@ -72,7 +73,7 @@ class Model:
 
         if opt["layer_type"] == "INPUT3D_LAYER":
             layer = Input3DLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"],
-                               initial_down_scale=opt["down_scale"])
+                                 initial_down_scale=opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer
@@ -105,6 +106,12 @@ class Model:
         if opt["layer_type"] == "VOTING3D_Layer":
             prev_layer = self.load_previous_layers(model_folder)
             layer = Voting3DLayer(prev_layer, opt["name"])
+            layer.set_index(int(opt["index"]))
+            return layer
+
+        if opt["layer_type"] == "VOTING_Layer":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = VotingLayer(prev_layer, opt["name"])
             layer.set_index(int(opt["index"]))
             return layer
 

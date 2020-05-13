@@ -10,7 +10,7 @@ from structured_classifier.voting_3d_layer import Voting3DLayer
 
 from utils import parameter_grid as pg
 
-from base_elements.base_structures import u_layer_3d
+from elements.base_structures import u_layer_3d
 
 from utils.utils import save_dict
 
@@ -43,24 +43,17 @@ def main(args_):
 
     x1 = Input3DLayer("input_1", ["gray-color"], width=150)
     x2 = Input3DLayer("input_2", ["gray-color"], width=150)
-    x3 = Input3DLayer("input_3", ["gray-color"], width=150)
 
-    x1 = Decision3DLayer(INPUTS=x1, name="d1", kernel=(10, 1, 1), kernel_shape="ellipse")
-    x1 = u_layer_3d(x1, "u_structure", kernel=(2, 3, 3), depth=4)
+    x1 = Decision3DLayer(INPUTS=x1, name="d1", kernel=(11, 1, 1), kernel_shape="ellipse")
+    x1 = Decision3DLayer(INPUTS=x1, name="d2", kernel=(5, 3, 3), kernel_shape="ellipse", down_scale=1)
+    x1 = Decision3DLayer(INPUTS=x1, name="d3", kernel=(1, 3, 3), kernel_shape="ellipse", down_scale=2)
+
+    x2 = u_layer_3d(x2, "u_structure", kernel=(1, 3, 3), depth=3)
+
+    x3 = Decision3DLayer(INPUTS=[x1, x2], name="m1", kernel=(1, 1, 1), kernel_shape="ellipse")
 
 
-    x2 = Decision3DLayer(INPUTS=x2,
-                         name="d2",
-                         kernel=(1, 3, 3),
-                         kernel_shape="ellipse",
-                         clf=clf,
-                         clf_options={"n_estimators": 100},
-                         down_scale=1,
-                         )
-    x3 = Decision3DLayer(INPUTS=x3, name="d3", kernel=(4, 2, 2), kernel_shape="ellipse", clf=clf)
-
-    x = Voting3DLayer(INPUTS=[x1, x2, x3], name="votes")
-    model = Model(graph=x1)
+    model = Model(graph=x3)
 
     d_set = VideoSet(df, color_coding)
     tag_set = d_set.load()

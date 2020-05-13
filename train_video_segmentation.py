@@ -11,7 +11,7 @@ from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 
-from base_elements.base_structures import u_layer, up_pyramid, down_pyramid
+from elements.base_structures import u_layer, up_pyramid, down_pyramid
 
 from utils import parameter_grid as pg
 
