@@ -11,6 +11,8 @@ from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 
+from elements.graph_structures import RandomStructuredRandomForrest
+
 from elements.base_structures import u_layer, up_pyramid, down_pyramid
 
 from utils import parameter_grid as pg
@@ -23,12 +25,12 @@ def main(args_):
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
-        "heart": [[4, 4, 4], [0, 255, 0]],
+        # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "shadow": [[1, 1, 1], [255, 0, 0]],
-        # "filled_crack": [[2, 2, 2], [0, 255, 0]],
+        "shadow": [[1, 1, 1], [255, 0, 0]],
+        "filled_crack": [[2, 2, 2], [0, 255, 0]],
     }
 
     randomized_split = False
@@ -44,25 +46,23 @@ def main(args_):
         "max_iter": 10000000
     }
 
-    x1 = InputLayer("input_1", ["gray-color"], width=150)
+    x1 = InputLayer("input_1", ["hsv-color"], initial_down_scale=2)
 
-    # x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
+    x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
+
+    rf = RandomStructuredRandomForrest(n_estimators=100,
+                                       max_kernel_sum=10,
+                                       max_down_scale=6,
+                                       clf="lr",
+                                       norm_input="normalize_mean")
+    x1 = rf.build(initial_down_scale=2)
     # x1 = u_layer(x1, "u_structure", kernel=(5, 5), depth=5)
-    # x1 = BottleNeckLayer(x1, name="b1")
-    s1 = ShapeRefinementLayer(INPUTS=x1,
-                              name="s1",
-                              global_kernel=(15, 15),
-                              shape="rectangle",
-                              clf="extra",
-                              clf_options=clf_opt)
-
-    s1 = u_layer(s1, "u_structure", kernel=(5, 5), depth=5)
 
     # x1 = u_layer(x1, "u_s_clf_1", depth=4, repeat=1, kernel=(5, 5), clf=clf, clf_options=clf_opt)
 
     # x12 = u_layer(x1, "u_s_clf_2", depth=3, repeat=1, kernel=(3, 3), clf="b_rf", clf_options=clf_opt)
 
-    f1 = DecisionLayer(INPUTS=s1,
+    a1 = DecisionLayer(INPUTS=x1,
                        name="final_decision",
                        kernel=(5, 5),
                        kernel_shape="ellipse",
@@ -71,7 +71,7 @@ def main(args_):
                        down_scale=1,
                        )
 
-    model = Model(graph=s1)
+    model = Model(graph=x1)
 
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()

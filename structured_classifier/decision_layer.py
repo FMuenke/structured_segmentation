@@ -56,13 +56,12 @@ class DecisionLayer:
         k_x, k_y = kernel
         s_element = self.make_s_element(kernel, kernel_shape)
         self.look_ups = []
-        if kernel is not None:
-            for i in range(k_x):
-                for j in range(k_y):
-                    if s_element[j, i] == 1:
-                        look = np.zeros((k_y, k_x, 1))
-                        look[j, i, 0] = 1
-                        self.look_ups.append(look)
+        for i in range(k_y):
+            for j in range(k_x):
+                if s_element[j, i] == 1:
+                    look = np.zeros((k_x, k_y, 1))
+                    look[j, i, 0] = 1
+                    self.look_ups.append(look)
 
     def make_s_element(self, kernel, kernel_shape):
         k_x, k_y = kernel
