@@ -58,11 +58,13 @@ class Decision3DLayer:
         if self.time_range < 1:
             self.time_range = 1
         s_element = self.make_s_element(kernel, kernel_shape)
+        print(s_element)
+        print(s_element.shape)
         self.look_ups = []
-        for i in range(k_x):
-            for j in range(k_y):
+        for i in range(k_y):
+            for j in range(k_x):
                 if s_element[j, i] == 1:
-                    look = np.zeros((k_y, k_x, 1))
+                    look = np.zeros((k_x, k_y, 1))
                     look[j, i, 0] = 1
                     self.look_ups.append(look)
 

@@ -8,6 +8,7 @@ from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.voting_layer import VotingLayer
+from structured_classifier.normalization_layer import NormalizationLayer
 
 
 class RandomStructuredRandomForrest3D:
@@ -51,10 +52,18 @@ class RandomStructuredRandomForrest3D:
 
 
 class RandomStructuredRandomForrest:
-    def __init__(self, n_estimators, max_kernel_sum, max_down_scale, clf="b_rf", clf_options=None, data_reduction=3):
+    def __init__(self,
+                 n_estimators,
+                 max_kernel_sum,
+                 max_down_scale,
+                 norm_input=None,
+                 clf="b_rf",
+                 clf_options=None,
+                 data_reduction=3):
         self.n_estimators = n_estimators
         self.max_kernel_sum = max_kernel_sum
         self.max_down_scale = max_down_scale
+        self.norm_input = norm_input
         self.data_reduction = data_reduction
 
         self.clf = clf
@@ -67,10 +76,13 @@ class RandomStructuredRandomForrest:
                                  features_to_use=["gray-color"],
                                  width=width, height=height,
                                  initial_down_scale=initial_down_scale)
-            k_y = np.random.randint(self.max_kernel_sum)
-            k_x = np.random.randint(self.max_kernel_sum - k_y)
+            if self.norm_input is not None:
+                tree_in = NormalizationLayer(INPUTS=tree_in,
+                                             name="norm_tree_{}".format(i),
+                                             norm_option=self.norm_input)
+            k_y = np.random.randint(self.max_kernel_sum) + 1
+            k_x = np.random.randint(self.max_kernel_sum - k_y + 1) + 1
             k = (k_y, k_x)
-            print(k)
             if type(self.clf) is list:
                 clf = np.random.choice(self.clf)
             else:

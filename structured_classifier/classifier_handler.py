@@ -111,7 +111,7 @@ class ClassifierHandler:
             return LogisticRegression(class_weight='balanced')
         elif opt["type"] == "sgd":
             return SGDClassifier(class_weight='balanced')
-        elif opt["type"] in ["gaussian_bayes", "bayes"]:
+        elif opt["type"] in ["gaussian_bayes", "bayes", "gaussian_nb"]:
             return GaussianNB()
         elif opt["type"] in ["support_vector_machine", "svm"]:
             return SVC(kernel='rbf', class_weight='balanced', gamma="scale")
