@@ -33,7 +33,7 @@ class Decision3DLayer:
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
-        self.max_num_samples = 500000
+        self.max_num_samples = 250000
 
         self.opt = {
             "name": self.name,
@@ -54,9 +54,12 @@ class Decision3DLayer:
         self.data_reduction = data_reduction
 
         k_t, k_x, k_y = kernel
-        self.time_range = int(k_t / 2)
-        if self.time_range < 1:
-            self.time_range = 1
+
+        self.time_range = []
+        m = int(k_t / 2)
+        for i in range(k_t):
+            self.time_range.append(int(i-m))
+
         s_element = self.make_s_element(kernel, kernel_shape)
         self.look_ups = []
         for i in range(k_x):
@@ -126,8 +129,8 @@ class Decision3DLayer:
     def get_features(self, tag_3d):
         x = []
         for p in self.previous:
-            for t in range(0, 2*self.time_range):
-                f_tag3d = tag_3d.get_offset_frame(t-self.time_range)
+            for t in self.time_range:
+                f_tag3d = tag_3d.get_offset_frame(t)
                 x_p = p.inference(f_tag3d, interpolation="cubic")
                 if len(x_p.shape) < 3:
                     x_p = np.expand_dims(x_p, axis=2)

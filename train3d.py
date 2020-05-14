@@ -44,13 +44,13 @@ def main(args_):
     x1 = Input3DLayer("input_1", ["gray-color"], width=150)
     x2 = Input3DLayer("input_2", ["gray-color"], width=150)
 
-    x1 = Decision3DLayer(INPUTS=x1, name="d1", kernel=(11, 1, 1), kernel_shape="ellipse")
-    x1 = Decision3DLayer(INPUTS=x1, name="d2", kernel=(5, 3, 3), kernel_shape="ellipse", down_scale=1)
-    x1 = Decision3DLayer(INPUTS=x1, name="d3", kernel=(1, 3, 3), kernel_shape="ellipse", down_scale=2)
+    x1 = Decision3DLayer(INPUTS=x1, name="d1", kernel=(9, 1, 1), kernel_shape="ellipse", data_reduction=4)
+    x1 = Decision3DLayer(INPUTS=x1, name="d2", kernel=(5, 2, 2), kernel_shape="ellipse", down_scale=1, data_reduction=4)
+    x1 = Decision3DLayer(INPUTS=x1, name="d3", kernel=(1, 3, 3), kernel_shape="ellipse", down_scale=2, data_reduction=4)
 
-    x2 = u_layer_3d(x2, "u_structure", kernel=(1, 3, 3), depth=3)
+    # x2 = u_layer_3d(x2, "u_structure", kernel=(1, 3, 3), depth=1)
 
-    x3 = Decision3DLayer(INPUTS=[x1, x2], name="m1", kernel=(1, 1, 1), kernel_shape="ellipse")
+    x3 = Decision3DLayer(INPUTS=x1, name="m1", kernel=(1, 5, 5), kernel_shape="ellipse", down_scale=1)
 
 
     model = Model(graph=x3)
