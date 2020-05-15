@@ -12,9 +12,17 @@ from structured_classifier.normalization_layer import NormalizationLayer
 
 
 class RandomStructuredRandomForrest3D:
-    def __init__(self, n_estimators, max_kernel_sum, max_down_scale, clf="b_rf", clf_options=None, data_reduction=3):
+    def __init__(self,
+                 n_estimators,
+                 max_depth=1,
+                 max_kernel_sum=25,
+                 max_down_scale=6,
+                 clf="b_rf",
+                 clf_options=None,
+                 data_reduction=3):
         self.n_estimators = n_estimators
         self.max_kernel_sum = max_kernel_sum
+        self.max_depth = max_depth
         self.max_down_scale = max_down_scale
         self.data_reduction = data_reduction
 
@@ -24,25 +32,26 @@ class RandomStructuredRandomForrest3D:
     def build(self, width=None, height=None, initial_down_scale=None, include_voting=True):
         trees = []
         for i in range(self.n_estimators):
-            tree_in = Input3DLayer(name="input_tree_{}".format(i),
-                                   features_to_use=["gray-color"],
-                                   width=width, height=height,
-                                   initial_down_scale=initial_down_scale)
-            k_t = np.random.randint(self.max_kernel_sum)
-            k_y = np.random.randint(self.max_kernel_sum - k_t)
-            k_x = np.random.randint(self.max_kernel_sum - k_t - k_y)
-            k = (k_t, k_y, k_x)
-            print(k)
-            if type(self.clf) is list:
-                clf = np.random.choice(self.clf)
-            else:
-                clf = self.clf
-            d = np.random.randint(self.max_down_scale)
-            tree = Decision3DLayer(INPUTS=tree_in,
-                                   name="tree_{}".format(i),
-                                   kernel=k, kernel_shape="ellipse",
-                                   down_scale=d, data_reduction=self.data_reduction,
-                                   clf=clf, clf_options=self.clf_options)
+            tree = Input3DLayer(name="input_tree_{}".format(i),
+                                features_to_use=["gray-color"],
+                                width=width, height=height,
+                                initial_down_scale=initial_down_scale)
+
+            for ii in range(self.max_depth):
+                k_y = np.random.randint(self.max_kernel_sum) + 1
+                k_x = np.random.randint(int(self.max_kernel_sum / k_y)) + 1
+                k_t = np.random.randint(int(self.max_kernel_sum / k_y / k_x)) + 1
+                k = (k_t, k_y, k_x)
+                if type(self.clf) is list:
+                    clf = np.random.choice(self.clf)
+                else:
+                    clf = self.clf
+                d = np.random.randint(self.max_down_scale)
+                tree = Decision3DLayer(INPUTS=tree,
+                                       name="tree_{}_{}".format(i, ii),
+                                       kernel=k, kernel_shape="ellipse",
+                                       down_scale=d, data_reduction=self.data_reduction,
+                                       clf=clf, clf_options=self.clf_options)
 
             trees.append(tree)
 
@@ -53,16 +62,20 @@ class RandomStructuredRandomForrest3D:
 
 class RandomStructuredRandomForrest:
     def __init__(self,
-                 n_estimators,
-                 max_kernel_sum,
-                 max_down_scale,
+                 n_estimators=20,
+                 max_depth=1,
+                 max_kernel_sum=25,
+                 max_down_scale=6,
+                 features_to_use="gray-color",
                  norm_input=None,
                  clf="b_rf",
                  clf_options=None,
                  data_reduction=3):
         self.n_estimators = n_estimators
+        self.max_depth = max_depth
         self.max_kernel_sum = max_kernel_sum
         self.max_down_scale = max_down_scale
+        self.features_to_use = features_to_use
         self.norm_input = norm_input
         self.data_reduction = data_reduction
 
@@ -72,27 +85,34 @@ class RandomStructuredRandomForrest:
     def build(self, width=None, height=None, initial_down_scale=None, include_voting=True):
         trees = []
         for i in range(self.n_estimators):
-            tree_in = InputLayer(name="input_tree_{}".format(i),
-                                 features_to_use=["gray-color"],
-                                 width=width, height=height,
-                                 initial_down_scale=initial_down_scale)
-            if self.norm_input is not None:
-                tree_in = NormalizationLayer(INPUTS=tree_in,
-                                             name="norm_tree_{}".format(i),
-                                             norm_option=self.norm_input)
-            k_y = np.random.randint(self.max_kernel_sum) + 1
-            k_x = np.random.randint(self.max_kernel_sum - k_y + 1) + 1
-            k = (k_y, k_x)
-            if type(self.clf) is list:
-                clf = np.random.choice(self.clf)
+            if type(self.features_to_use) is list:
+                features_to_use = np.random.choice(self.features_to_use)
             else:
-                clf = self.clf
-            d = np.random.randint(self.max_down_scale)
-            tree = DecisionLayer(INPUTS=tree_in,
-                                 name="tree_{}".format(i),
-                                 kernel=k, kernel_shape="ellipse",
-                                 down_scale=d, data_reduction=self.data_reduction,
-                                 clf=clf, clf_options=self.clf_options)
+                features_to_use = self.features_to_use
+            tree = InputLayer(name="input_tree_{}".format(i),
+                              features_to_use=features_to_use,
+                              width=width, height=height,
+                              initial_down_scale=initial_down_scale)
+
+            if self.norm_input is not None:
+                tree = NormalizationLayer(INPUTS=tree,
+                                          name="norm_tree_{}".format(i),
+                                          norm_option=self.norm_input)
+
+            for ii in range(self.max_depth):
+                k_y = max(np.random.randint(self.max_kernel_sum), 1)
+                k_x = int(self.max_kernel_sum - k_y)
+                k = (k_y, k_x)
+                if type(self.clf) is list:
+                    clf = np.random.choice(self.clf)
+                else:
+                    clf = self.clf
+                d = np.random.randint(self.max_down_scale)
+                tree = DecisionLayer(INPUTS=tree,
+                                     name="tree_{}_{}".format(i, ii),
+                                     kernel=k, kernel_shape="ellipse",
+                                     down_scale=d, data_reduction=self.data_reduction,
+                                     clf=clf, clf_options=self.clf_options)
 
             trees.append(tree)
 

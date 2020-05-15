@@ -20,6 +20,11 @@ class VotingLayer:
             "layer_type": self.layer_type,
         }
 
+    def __str__(self):
+        s = ""
+        s += "{} - {}".format(self.layer_type, self.name)
+        return s
+
     def fit(self, train_tags, validation_tags):
         for p in self.previous:
             p.fit(train_tags, validation_tags)

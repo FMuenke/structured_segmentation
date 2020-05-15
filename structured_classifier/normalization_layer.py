@@ -22,7 +22,10 @@ class NormalizationLayer:
             "layer_type": self.layer_type,
             "norm_option": norm_option
         }
-        self.norm_option = norm_option
+        if type(norm_option) is list:
+            self.norm_option = norm_option
+        else:
+            self.norm_option = [norm_option]
 
     def __str__(self):
         s = ""
@@ -44,18 +47,41 @@ class NormalizationLayer:
             p.fit(train_tags, validation_tags)
 
     def inference(self, x_input, interpolation="nearest"):
+        for opt in self.norm_option:
+            x_input = self._inference(x_input, opt)
+        return x_input
+
+    def _inference(self, x_input, norm_option):
         x_img = self.get_features(x_input)
-        if self.norm_option == "normalize_and_standardize":
+        if norm_option == "normalize_and_standardize":
             return normalize_and_standardize(x_img)
-        if self.norm_option == "min_max_scaling":
+        if norm_option == "min_max_scaling":
             return normalize(x_img)
-        if self.norm_option == "normalize_media":
+        if norm_option == "normalize_media":
             median_mat = np.median(np.median(x_img, axis=0), axis=0)
             x_img = x_img - median_mat
             return x_img
-        if self.norm_option == "normalize_mean":
+        if norm_option == "normalize_mean":
             median_mat = np.mean(np.mean(x_img, axis=0), axis=0)
             x_img = x_img - median_mat
+            return x_img
+        if norm_option == "normalize_mean_y_axis":
+            median_mat = np.mean(x_img, axis=0)
+            x_img = np.add(x_img, median_mat)
+            return x_img
+
+        if norm_option == "normalize_mean_y_axis_mean":
+            median_mat = np.mean(np.mean(x_img, axis=0), axis=0)
+            x_img = x_img - median_mat
+            median_mat = np.mean(x_img, axis=0)
+            x_img = np.add(x_img, median_mat)
+            return x_img
+
+        if norm_option == "normalize_mean_axis":
+            median_mat_y = np.mean(x_img, axis=0)
+            median_mat_x = np.mean(x_img, axis=0)
+            x_img = np.add(x_img, np.multiply(median_mat_y, 0.5))
+            x_img = np.add(x_img, np.multiply(median_mat_x, 0.5))
             return x_img
         raise ValueError("Option: {} unknown".format(self.norm_option))
 

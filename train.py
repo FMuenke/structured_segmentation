@@ -30,7 +30,7 @@ def main(args_):
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         "shadow": [[1, 1, 1], [255, 0, 0]],
-        "filled_crack": [[2, 2, 2], [0, 255, 0]],
+        # "filled_crack": [[2, 2, 2], [0, 255, 0]],
     }
 
     randomized_split = False
@@ -39,37 +39,15 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "b_rf"
-    clf_opt = {
-        "n_estimators": 10,
-        "layer_structure": (800, 400, 200, 100, 50, 25,),
-        "max_iter": 10000000
-    }
-
-    x1 = InputLayer("input_1", ["hsv-color"], initial_down_scale=2)
-
-    x1 = NormalizationLayer(INPUTS=x1, name="norm_1", norm_option="normalize_mean")
-
-    rf = RandomStructuredRandomForrest(n_estimators=100,
-                                       max_kernel_sum=10,
+    rf = RandomStructuredRandomForrest(n_estimators=5,
+                                       max_depth=5,
+                                       max_kernel_sum=15,
                                        max_down_scale=6,
-                                       clf="lr",
-                                       norm_input="normalize_mean")
-    x1 = rf.build(initial_down_scale=2)
-    # x1 = u_layer(x1, "u_structure", kernel=(5, 5), depth=5)
-
-    # x1 = u_layer(x1, "u_s_clf_1", depth=4, repeat=1, kernel=(5, 5), clf=clf, clf_options=clf_opt)
-
-    # x12 = u_layer(x1, "u_s_clf_2", depth=3, repeat=1, kernel=(3, 3), clf="b_rf", clf_options=clf_opt)
-
-    a1 = DecisionLayer(INPUTS=x1,
-                       name="final_decision",
-                       kernel=(5, 5),
-                       kernel_shape="ellipse",
-                       clf=clf,
-                       clf_options={"n_estimators": 100},
-                       down_scale=1,
-                       )
+                                       features_to_use=["hsv-color"],
+                                       clf="b_rf",
+                                       clf_options={"n_estimators": 10},
+                                       norm_input=["normalize_mean_axis"])
+    x1 = rf.build(width=600)
 
     model = Model(graph=x1)
 

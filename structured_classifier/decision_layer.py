@@ -141,8 +141,8 @@ class DecisionLayer:
         return x, x_pass
 
     def get_x_y(self, tag_set, reduction_factor=0):
-        x = []
-        y = []
+        x = None
+        y = None
         n = 0
         for t in tqdm(tag_set):
             use_sample = True
@@ -171,11 +171,12 @@ class DecisionLayer:
 
                 n += x_img.shape[0]
                 # print(n)
-
-                x.append(x_img)
-                y.append(y_img)
-        x = np.concatenate(x, axis=0)
-        y = np.concatenate(y, axis=0)
+                if x is None:
+                    x = x_img
+                    y = y_img
+                else:
+                    x = np.append(x, x_img, axis=0)
+                    y = np.append(y, y_img, axis=0)
         return x, y
 
     def fit(self, train_tags, validation_tags):

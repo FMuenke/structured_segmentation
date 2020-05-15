@@ -93,6 +93,11 @@ class ClassifierHandler:
         else:
             n_estimators = 200
 
+        if "max_iter" in opt:
+            max_iter = opt["max_iter"]
+        else:
+            max_iter = 10000
+
         if "num_parallel_tree" in opt:
             num_parallel_tree = opt["num_parallel_tree"]
         else:
@@ -108,15 +113,15 @@ class ClassifierHandler:
         elif opt["type"] == "ada_boost":
             return AdaBoostClassifier(base_estimator=b_est, n_estimators=n_estimators)
         elif opt["type"] in ["logistic_regression", "lr"]:
-            return LogisticRegression(class_weight='balanced')
+            return LogisticRegression(class_weight='balanced', max_iter=max_iter)
         elif opt["type"] == "sgd":
-            return SGDClassifier(class_weight='balanced')
+            return SGDClassifier(class_weight='balanced', max_iter=max_iter)
         elif opt["type"] in ["gaussian_bayes", "bayes", "gaussian_nb"]:
             return GaussianNB()
         elif opt["type"] in ["support_vector_machine", "svm"]:
             return SVC(kernel='rbf', class_weight='balanced', gamma="scale")
         elif opt["type"] in ["multilayer_perceptron", "mlp"]:
-            return MLPClassifier(hidden_layer_sizes=layer_structure)
+            return MLPClassifier(hidden_layer_sizes=layer_structure, max_iter=max_iter)
         elif opt["type"] in ["decision_tree", "dt", "tree"]:
             return DecisionTreeClassifier()
         elif opt["type"] in ["b_decision_tree", "b_dt", "b_tree"]:
