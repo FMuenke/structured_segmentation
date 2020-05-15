@@ -42,12 +42,12 @@ def main(args_):
                                        norm_input=["normalize_mean_axis"])
     x1 = rf.build(width=600)
 
-    pb = PyramidBoosting(n_estimators=1,
-                         max_depth=5,
+    pb = PyramidBoosting(n_estimators=3,
+                         max_depth=3,
                          max_kernel_sum=5,
                          features_to_use="hsv-color",
                          norm_input="normalize_mean",
-                         clf="lr")
+                         clf="b_rf")
 
     x1 = pb.build(width=300)
 

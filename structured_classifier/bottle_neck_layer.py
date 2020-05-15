@@ -43,6 +43,10 @@ class BottleNeckLayer:
         x_img = self.get_features(x_input)
         return x_img
 
+    def predict(self, x_input, interpolation="nearest"):
+        x_img = self.get_features(x_input)
+        return x_img
+
     def save(self, model_path):
         model_path = os.path.join(model_path, self.layer_type + "-" + self.name)
         check_n_make_dir(model_path)

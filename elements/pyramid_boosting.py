@@ -52,16 +52,13 @@ class PyramidBoosting:
 
         for d in range(self.max_depth):
             x1 = DecisionLayer(INPUTS=x1,
-                               name="{}_up_{}".format(name, self.max_depth - d - 1),
+                               name="{}_stage_{}".format(name, self.max_depth - d - 1),
                                kernel=kernel,
                                kernel_shape="ellipse",
                                down_scale=self.max_depth - d - 1,
                                clf=self.clf,
                                clf_options=self.clf_options,
                                data_reduction=self.data_reduction)
-
-        x1 = BottleNeckLayer(INPUTS=x1, name="reduction_{}".format(name))
-
         return x1
 
 
