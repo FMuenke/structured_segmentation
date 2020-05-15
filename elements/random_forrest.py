@@ -4,11 +4,13 @@ import numpy as np
 from structured_classifier.decision_3d_layer import Decision3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
+from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
 
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer
+from structured_classifier.bottle_neck_layer import BottleNeckLayer
 
 
 class RandomStructuredRandomForrest3D:
@@ -29,7 +31,7 @@ class RandomStructuredRandomForrest3D:
         self.clf = clf
         self.clf_options = clf_options
 
-    def build(self, width=None, height=None, initial_down_scale=None, include_voting=True):
+    def build(self, width=None, height=None, initial_down_scale=None, output_option="voting"):
         trees = []
         for i in range(self.n_estimators):
             tree = Input3DLayer(name="input_tree_{}".format(i),
@@ -55,8 +57,11 @@ class RandomStructuredRandomForrest3D:
 
             trees.append(tree)
 
-        if include_voting:
+        if output_option == "voting":
             return Voting3DLayer(INPUTS=trees, name="voting")
+        elif output_option == "boosting":
+            b = BottleNeck3DLayer(INPUTS=trees, name="cls_preparation")
+            return Decision3DLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
         return trees
 
 
@@ -82,7 +87,7 @@ class RandomStructuredRandomForrest:
         self.clf = clf
         self.clf_options = clf_options
 
-    def build(self, width=None, height=None, initial_down_scale=None, include_voting=True):
+    def build(self, width=None, height=None, initial_down_scale=None, output_option="voting"):
         trees = []
         for i in range(self.n_estimators):
             if type(self.features_to_use) is list:
@@ -116,6 +121,9 @@ class RandomStructuredRandomForrest:
 
             trees.append(tree)
 
-        if include_voting:
+        if output_option == "voting":
             return VotingLayer(INPUTS=trees, name="voting")
+        elif output_option == "boosting":
+            b = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
+            return DecisionLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
         return trees

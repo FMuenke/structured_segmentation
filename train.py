@@ -4,14 +4,8 @@ import os
 from data_structure.segmentation_data_set import SegmentationDataSet
 from structured_classifier.model import Model
 
-from structured_classifier.decision_layer import DecisionLayer
-from structured_classifier.input_layer import InputLayer
-from structured_classifier.global_context_layer import GlobalContextLayer
-from structured_classifier.normalization_layer import NormalizationLayer
-from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
-from structured_classifier.bottle_neck_layer import BottleNeckLayer
-
-from elements.graph_structures import RandomStructuredRandomForrest
+from elements.random_forrest import RandomStructuredRandomForrest
+from elements.pyramid_boosting import PyramidBoosting
 
 from elements.base_structures import u_layer, up_pyramid, down_pyramid
 
@@ -39,15 +33,23 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    rf = RandomStructuredRandomForrest(n_estimators=5,
-                                       max_depth=5,
+    rf = RandomStructuredRandomForrest(n_estimators=10,
+                                       max_depth=2,
                                        max_kernel_sum=15,
                                        max_down_scale=6,
                                        features_to_use=["hsv-color"],
-                                       clf="b_rf",
-                                       clf_options={"n_estimators": 10},
+                                       clf="lr",
                                        norm_input=["normalize_mean_axis"])
     x1 = rf.build(width=600)
+
+    pb = PyramidBoosting(n_estimators=1,
+                         max_depth=5,
+                         max_kernel_sum=5,
+                         features_to_use="hsv-color",
+                         norm_input="normalize_mean",
+                         clf="lr")
+
+    x1 = pb.build(width=300)
 
     model = Model(graph=x1)
 
