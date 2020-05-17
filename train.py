@@ -27,7 +27,7 @@ def main(args_):
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
     }
 
-    randomized_split = False
+    randomized_split = True
     train_test_ratio = 0.20
 
     df = args_.dataset_folder
@@ -47,9 +47,9 @@ def main(args_):
                          max_kernel_sum=5,
                          features_to_use="hsv-color",
                          norm_input="normalize_mean",
-                         clf="b_rf")
+                         clf="sgd")
 
-    x1 = pb.build(width=300)
+    x1 = pb.build(initial_down_scale=2)
 
     model = Model(graph=x1)
 

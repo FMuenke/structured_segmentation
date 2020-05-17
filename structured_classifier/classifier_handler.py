@@ -1,5 +1,6 @@
 import os
 import joblib
+import numpy as np
 from time import time
 
 from xgboost import XGBClassifier
@@ -64,7 +65,12 @@ class ClassifierHandler:
         return self.classifier.predict(x)
 
     def predict_proba(self, x):
-        return self.classifier.predict_proba(x)
+        if hasattr(self.classifier, "predict_proba"):
+            prob_pos = self.classifier.predict_proba(x)
+        else:  # use decision function
+            prob_pos = self.classifier.predict(x)
+            prob_pos = np.expand_dims(prob_pos, axis=1)
+        return prob_pos
 
     def evaluate(self, x_test, y_test, save_path=None):
         print("Predicting on the test set")
