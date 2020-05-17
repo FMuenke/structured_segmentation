@@ -43,6 +43,9 @@ class BottleNeckLayer:
         x_img = self.get_features(x_input)
         return x_img
 
+    def load(self, model_folder):
+        pass
+
     def predict(self, x_input, interpolation="nearest"):
         x_img = self.get_features(x_input)
         return x_img
