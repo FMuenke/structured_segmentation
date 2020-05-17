@@ -84,7 +84,7 @@ class ClassifierHandler:
 
     def _init_classifier(self, opt):
         if "base_estimator" in opt:
-            b_est = self._init_classifier({"classifier_opt": opt["base_estimator"]})
+            b_est = self._init_classifier(opt["base_estimator"])
         else:
             b_est = None
 
