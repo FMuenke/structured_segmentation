@@ -124,8 +124,8 @@ class ShapeRefinementLayer:
         return x
 
     def get_x_y(self, tag_set, reduction_factor=0, augment=0):
-        x = []
-        y = []
+        x = None
+        y = None
         for t in tqdm(tag_set):
             use_sample = True
             if reduction_factor > 1:
@@ -144,16 +144,22 @@ class ShapeRefinementLayer:
                         x_img_a, y_img_a = augment_tag(x_img, y_img)
                         x_img_a = self.transform_features(x_img_a)
                         y_img_a = self.label_map_to_shape_parameters(y_img_a)
-                        x.append(x_img_a)
-                        y.append(y_img_a)
+                        if x is None:
+                            x = x_img_a
+                            y = y_img_a
+                        else:
+                            x = np.append(x, x_img_a, axis=0)
+                            y = np.append(y, y_img_a, axis=0)
 
                 x_img_a = self.transform_features(x_img)
                 y_img_a = self.label_map_to_shape_parameters(y_img)
 
-                x.append(x_img_a)
-                y.append(y_img_a)
-        x = np.concatenate(x, axis=0)
-        y = np.concatenate(y, axis=0)
+                if x is None:
+                    x = x_img_a
+                    y = y_img_a
+                else:
+                    x = np.append(x, x_img_a, axis=0)
+                    y = np.append(y, y_img_a, axis=0)
         return x, y
 
     def fit(self, train_tags, validation_tags):

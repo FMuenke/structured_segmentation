@@ -8,6 +8,10 @@ from elements.random_forrest import RandomStructuredRandomForrest
 from elements.pyramid_boosting import PyramidBoosting
 from elements.encoder_decoder import EncoderDecoder
 
+from structured_classifier.input_layer import InputLayer
+from structured_classifier.decision_layer import DecisionLayer
+from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
+
 from elements.base_structures import u_layer, up_pyramid, down_pyramid
 
 from utils import parameter_grid as pg
@@ -17,7 +21,8 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        "street_sign": [[155, 155, 155], [0, 255, 0]]
+        "ellipse": [[200, 0, 0], [0, 255, 255]]
+        # "street_sign": [[155, 155, 155], [0, 255, 0]]
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
@@ -35,36 +40,11 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    rf = RandomStructuredRandomForrest(n_estimators=10,
-                                       max_depth=2,
-                                       max_kernel_sum=15,
-                                       max_down_scale=6,
-                                       features_to_use=["hsv-color"],
-                                       norm_input="normalize_mean",
-                                       clf="lr")
+    x = InputLayer(name="in", features_to_use="gray-color")
+    # x = DecisionLayer(INPUTS=x, name="dec_1", kernel=(20, 20), kernel_shape="cross", down_scale=2, clf="lr")
+    x = ShapeRefinementLayer(INPUTS=x, name="shape", shape="rectangle")
 
-    x_rf = rf.build(width=300, output_option="voting")
-
-    pb = PyramidBoosting(n_estimators=3,
-                         max_depth=3,
-                         max_kernel_sum=5,
-                         features_to_use="hsv-color",
-                         norm_input="normalize_mean",
-                         clf="sgd")
-
-    x_pb = pb.build(width=256)
-
-    ed = EncoderDecoder(depth=1,
-                        repeat=1,
-                        max_kernel_sum=10,
-                        features_to_use="opponent-color",
-                        norm_input="normalize_mean",
-                        clf="b_bagging",
-                        clf_options={"n_estimators": 10, "base_estimator": {"type": "gaussian_nb"}})
-
-    x_ed = ed.build(width=300)
-
-    model = Model(graph=x_ed)
+    model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()
