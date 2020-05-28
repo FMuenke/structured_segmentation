@@ -21,7 +21,9 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        "ellipse": [[200, 0, 0], [0, 255, 255]]
+        "js": [[1, 1, 1], [255, 0, 0]]
+        # "cr": [[255, 255, 255], [255, 0, 0]]
+        # "ellipse": [[200, 0, 0], [0, 255, 255]]
         # "street_sign": [[155, 155, 155], [0, 255, 0]]
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
@@ -40,9 +42,8 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    x = InputLayer(name="in", features_to_use="gray-color")
-    # x = DecisionLayer(INPUTS=x, name="dec_1", kernel=(20, 20), kernel_shape="cross", down_scale=2, clf="lr")
-    x = ShapeRefinementLayer(INPUTS=x, name="shape", shape="rectangle")
+    ed = EncoderDecoder(features_to_use=["gray-frangi-filter"], data_reduction=3)
+    x = ed.build(initial_down_scale=1)
 
     model = Model(graph=x)
 

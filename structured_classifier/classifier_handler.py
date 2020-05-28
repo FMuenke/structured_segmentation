@@ -102,7 +102,7 @@ class ClassifierHandler:
         if "max_iter" in opt:
             max_iter = opt["max_iter"]
         else:
-            max_iter = 10000
+            max_iter = 100000
 
         if "num_parallel_tree" in opt:
             num_parallel_tree = opt["num_parallel_tree"]

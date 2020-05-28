@@ -138,6 +138,9 @@ class DecisionLayer:
             new_height = 2
         x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
         x = self.get_kernel(x)
+        x = x.astype(np.float32)
+        x[np.isnan(x)] = 0
+        x[np.isinf(x)] = 0
         return x, x_pass
 
     def get_x_y(self, tag_set, reduction_factor=0):
@@ -177,6 +180,9 @@ class DecisionLayer:
                 else:
                     x = np.append(x, x_img, axis=0)
                     y = np.append(y, y_img, axis=0)
+        x = x.astype(np.float32)
+        x[np.isnan(x)] = 0
+        x[np.isinf(x)] = 0
         return x, y
 
     def fit(self, train_tags, validation_tags):

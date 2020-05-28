@@ -4,6 +4,7 @@ import os
 from features.color_space import ColorSpace
 from features.local_binary_pattern import LocalBinaryPattern
 from features.leung_malik import LeungMalik
+from features.filter_operators import FilterOperator
 
 from utils.utils import check_n_make_dir, save_dict
 
@@ -90,6 +91,11 @@ class InputLayer:
                 color_space, descriptor_type = f_type.split("-")
                 lm = LeungMalik(color_space=color_space)
                 f = lm.compute(image)
+                tensors.append(f)
+            if "filter" in f_type:
+                color_space, filter_type, descriptor_type = f_type.split("-")
+                fo = FilterOperator(color_space=color_space, filter_name=filter_type)
+                f = fo.compute(image)
                 tensors.append(f)
         data = np.concatenate(tensors, axis=2)
         return data
