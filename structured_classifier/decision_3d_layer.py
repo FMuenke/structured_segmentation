@@ -133,7 +133,7 @@ class Decision3DLayer:
         for p in self.previous:
             for t in self.time_range:
                 f_tag3d = tag_3d.get_offset_frame(t)
-                x_p = p.inference(f_tag3d, interpolation="cubic")
+                x_p = p.inference(f_tag3d, interpolation="linear")
                 if len(x_p.shape) < 3:
                     x_p = np.expand_dims(x_p, axis=2)
                 x.append(x_p)

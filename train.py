@@ -42,8 +42,8 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    ed = EncoderDecoder(features_to_use=["gray-frangi-filter"], data_reduction=3)
-    x = ed.build(initial_down_scale=1)
+    ed = EncoderDecoder(features_to_use=["gray-color"], data_reduction=3, depth=2)
+    x = ed.build(initial_down_scale=2)
 
     model = Model(graph=x)
 

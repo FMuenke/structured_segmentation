@@ -13,13 +13,9 @@ from data_structure.stats_handler import StatsHandler
 def convert_cls_to_color(cls_map, color_coding):
     h, w = cls_map.shape[:2]
     color_map = np.zeros((h, w, 3))
-    clmp = dict()
     for idx, cls in enumerate(color_coding):
-        clmp[idx + 1] = cls
-    for x in range(w):
-        for y in range(h):
-            if int(cls_map[y, x]) in clmp:
-                color_map[y, x, :] = color_coding[clmp[int(cls_map[y, x])]][1]
+        iy, ix = np.where(cls_map == idx + 1)
+        color_map[iy, ix, :] = color_coding[cls][1]
     return color_map
 
 
