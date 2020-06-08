@@ -23,8 +23,8 @@ class Ellipse:
             prop["minor_axis_length"] = 0
             return prop
         centroid = regions[0].centroid
-        prop["cy"] = centroid[0] / height
-        prop["cx"] = centroid[1] / width
+        prop["cy"] = centroid[0] / height - 0.5
+        prop["cx"] = centroid[1] / width - 0.5
         prop["orientation"] = regions[0].orientation
         min_row, min_col, max_row, max_col = regions[0].bbox
         prop["height"] = (max_row - min_row) / height
@@ -54,8 +54,8 @@ class Ellipse:
         label_map = np.zeros((height, width, 1))
         dia = np.sqrt(height ** 2 + width ** 2)
         orientation = parameters[4]
-        cy = parameters[0] * height
-        cx = parameters[1] * width
+        cy = (parameters[0] + 0.5) * height
+        cx = (parameters[1] + 0.5) * width
         axis_0_length = parameters[2] * height / np.cos(-orientation)
         axis_1_length = parameters[3] * width / np.cos(np.pi - orientation)
         major_axis_length = max(axis_1_length, axis_0_length)
