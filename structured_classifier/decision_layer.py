@@ -123,7 +123,7 @@ class DecisionLayer:
     def get_features(self, x_input):
         x = []
         for p in self.previous:
-            x_p = p.inference(x_input, interpolation="cubic")
+            x_p = p.inference(x_input, interpolation="linear")
             if len(x_p.shape) < 3:
                 x_p = np.expand_dims(x_p, axis=2)
             x.append(x_p)

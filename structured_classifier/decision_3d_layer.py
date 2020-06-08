@@ -61,24 +61,23 @@ class Decision3DLayer:
             self.time_range.append(int(i-m))
 
         s_element = self.make_s_element(kernel, kernel_shape)
-        print(s_element)
-        print(s_element.shape)
         self.look_ups = []
-        for i in range(k_y):
-            for j in range(k_x):
+        for i in range(k_x):
+            for j in range(k_y):
                 if s_element[j, i] == 1:
-                    look = np.zeros((k_x, k_y, 1))
+                    look = np.zeros((k_y, k_x, 1))
                     look[j, i, 0] = 1
                     self.look_ups.append(look)
 
     def make_s_element(self, kernel, kernel_shape):
         k_t, k_x, k_y = kernel
+        print(kernel)
         if kernel_shape == "square":
             return np.ones((k_y, k_x))
         if kernel_shape == "ellipse":
-            return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_y, k_x))
+            return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_x, k_y))
         if kernel_shape == "cross":
-            return cv2.getStructuringElement(cv2.MORPH_CROSS, (k_y, k_x))
+            return cv2.getStructuringElement(cv2.MORPH_CROSS, (k_x, k_y))
         raise ValueError("Kernel-Shape option: {} not known".format(kernel_shape))
 
     def __str__(self):
@@ -133,7 +132,7 @@ class Decision3DLayer:
         for p in self.previous:
             for t in self.time_range:
                 f_tag3d = tag_3d.get_offset_frame(t)
-                x_p = p.inference(f_tag3d, interpolation="cubic")
+                x_p = p.inference(f_tag3d, interpolation="linear")
                 if len(x_p.shape) < 3:
                     x_p = np.expand_dims(x_p, axis=2)
                 x.append(x_p)

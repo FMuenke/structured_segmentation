@@ -88,12 +88,12 @@ class ImageHandler:
         return np.concatenate([O1, O2, O3], axis=2)
 
     def rgb(self):
-        B = self.image[:, :, 0]
-        G = self.image[:, :, 1]
-        R = self.image[:, :, 2]
-        r = np.divide(R, (R + G + B))
-        g = np.divide(G, (R + G + B))
-        b = np.divide(B, (R + G + B))
+        B = self.image[:, :, 0].astype(np.float)
+        G = self.image[:, :, 1].astype(np.float)
+        R = self.image[:, :, 2].astype(np.float)
+        r = np.divide(R, (R + G + B + 1e-5))
+        g = np.divide(G, (R + G + B + 1e-5))
+        b = np.divide(B, (R + G + B + 1e-5))
         r = np.expand_dims(r, axis=2)
         b = np.expand_dims(b, axis=2)
         g = np.expand_dims(g, axis=2)

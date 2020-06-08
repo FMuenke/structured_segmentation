@@ -57,7 +57,7 @@ class NormalizationLayer:
             return normalize_and_standardize(x_img)
         if norm_option == "min_max_scaling":
             return normalize(x_img)
-        if norm_option == "normalize_media":
+        if norm_option == "normalize_median":
             median_mat = np.median(np.median(x_img, axis=0), axis=0)
             x_img = x_img - median_mat
             return x_img

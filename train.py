@@ -21,12 +21,12 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        "js": [[1, 1, 1], [255, 0, 0]]
+        # "js": [[1, 1, 1], [255, 0, 0]]
         # "cr": [[255, 255, 255], [255, 0, 0]]
         # "ellipse": [[200, 0, 0], [0, 255, 255]]
         # "street_sign": [[155, 155, 155], [0, 255, 0]]
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
-        # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
+        "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
@@ -42,8 +42,11 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    ed = EncoderDecoder(depth=3, features_to_use=["gray-color", "gray-frangi-filter"], data_reduction=3)
-    x = ed.build(initial_down_scale=2)
+    ed = EncoderDecoder(features_to_use=["hsv-color"],
+                        data_reduction=3,
+                        norm_input="normalize_mean",
+                        depth=3)
+    x = ed.build(initial_down_scale=1)
 
     model = Model(graph=x)
 

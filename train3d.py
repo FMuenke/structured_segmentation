@@ -8,6 +8,9 @@ from structured_classifier.decision_3d_layer import Decision3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 
+from elements.random_forrest import RandomStructuredRandomForrest3D
+from elements.pyramid_boosting import PyramidBoosting3D
+
 from utils import parameter_grid as pg
 
 from elements.base_structures import u_layer_3d
@@ -41,19 +44,13 @@ def main(args_):
         "max_iter": 10000000
     }
 
-    x1 = Input3DLayer("input_1", ["gray-color"], width=150)
-    x2 = Input3DLayer("input_2", ["gray-color"], width=150)
+    # rf = RandomStructuredRandomForrest3D(n_estimators=100, max_down_scale=3, max_depth=2)
+    # x = rf.build(initial_down_scale=1)
 
-    x1 = Decision3DLayer(INPUTS=x1, name="d1", kernel=(9, 1, 1), kernel_shape="ellipse", data_reduction=4)
-    x1 = Decision3DLayer(INPUTS=x1, name="d2", kernel=(5, 2, 2), kernel_shape="ellipse", down_scale=1, data_reduction=4)
-    x1 = Decision3DLayer(INPUTS=x1, name="d3", kernel=(1, 3, 3), kernel_shape="ellipse", down_scale=2, data_reduction=4)
+    pb = PyramidBoosting3D(n_estimators=1, max_depth=2, max_kernel_sum=5)
+    x = pb.build(initial_down_scale=2)
 
-    # x2 = u_layer_3d(x2, "u_structure", kernel=(1, 3, 3), depth=1)
-
-    x3 = Decision3DLayer(INPUTS=x1, name="m1", kernel=(1, 5, 5), kernel_shape="ellipse", down_scale=1)
-
-
-    model = Model(graph=x3)
+    model = Model(graph=x)
 
     d_set = VideoSet(df, color_coding)
     tag_set = d_set.load()

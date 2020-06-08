@@ -40,9 +40,9 @@ class RandomStructuredRandomForrest3D:
                                 initial_down_scale=initial_down_scale)
 
             for ii in range(self.max_depth):
-                k_y = np.random.randint(self.max_kernel_sum) + 1
-                k_x = np.random.randint(int(self.max_kernel_sum / k_y)) + 1
-                k_t = np.random.randint(int(self.max_kernel_sum / k_y / k_x)) + 1
+                k_t = max(np.random.randint(self.max_kernel_sum), 1)
+                k_x = max(np.random.randint(self.max_kernel_sum - k_t), 1)
+                k_y = max(int(self.max_kernel_sum - k_t - k_x), 1)
                 k = (k_t, k_y, k_x)
                 if type(self.clf) is list:
                     clf = np.random.choice(self.clf)
