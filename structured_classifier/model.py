@@ -11,6 +11,7 @@ from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.voting_layer import VotingLayer
+from structured_classifier.super_pixel_layer import SuperPixelLayer
 
 
 class Model:
@@ -112,6 +113,12 @@ class Model:
         if opt["layer_type"] == "VOTING_Layer":
             prev_layer = self.load_previous_layers(model_folder)
             layer = VotingLayer(prev_layer, opt["name"])
+            layer.set_index(int(opt["index"]))
+            return layer
+
+        if opt["layer_type"] == "SUPER_PIXEL_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = SuperPixelLayer(prev_layer, opt["name"], super_pixel_method=opt["super_pixel_method"])
             layer.set_index(int(opt["index"]))
             return layer
 

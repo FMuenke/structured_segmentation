@@ -9,6 +9,7 @@ from elements.pyramid_boosting import PyramidBoosting
 from elements.encoder_decoder import EncoderDecoder
 
 from structured_classifier.input_layer import InputLayer
+from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 
@@ -25,8 +26,8 @@ def main(args_):
         # "cr": [[255, 255, 255], [255, 0, 0]]
         # "ellipse": [[200, 0, 0], [0, 255, 255]]
         # "street_sign": [[155, 155, 155], [0, 255, 0]]
-        # "man_hole": [[1, 1, 1], [0, 255, 0]],
-        "crack_cluster": [[1, 1, 1], [255, 255, 0]],
+        "man_hole": [[1, 1, 1], [0, 255, 0]],
+        # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
@@ -47,6 +48,9 @@ def main(args_):
                         norm_input="normalize_mean",
                         depth=3)
     x = ed.build(initial_down_scale=1)
+
+    x = InputLayer(name="in", features_to_use=["hsv-color", "gray-lbp"])
+    x = SuperPixelLayer(INPUTS=x, name="sp", super_pixel_method="slic")
 
     model = Model(graph=x)
 
