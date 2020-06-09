@@ -71,7 +71,6 @@ class Decision3DLayer:
 
     def make_s_element(self, kernel, kernel_shape):
         k_t, k_x, k_y = kernel
-        print(kernel)
         if kernel_shape == "square":
             return np.ones((k_y, k_x))
         if kernel_shape == "ellipse":

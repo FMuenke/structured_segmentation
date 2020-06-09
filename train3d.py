@@ -47,7 +47,7 @@ def main(args_):
     # rf = RandomStructuredRandomForrest3D(n_estimators=100, max_down_scale=3, max_depth=2)
     # x = rf.build(initial_down_scale=1)
 
-    pb = PyramidBoosting3D(n_estimators=1, max_depth=2, max_kernel_sum=5)
+    pb = PyramidBoosting3D(n_estimators=1, max_depth=3, max_kernel_sum=5, data_reduction=6)
     x = pb.build(initial_down_scale=2)
 
     model = Model(graph=x)
