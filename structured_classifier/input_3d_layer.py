@@ -48,6 +48,7 @@ class Input3DLayer:
 
     def inference(self, tag_3d, interpolation="nearest"):
         image = tag_3d.load_x(neighbours=0)
+        assert image is not None, "Image Data is None - {} -".format(tag_3d)
         if self.height is not None and self.width is not None:
             image = cv2.resize(image, (self.width, self.height), interpolation=cv2.INTER_CUBIC)
 

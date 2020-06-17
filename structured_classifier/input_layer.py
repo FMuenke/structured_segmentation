@@ -5,6 +5,7 @@ from features.color_space import ColorSpace
 from features.local_binary_pattern import LocalBinaryPattern
 from features.leung_malik import LeungMalik
 from features.filter_operators import FilterOperator
+from features.histogram_of_oriented_gradients import HistogramOfOrientedGradients
 
 from utils.utils import check_n_make_dir, save_dict
 
@@ -95,6 +96,11 @@ class InputLayer:
             if "filter" in f_type:
                 color_space, filter_type, descriptor_type = f_type.split("-")
                 fo = FilterOperator(color_space=color_space, filter_name=filter_type)
+                f = fo.compute(image)
+                tensors.append(f)
+            if "hog" in f_type:
+                color_space, descriptor_type = f_type.split("-")
+                fo = HistogramOfOrientedGradients(color_space=color_space)
                 f = fo.compute(image)
                 tensors.append(f)
         data = np.concatenate(tensors, axis=2)

@@ -9,9 +9,11 @@ from structured_classifier.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
+from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
+from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
 
 
 class Model:
@@ -104,6 +106,12 @@ class Model:
             layer.set_index(int(opt["index"]))
             return layer
 
+        if opt["layer_type"] == "BOTTLE_NECK3D_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = BottleNeck3DLayer(prev_layer, opt["name"])
+            layer.set_index(int(opt["index"]))
+            return layer
+
         if opt["layer_type"] == "VOTING3D_Layer":
             prev_layer = self.load_previous_layers(model_folder)
             layer = Voting3DLayer(prev_layer, opt["name"])
@@ -118,12 +126,25 @@ class Model:
 
         if opt["layer_type"] == "SUPER_PIXEL_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = SuperPixelLayer(prev_layer, opt["name"], super_pixel_method=opt["super_pixel_method"])
+            layer = SuperPixelLayer(prev_layer, opt["name"],
+                                    super_pixel_method=opt["super_pixel_method"],
+                                    option=opt["option"])
             layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
+            return layer
+
+        if opt["layer_type"] == "SUPER_PIXEL_3D_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = SuperPixel3DLayer(prev_layer, opt["name"],
+                                      time_range=opt["time_range"],
+                                      super_pixel_method=opt["super_pixel_method"],
+                                      option=opt["option"])
+            layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
             return layer
 
         print(opt)
-        raise ValueError("Layer not recognised!")
+        raise ValueError("Layer: {} not recognised!".format(opt["layer_type"]))
 
     def load_previous_layers(self, model_folder):
         p_layer = []

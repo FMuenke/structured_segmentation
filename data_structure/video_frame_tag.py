@@ -11,13 +11,19 @@ class VideoFrameTag:
         self.frame_no = frame_no
         self.color_coding = color_coding
 
+    def __str__(self):
+        return "Tag: VideoID: {} - FrameNo.: {}".format(self.video.id, self.frame_no)
+
     def get_offset_frame(self, offset):
         return VideoFrameTag(video=self.video, frame_no=self.frame_no+offset, color_coding=self.color_coding)
 
     def load_x(self, neighbours=5, offset=0):
         frame_no = self.frame_no + offset
         if neighbours == 0:
-            return self.video.get_frame_of_index(frame_no)
+            data = self.video.get_frame_of_index(frame_no)
+            if data is None:
+                print(frame_no)
+            return data
 
         x = []
         xc = self.video.get_frame_of_index(frame_no)

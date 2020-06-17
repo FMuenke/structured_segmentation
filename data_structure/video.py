@@ -26,6 +26,10 @@ class Video:
         self.regions_of_interest = self._register_regions_of_interest()
         self.segmentation = self._register_segmentation()
 
+        self.frame_height, self.frame_width = 100, 100
+        frame = self.get_frame_of_index(1)
+        self.frame_height, self.frame_width = frame.shape[:2]
+
     def __len__(self):
         return self.num_of_frames
 
@@ -137,11 +141,14 @@ class Video:
             return None
 
     def get_frame_of_index(self, idx, roi_only=False):
+        empty_frame = np.zeros((self.frame_height, self.frame_width, 3))
         if 0 < idx < self.num_of_frames:
             cap = cv2.VideoCapture(self.data_path)
             cap.set(cv2.CAP_PROP_POS_FRAMES, idx-1)
             ret, frame = cap.read()
             cap.release()
+            if frame is None:
+                frame = empty_frame
             if not roi_only:
                 return frame
             if str(idx) in self.regions_of_interest:
@@ -149,11 +156,12 @@ class Video:
                 height, width = frame.shape[:2]
                 return frame[int(roi[1]*height):int(roi[3]*height), int(roi[0]*width):int(roi[2]*width), :]
             else:
-                return None
+                return empty_frame
         else:
-            return None
+            return empty_frame
 
     def get_label_map_of_index(self, idx, obj_type="4", roi_only=False):
+        empty_label_map = np.zeros((self.frame_height, self.frame_width, 3))
         if 0 < idx < self.num_of_frames:
             label_map_path = self.get_label_files_of_index(idx)
             if label_map_path is not None:

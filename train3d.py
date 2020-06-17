@@ -7,6 +7,7 @@ from structured_classifier.model import Model
 from structured_classifier.decision_3d_layer import Decision3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
+from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
 
 from elements.random_forrest import RandomStructuredRandomForrest3D
 from elements.pyramid_boosting import PyramidBoosting3D
@@ -37,18 +38,24 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "rf"
-    clf_opt = {
-        "n_estimators": 10,
-        "layer_structure": (800, 400, 200, 100, 50, 25,),
-        "max_iter": 10000000
-    }
+    rf = RandomStructuredRandomForrest3D(n_estimators=75, features_to_use="gray-lbp",
+                                         max_down_scale=5, max_depth=1, clf="tree")
+    x = rf.build(width=300, output_option="boosting")
 
-    # rf = RandomStructuredRandomForrest3D(n_estimators=100, max_down_scale=3, max_depth=2)
-    # x = rf.build(initial_down_scale=1)
+    # pb = PyramidBoosting3D(n_estimators=3, max_depth=1, max_kernel_sum=5, data_reduction=6, features_to_use="gray-lbp")
+    # x = pb.build(width=300)
 
-    pb = PyramidBoosting3D(n_estimators=1, max_depth=3, max_kernel_sum=5, data_reduction=6)
-    x = pb.build(initial_down_scale=2)
+    # x_in = Input3DLayer(name="in", features_to_use="gray-lbp", width=300)
+    # x1 = SuperPixel3DLayer(INPUTS=x_in, name="sp1", time_range=5, super_pixel_method="slic", option=200)
+    # x2 = SuperPixel3DLayer(INPUTS=x_in, name="sp2", time_range=11, super_pixel_method="slic", option=50)
+    # x3 = SuperPixel3DLayer(INPUTS=x_in, name="sp3", time_range=7, super_pixel_method="slic", option=100)
+    # x = SuperPixel3DLayer(INPUTS=x, name="sp2", time_range=11, super_pixel_method="slic", option=100)
+    # x = SuperPixel3DLayer(INPUTS=x, name="sp3", time_range= 5, super_pixel_method="slic", option= 50)
+    # x = Decision3DLayer(INPUTS=[x1, x2, x3], kernel=(15, 3, 3), name="dl-1", down_scale=0, data_reduction=3)
+    # x = Decision3DLayer(INPUTS=x, kernel=(1, 5, 5), name="dl-2", down_scale=2, data_reduction=3)
+    # x = Decision3DLayer(INPUTS=x, kernel=(1, 5, 5), name="dl-3", down_scale=3, data_reduction=3)
+    # x = Decision3DLayer(INPUTS=x, kernel=(1, 5, 5), name="dl-4", down_scale=2, data_reduction=3)
+    # x = Decision3DLayer(INPUTS=x, kernel=(1, 3, 3), name="dl-5", down_scale=0)
 
     model = Model(graph=x)
 

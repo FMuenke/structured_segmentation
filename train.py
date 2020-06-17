@@ -26,10 +26,10 @@ def main(args_):
         # "cr": [[255, 255, 255], [255, 0, 0]]
         # "ellipse": [[200, 0, 0], [0, 255, 255]]
         # "street_sign": [[155, 155, 155], [0, 255, 0]]
-        "man_hole": [[1, 1, 1], [0, 255, 0]],
+        # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
-        # "heart": [[4, 4, 4], [0, 255, 0]],
+        "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
@@ -43,14 +43,11 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    ed = EncoderDecoder(features_to_use=["hsv-color"],
-                        data_reduction=3,
-                        norm_input="normalize_mean",
-                        depth=3)
-    x = ed.build(initial_down_scale=1)
-
-    x = InputLayer(name="in", features_to_use=["hsv-color", "gray-lbp"])
-    x = SuperPixelLayer(INPUTS=x, name="sp", super_pixel_method="slic")
+    x = InputLayer(name="in", features_to_use=["gray-lbp"], width=300)
+    x = SuperPixelLayer(INPUTS=x, name="sp0", super_pixel_method="slic", option=100)
+    x = SuperPixelLayer(INPUTS=x, name="sp1", super_pixel_method="slic", option=50)
+    x = SuperPixelLayer(INPUTS=x, name="sp2", super_pixel_method="slic", option=100)
+    x = DecisionLayer(INPUTS=x, name="final")
 
     model = Model(graph=x)
 

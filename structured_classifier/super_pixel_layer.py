@@ -1,4 +1,3 @@
-import cv2
 import os
 import numpy as np
 from tqdm import tqdm
@@ -6,7 +5,6 @@ from skimage.segmentation import felzenszwalb, slic, quickshift, watershed
 from skimage.color import rgb2gray
 from skimage.filters import sobel
 from skimage.util import img_as_float
-from sklearn.preprocessing import normalize
 
 
 from structured_classifier.classifier_handler import ClassifierHandler
@@ -21,7 +19,7 @@ class SuperPixelLayer:
                  INPUTS,
                  name,
                  super_pixel_method,
-                 down_scale=0,
+                 option,
                  clf="b_rf",
                  clf_options=None,
                  param_grid=None,
@@ -36,16 +34,13 @@ class SuperPixelLayer:
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
-        self.max_num_samples = 500000
 
         self.opt = {
             "name": self.name,
             "layer_type": self.layer_type,
             "super_pixel_method": super_pixel_method,
-            "down_scale": down_scale
+            "option": option
         }
-
-        self.down_scale = down_scale
         if clf_options is None:
             clf_options = {"type": clf}
         else:
@@ -56,7 +51,11 @@ class SuperPixelLayer:
         self.data_reduction = data_reduction
 
     def __str__(self):
-        return "{} - {} - {} - DownScale: {} - SP: {}".format(self.layer_type, self.name, self.clf, self.down_scale, self.opt["super_pixel_method"])
+        return "{} - {} - {} - SP: {} - {}".format(self.layer_type,
+                                                   self.name,
+                                                   self.clf,
+                                                   self.opt["super_pixel_method"],
+                                                   self.opt["option"])
 
     def get_features_for_segments(self, tensor, segments):
         if len(tensor.shape) < 3:
@@ -64,24 +63,20 @@ class SuperPixelLayer:
         h, w, num_f = tensor.shape
         x_img = []
         segments = resize(segments, width=w, height=h)
-        for f in range(num_f):
-            tensor[:, :, f] = normalize(tensor[:, :, f], norm='max')
+
+        f_tensor = np.reshape(tensor, (w*h, num_f))
+        f_segments = np.reshape(segments, (w*h))
 
         for u in np.unique(segments):
-            x_seg = []
-            for f in range(num_f):
-                f_tensor = tensor[:, :, f].astype(np.float)
-
-                x_seg_f_m = np.array([
-                    np.mean(f_tensor[segments == u]),
-                    np.std(f_tensor[segments == u]),
-                    np.sum(f_tensor[segments == u]),
-                ])
-                x_seg_f_h, _ = np.histogram(f_tensor[segments == u], bins=32, range=[0, 1])
-                x_seg.append(x_seg_f_m)
-                x_seg.append(x_seg_f_h)
-
-            x_seg = np.concatenate(x_seg, axis=0)
+            ids = np.where(f_segments == u)[0]
+            u_val = f_tensor[ids, :]
+            x_seg = np.array([
+                np.mean(u_val, axis=0),
+                np.std(u_val, axis=0),
+                np.sum(u_val, axis=0),
+                np.percentile(u_val, 0.75, axis=0),
+                np.percentile(u_val, 0.25, axis=0),
+            ])
             x_seg = np.reshape(x_seg, (1, -1))
             x_img.append(x_seg)
         x_img = np.concatenate(x_img, axis=0)
@@ -105,14 +100,14 @@ class SuperPixelLayer:
     def generate_segments(self, x_input):
         img = img_as_float(x_input[::2, ::2])
         if "felzenszwalb" in self.opt["super_pixel_method"]:
-            segments = felzenszwalb(img, scale=100, sigma=0.5, min_size=50)
+            segments = felzenszwalb(img, scale=self.opt["option"], sigma=0.5, min_size=50)
         elif "slic" in self.opt["super_pixel_method"]:
-            segments = slic(img, n_segments=250, compactness=10, sigma=1, start_label=1)
+            segments = slic(img, n_segments=self.opt["option"], compactness=10, sigma=1, start_label=1)
         elif "quickshift" in self.opt["super_pixel_method"]:
-            segments = quickshift(img, kernel_size=3, max_dist=6, ratio=0.5)
+            segments = quickshift(img, kernel_size=self.opt["option"], max_dist=6, ratio=0.5)
         elif "watershed" in self.opt["super_pixel_method"]:
             gradient = sobel(rgb2gray(img))
-            segments = watershed(gradient, markers=250, compactness=0.001)
+            segments = watershed(gradient, markers=self.opt["option"], compactness=0.001)
         else:
             raise ValueError("SuperPixel-Option: {} unknown!".format(self.opt["super_pixel_method"]))
         return segments
@@ -121,8 +116,10 @@ class SuperPixelLayer:
         segments = self.generate_segments(x_input)
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
+        x_height, x_width = x_img.shape[:2]
         x_img = self.get_features_for_segments(x_img, segments)
         y_pred = self.clf.predict(x_img)
+        segments = resize(segments, width=x_width, height=x_height, interpolation="nearest")
         y_img = self.map_segments(segments, y_pred)
         x_img_pass = resize(x_pass, width=o_width, height=o_height, interpolation="nearest")
         y_img = resize(y_img, width=o_width, height=o_height, interpolation=interpolation)
@@ -138,8 +135,10 @@ class SuperPixelLayer:
         segments = self.generate_segments(x_input)
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
+        x_height, x_width = x_img.shape[:2]
         x_img = self.get_features_for_segments(x_img, segments)
         y_img = self.clf.predict(x_img)
+        segments = resize(segments, width=x_width, height=x_height, interpolation="nearest")
         y_img = self.map_segments(segments, y_img)
         y_img = resize(y_img, width=o_width, height=o_height, interpolation="nearest")
         return y_img
@@ -153,14 +152,6 @@ class SuperPixelLayer:
             x.append(x_p)
         x = np.concatenate(x, axis=2)
         x_pass = np.copy(x)
-        o_height, o_width = x.shape[:2]
-        new_height = int(o_height / 2**self.down_scale)
-        new_width = int(o_width / 2 ** self.down_scale)
-        if new_width < 2:
-            new_width = 2
-        if new_height < 2:
-            new_height = 2
-        x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
         x = x.astype(np.float32)
         x[np.isnan(x)] = 0
         x[np.isinf(x)] = 0
@@ -179,10 +170,12 @@ class SuperPixelLayer:
                 x_img = t.load_x()
                 segments = self.generate_segments(x_img)
                 x_img, _ = self.get_features(x_img)
+                h_img, w_img = x_img.shape[:2]
                 x_img = self.get_features_for_segments(x_img, segments)
-                h_img, w_img = segments.shape[:2]
                 y_img = t.load_y([h_img, w_img])
                 y_img = self.get_y_for_segments(y_img, segments)
+                assert x_img.shape[0] == y_img.shape[0], "Not equal dimensions. [{} - {}]".format(
+                    x_img.shape, y_img.shape)
 
                 if x is None:
                     x = x_img
@@ -206,6 +199,7 @@ class SuperPixelLayer:
 
         n_samples_train, n_features = x_train.shape
         n_samples_val = x_val.shape[0]
+
         print("DataSet has {} Samples (Train: {} / Validation: {}) with {} features.".format(
             n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
         ))

@@ -19,9 +19,11 @@ class RandomStructuredRandomForrest3D:
                  max_depth=1,
                  max_kernel_sum=25,
                  max_down_scale=6,
+                 features_to_use="gray-color",
                  clf="b_rf",
                  clf_options=None,
                  data_reduction=3):
+        self.features_to_use = features_to_use
         self.n_estimators = n_estimators
         self.max_kernel_sum = max_kernel_sum
         self.max_depth = max_depth
@@ -35,7 +37,7 @@ class RandomStructuredRandomForrest3D:
         trees = []
         for i in range(self.n_estimators):
             tree = Input3DLayer(name="input_tree_{}".format(i),
-                                features_to_use=["gray-color"],
+                                features_to_use=self.features_to_use,
                                 width=width, height=height,
                                 initial_down_scale=initial_down_scale)
 
