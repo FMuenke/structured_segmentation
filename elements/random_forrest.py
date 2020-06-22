@@ -11,6 +11,7 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
+from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 
 
 class RandomStructuredRandomForrest3D:
@@ -22,6 +23,7 @@ class RandomStructuredRandomForrest3D:
                  features_to_use="gray-color",
                  clf="b_rf",
                  clf_options=None,
+                 kernel_shape="square",
                  data_reduction=3):
         self.features_to_use = features_to_use
         self.n_estimators = n_estimators
@@ -29,6 +31,7 @@ class RandomStructuredRandomForrest3D:
         self.max_depth = max_depth
         self.max_down_scale = max_down_scale
         self.data_reduction = data_reduction
+        self.kernel_shape = kernel_shape
 
         self.clf = clf
         self.clf_options = clf_options
@@ -53,7 +56,7 @@ class RandomStructuredRandomForrest3D:
                 d = np.random.randint(self.max_down_scale)
                 tree = Decision3DLayer(INPUTS=tree,
                                        name="tree_{}_{}".format(i, ii),
-                                       kernel=k, kernel_shape="ellipse",
+                                       kernel=k, kernel_shape=self.kernel_shape,
                                        down_scale=d, data_reduction=self.data_reduction,
                                        clf=clf, clf_options=self.clf_options)
 
@@ -76,6 +79,7 @@ class RandomStructuredRandomForrest:
                  features_to_use="gray-color",
                  norm_input=None,
                  clf="b_rf",
+                 kernel_shape="square",
                  clf_options=None,
                  data_reduction=3):
         self.n_estimators = n_estimators
@@ -84,6 +88,7 @@ class RandomStructuredRandomForrest:
         self.max_down_scale = max_down_scale
         self.features_to_use = features_to_use
         self.norm_input = norm_input
+        self.kernel_shape = kernel_shape
         self.data_reduction = data_reduction
 
         self.clf = clf
@@ -117,7 +122,7 @@ class RandomStructuredRandomForrest:
                 d = np.random.randint(self.max_down_scale)
                 tree = DecisionLayer(INPUTS=tree,
                                      name="tree_{}_{}".format(i, ii),
-                                     kernel=k, kernel_shape="ellipse",
+                                     kernel=k, kernel_shape=self.kernel_shape,
                                      down_scale=d, data_reduction=self.data_reduction,
                                      clf=clf, clf_options=self.clf_options)
 

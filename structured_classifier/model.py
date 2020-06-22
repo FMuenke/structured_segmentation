@@ -8,6 +8,7 @@ from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
+from structured_classifier.shape_refinement_3d_layer import ShapeRefinement3DLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
@@ -96,6 +97,13 @@ class Model:
         if opt["layer_type"] == "SHAPE_REFINEMENT_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = ShapeRefinementLayer(prev_layer, opt["name"], shape=opt["shape"], global_kernel=opt["global_kernel"])
+            layer.load(model_folder)
+            layer.set_index(int(opt["index"]))
+            return layer
+
+        if opt["layer_type"] == "SHAPE_REFINEMENT_3D_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = ShapeRefinement3DLayer(prev_layer, opt["name"], shape=opt["shape"], global_kernel=opt["global_kernel"])
             layer.load(model_folder)
             layer.set_index(int(opt["index"]))
             return layer

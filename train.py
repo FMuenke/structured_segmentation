@@ -43,11 +43,11 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    x = InputLayer(name="in", features_to_use=["gray-lbp"], width=300)
-    x = SuperPixelLayer(INPUTS=x, name="sp0", super_pixel_method="slic", option=100)
-    x = SuperPixelLayer(INPUTS=x, name="sp1", super_pixel_method="slic", option=50)
-    x = SuperPixelLayer(INPUTS=x, name="sp2", super_pixel_method="slic", option=100)
-    x = DecisionLayer(INPUTS=x, name="final")
+    rf = RandomStructuredRandomForrest(n_estimators=25, features_to_use="gray-lbp")
+    x = rf.build(width=300, output_option="shape")
+
+    # x = InputLayer(name="Input", features_to_use="gray-lbp", width=300)
+    x = ShapeRefinementLayer(INPUTS=x, name="sr", shape="ellipse")
 
     model = Model(graph=x)
 

@@ -10,14 +10,14 @@ from structured_classifier.layer_operations import resize, dropout, augment_tag
 from utils.utils import check_n_make_dir, save_dict
 
 
-class ShapeRefinementLayer:
-    layer_type = "SHAPE_REFINEMENT_LAYER"
+class ShapeRefinement3DLayer:
+    layer_type = "SHAPE_REFINEMENT_3D_LAYER"
 
     def __init__(self,
                  INPUTS,
                  name,
                  shape="ellipse",
-                 global_kernel=(20, 20),
+                 global_kernel=(21, 20, 20),
                  data_reduction=0,
                  clf="rf",
                  clf_options=None,
@@ -44,7 +44,14 @@ class ShapeRefinementLayer:
 
         self.shape = shape
 
-        self.global_kernel = global_kernel
+        k_t, k_x, k_y = global_kernel
+
+        self.time_range = []
+        m = int(k_t / 2)
+        for i in range(k_t):
+            self.time_range.append(int((i - m) * 3))
+
+        self.global_kernel = [k_x, k_y]
         if clf_options is None:
             clf_opt = {"type": clf}
         else:
@@ -57,8 +64,8 @@ class ShapeRefinementLayer:
     def __str__(self):
         return "{} - {} - {} - GlobalKernel: {}".format(self.layer_type, self.name, self.clf, self.global_kernel)
 
-    def inference(self, x_input, interpolation="nearest"):
-        x_img, x_pass = self.get_features(x_input)
+    def inference(self, tag_3d, interpolation="nearest"):
+        x_img, x_pass = self.get_features(tag_3d)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
         x_img = self.transform_features(x_img)
@@ -75,8 +82,8 @@ class ShapeRefinementLayer:
         y_img = np.concatenate([x_img_pass, y_img], axis=2)
         return y_img
 
-    def predict(self, x_input):
-        x_img, x_pass = self.get_features(x_input)
+    def predict(self, tag_3d):
+        x_img, x_pass = self.get_features(tag_3d)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
         x_img = self.transform_features(x_img)
@@ -85,13 +92,15 @@ class ShapeRefinementLayer:
         y_img = resize(y_img, width=o_width, height=o_height, interpolation="nearest")
         return y_img
 
-    def get_features(self, x_input):
+    def get_features(self, tag_3d):
         x = []
         for p in self.previous:
-            x_p = p.inference(x_input, interpolation="cubic")
-            if len(x_p.shape) < 3:
-                x_p = np.expand_dims(x_p, axis=2)
-            x.append(x_p)
+            for t in self.time_range:
+                f_tag3d = tag_3d.get_offset_frame(t)
+                x_p = p.inference(f_tag3d, interpolation="linear")
+                if len(x_p.shape) < 3:
+                    x_p = np.expand_dims(x_p, axis=2)
+                x.append(x_p)
         x = np.concatenate(x, axis=2)
         x_pass = np.copy(x)
         return x, x_pass
@@ -106,7 +115,7 @@ class ShapeRefinementLayer:
         return s.get_label_map(shape_parameters, height, width)
 
     def transform_features(self, x_img):
-        # height, width = x_img.shape[:2]
+        assert x_img.shape[2] < 512, "Too many features! - {} -".format(x_img.shape[2])
         x = resize(x_img, width=self.global_kernel[0], height=self.global_kernel[1], interpolation="linear")
         x = np.reshape(x, (1, -1))
         return x
@@ -121,9 +130,7 @@ class ShapeRefinementLayer:
                     use_sample = False
 
             if use_sample:
-
-                x_img = t.load_x()
-                x_img, _ = self.get_features(x_img)
+                x_img, _ = self.get_features(t)
                 h_img, w_img = x_img.shape[:2]
                 y_img = t.load_y([h_img, w_img])
 

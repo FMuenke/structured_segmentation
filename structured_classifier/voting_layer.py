@@ -53,8 +53,8 @@ class VotingLayer:
     def set_index(self, i):
         self.index = i
 
-    def inference(self, x_input):
-        pass
+    def inference(self, x_input, interpolation="nearest"):
+        return self.predict(x_input)
 
     def predict(self, x_input):
         x_img = self.get_features(x_input)
