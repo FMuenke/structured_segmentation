@@ -10,9 +10,15 @@ from utils.utils import load_dict
 from data_structure.stats_handler import StatsHandler
 
 
-def convert_cls_to_color(cls_map, color_coding):
+def convert_cls_to_color(cls_map, color_coding, unsupervised=False):
     h, w = cls_map.shape[:2]
     color_map = np.zeros((h, w, 3))
+    if unsupervised:
+        unique_y = np.unique(cls_map)
+        for u in unique_y:
+            if str(u) not in color_coding:
+                color_coding[str(u)] = [[0, 0, 0],
+                                        [np.random.randint(255), np.random.randint(255), np.random.randint(255)]]
     for idx, cls in enumerate(color_coding):
         iy, ix = np.where(cls_map == idx + 1)
         color_map[iy, ix, :] = color_coding[cls][1]
@@ -22,6 +28,7 @@ def convert_cls_to_color(cls_map, color_coding):
 def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
+    us = args_.unsupervised
 
     color_coding = load_dict(os.path.join(mf, "color_coding.json"))
 
@@ -41,9 +48,10 @@ def main(args_):
     print("Processing Images...")
     for tid in tqdm(t_set):
         cls_map = model.predict(t_set[tid].load_x())
-        color_map = convert_cls_to_color(cls_map, color_coding)
+        color_map = convert_cls_to_color(cls_map, color_coding, unsupervised=us)
         t_set[tid].write_result(res_fol.path(), color_map)
-        t_set[tid].eval(color_map, sh)
+        if not us:
+            t_set[tid].eval(color_map, sh)
         t_set[tid].visualize_result(vis_fol.path(), color_map)
 
     sh.eval()
@@ -61,6 +69,9 @@ def parse_args():
     )
     parser.add_argument(
         "--model_folder", "-m", default="./test", help="Path to model directory"
+    )
+    parser.add_argument(
+        "--unsupervised", "-unsup", type=bool, default=False, help="Path to model directory"
     )
     return parser.parse_args()
 

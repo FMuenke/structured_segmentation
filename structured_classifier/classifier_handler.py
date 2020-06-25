@@ -12,11 +12,14 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
+from sklearn.cluster import MiniBatchKMeans
+
 from imblearn.ensemble import BalancedRandomForestClassifier
 from imblearn.ensemble import BalancedBaggingClassifier
 from imblearn.ensemble import RUSBoostClassifier
 
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.utils.validation import check_is_fitted
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
@@ -62,6 +65,8 @@ class ClassifierHandler:
         self.classifier = searcher.best_estimator_
 
     def predict(self, x):
+        if self.opt["type"] == "kmeans":
+            x = x.astype(np.float32)
         return self.classifier.predict(x)
 
     def predict_proba(self, x):
@@ -114,6 +119,11 @@ class ClassifierHandler:
         else:
             layer_structure = (100,)
 
+        if "n_clusters" in opt:
+            n_clusters = opt["n_clusters"]
+        else:
+            n_clusters = 8
+
         if opt["type"] in ["random_forrest", "rf"]:
             return RandomForestClassifier(n_estimators=n_estimators, class_weight="balanced", n_jobs=-1)
         elif opt["type"] == "ada_boost":
@@ -149,6 +159,8 @@ class ClassifierHandler:
             return BalancedBaggingClassifier(base_estimator=b_est, n_estimators=n_estimators)
         elif opt["type"] == "b_boosting":
             return RUSBoostClassifier(base_estimator=b_est, n_estimators=n_estimators)
+        elif opt["type"] == "kmeans":
+            return MiniBatchKMeans(n_clusters=n_clusters)
         else:
             raise ValueError("type: {} not recognised".format(opt["type"]))
 
@@ -164,4 +176,10 @@ class ClassifierHandler:
         save_dict(self.opt, os.path.join(model_path, "{}_opt.json".format(name)))
         if self.classifier is not None:
             joblib.dump(self.classifier, os.path.join(model_path, "{}.pkl".format(name)))
+
+    def is_fitted(self):
+        if self.classifier is not None:
+            return check_is_fitted(self.classifier)
+        else:
+            return False
 

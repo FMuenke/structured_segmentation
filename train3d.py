@@ -8,14 +8,15 @@ from structured_classifier.decision_3d_layer import Decision3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
+from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
 from structured_classifier.shape_refinement_3d_layer import ShapeRefinement3DLayer
 
-from elements.random_forrest import RandomStructuredRandomForrest3D
-from elements.pyramid_boosting import PyramidBoosting3D
+from model.random_forrest import RandomStructuredRandomForrest3D
+from model.pyramid_boosting import PyramidBoosting3D
 
 from utils import parameter_grid as pg
 
-from elements.base_structures import u_layer_3d
+from model.base_structures import u_layer_3d
 
 from utils.utils import save_dict
 
@@ -49,6 +50,7 @@ def main(args_):
     # x = pb.build(width=300)
 
     # x_in = Input3DLayer(name="in", features_to_use="gray-lbp", width=300)
+    x = BottleNeck3DLayer(INPUTS=x, name="shape_bottlenet")
     x = ShapeRefinement3DLayer(INPUTS=x, global_kernel=(3, 9, 9), shape="ellipse", name="sr")
     # x1 = SuperPixel3DLayer(INPUTS=x_in, name="sp1", time_range=5, super_pixel_method="slic", option=200)
     # x2 = SuperPixel3DLayer(INPUTS=x_in, name="sp2", time_range=11, super_pixel_method="slic", option=50)

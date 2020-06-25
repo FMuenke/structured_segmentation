@@ -4,16 +4,17 @@ import os
 from data_structure.segmentation_data_set import SegmentationDataSet
 from structured_classifier.model import Model
 
-from elements.random_forrest import RandomStructuredRandomForrest
-from elements.pyramid_boosting import PyramidBoosting
-from elements.encoder_decoder import EncoderDecoder
+from model.random_forrest import RandomStructuredRandomForrest
+from model.pyramid_boosting import PyramidBoosting
+from model.encoder_decoder import EncoderDecoder
 
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
+from structured_classifier.normalization_layer import NormalizationLayer
 
-from elements.base_structures import u_layer, up_pyramid, down_pyramid
+from model.base_structures import u_layer, up_pyramid, down_pyramid
 
 from utils import parameter_grid as pg
 
@@ -22,19 +23,20 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        # "js": [[1, 1, 1], [255, 0, 0]]
-        # "cr": [[255, 255, 255], [255, 0, 0]]
-        # "ellipse": [[200, 0, 0], [0, 255, 255]]
-        # "street_sign": [[155, 155, 155], [0, 255, 0]]
+        # "js": [[1, 1, 1], [255, 255, 0]],
+        # "cr": [[255, 255, 255], [255, 0, 255]],
+        # "ellipse": [[200, 0, 0], [0, 255, 255]],
+        # "street_sign": [[155, 155, 155], [0, 255, 0]],
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
-        "heart": [[4, 4, 4], [0, 255, 0]],
+        # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "shadow": [[1, 1, 1], [255, 0, 0]],
+        "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
+        # "lines": [[1, 1, 1], [255, 0, 0]],
     }
 
     randomized_split = True
@@ -43,11 +45,17 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    rf = RandomStructuredRandomForrest(n_estimators=25, features_to_use="gray-lbp")
-    x = rf.build(width=300, output_option="shape")
+    rf = RandomStructuredRandomForrest(n_estimators=5, features_to_use="hsv-color", norm_input="normalize_mean",
+                                       tree_type=["slic", "watershed"])
+    x = rf.build(width=300, output_option="boosting")
 
-    # x = InputLayer(name="Input", features_to_use="gray-lbp", width=300)
-    x = ShapeRefinementLayer(INPUTS=x, name="sr", shape="ellipse")
+    # ed = EncoderDecoder(norm_input="normalize_mean", features_to_use="hsv-color", depth=3)
+    # x = ed.build(width=300)
+    # x = SuperPixelLayer(INPUTS=x, name="sp3", super_pixel_method="slic", down_scale=2, data_reduction=3)
+
+    # x = InputLayer(name="in", features_to_use="gray-lm", initial_down_scale=2)
+    # x = DecisionLayer(INPUTS=x, name="cls", kernel=(3, 3), clf="kmeans")
+    # x = SuperPixelLayer(name="sp", INPUTS=x, super_pixel_method="slic", down_scale=3, clf="kmeans")
 
     model = Model(graph=x)
 

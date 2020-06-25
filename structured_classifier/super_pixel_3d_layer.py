@@ -20,8 +20,8 @@ class SuperPixel3DLayer:
                  INPUTS,
                  name,
                  super_pixel_method,
-                 option,
-                 time_range,
+                 down_scale=0,
+                 time_range=3,
                  clf="b_rf",
                  clf_options=None,
                  param_grid=None,
@@ -46,7 +46,7 @@ class SuperPixel3DLayer:
             "name": self.name,
             "layer_type": self.layer_type,
             "super_pixel_method": super_pixel_method,
-            "option": option,
+            "down_scale": down_scale,
             "time_range": time_range,
         }
         if clf_options is None:
@@ -65,7 +65,7 @@ class SuperPixel3DLayer:
             self.clf,
             self.time_range,
             self.opt["super_pixel_method"],
-            self.opt["option"])
+            self.opt["down_scale"])
 
     def get_features_for_segments(self, tensor, segments):
         if len(tensor.shape) < 3:
@@ -110,14 +110,18 @@ class SuperPixel3DLayer:
     def generate_segments(self, x_input):
         img = img_as_float(x_input[::2, ::2])
         if "felzenszwalb" in self.opt["super_pixel_method"]:
-            segments = felzenszwalb(img, scale=self.opt["option"], sigma=0.5, min_size=50)
+            scale = 2 ** self.opt["down_scale"]
+            segments = felzenszwalb(img, scale=scale, sigma=0.5, min_size=50)
         elif "slic" in self.opt["super_pixel_method"]:
-            segments = slic(img, n_segments=self.opt["option"], compactness=10, sigma=1, start_label=1)
+            n_segments = 1024 / (self.opt["down_scale"] + 1)
+            segments = slic(img, n_segments=n_segments, compactness=10, sigma=1, start_label=1)
         elif "quickshift" in self.opt["super_pixel_method"]:
-            segments = quickshift(img, kernel_size=self.opt["option"], max_dist=6, ratio=0.5)
+            kernel_size = 5 * (2 ** self.opt["down_scale"])
+            segments = quickshift(img, kernel_size=kernel_size, max_dist=6, ratio=0.5)
         elif "watershed" in self.opt["super_pixel_method"]:
+            n_segments = 1024 / (self.opt["down_scale"] + 1)
             gradient = sobel(rgb2gray(img))
-            segments = watershed(gradient, markers=self.opt["option"], compactness=0.001)
+            segments = watershed(gradient, markers=n_segments, compactness=0.001)
         else:
             raise ValueError("SuperPixel-Option: {} unknown!".format(self.opt["super_pixel_method"]))
         return segments

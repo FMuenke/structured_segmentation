@@ -136,7 +136,7 @@ class Model:
             prev_layer = self.load_previous_layers(model_folder)
             layer = SuperPixelLayer(prev_layer, opt["name"],
                                     super_pixel_method=opt["super_pixel_method"],
-                                    option=opt["option"])
+                                    down_scale=opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer
@@ -146,7 +146,7 @@ class Model:
             layer = SuperPixel3DLayer(prev_layer, opt["name"],
                                       time_range=opt["time_range"],
                                       super_pixel_method=opt["super_pixel_method"],
-                                      option=opt["option"])
+                                      down_scale=opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer

@@ -4,9 +4,8 @@ from data_structure.image_handler import ImageHandler
 
 
 class ColorSpace:
-    def __init__(self, color_space, resolution=64):
+    def __init__(self, color_space):
         self.color_space = color_space
-        self.resolution = resolution
 
     def _prepare_image(self, image):
         img_h = ImageHandler(image)
