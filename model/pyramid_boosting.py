@@ -8,6 +8,8 @@ from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 
+from model.base_structures import get_decision_layer, get_decision_layer_3d
+
 
 class PyramidBoosting:
     def __init__(self,
@@ -15,6 +17,8 @@ class PyramidBoosting:
                  max_depth=5,
                  max_kernel_sum=5,
                  features_to_use="gray-color",
+                 decision_type="kernel",
+                 kernel_shape="square",
                  norm_input=None,
                  clf="b_rf",
                  clf_options=None,
@@ -24,6 +28,8 @@ class PyramidBoosting:
         self.max_kernel_sum = max_kernel_sum
         self.features_to_use = features_to_use
         self.norm_input = norm_input
+        self.kernel_shape = kernel_shape
+        self.decision_type = decision_type
 
         self.clf = clf
         self.clf_options = clf_options
@@ -51,14 +57,15 @@ class PyramidBoosting:
         kernel = (self.max_kernel_sum, self.max_kernel_sum)
 
         for d in range(self.max_depth):
-            x1 = DecisionLayer(INPUTS=x1,
-                               name="{}_stage_{}".format(name, self.max_depth - d - 1),
-                               kernel=kernel,
-                               kernel_shape="ellipse",
-                               down_scale=self.max_depth - d - 1,
-                               clf=self.clf,
-                               clf_options=self.clf_options,
-                               data_reduction=self.data_reduction)
+            x1 = get_decision_layer(INPUTS=x1,
+                                    name="{}_stage_{}".format(name, self.max_depth - d - 1),
+                                    decision_type=self.decision_type,
+                                    kernel=kernel,
+                                    kernel_shape=self.kernel_shape,
+                                    down_scale=self.max_depth - d - 1,
+                                    clf=self.clf,
+                                    clf_options=self.clf_options,
+                                    data_reduction=self.data_reduction)
         return x1
 
 
@@ -68,6 +75,8 @@ class PyramidBoosting3D:
                  max_depth=5,
                  max_kernel_sum=5,
                  features_to_use="gray-color",
+                 decision_type="kernel",
+                 kernel_shape="square",
                  norm_input=None,
                  clf="b_rf",
                  clf_options=None,
@@ -77,6 +86,8 @@ class PyramidBoosting3D:
         self.max_kernel_sum = max_kernel_sum
         self.features_to_use = features_to_use
         self.norm_input = norm_input
+        self.kernel_shape = kernel_shape
+        self.decision_type = decision_type
 
         self.clf = clf
         self.clf_options = clf_options
@@ -102,13 +113,14 @@ class PyramidBoosting3D:
         kernel = (self.max_kernel_sum, self.max_kernel_sum, self.max_kernel_sum)
 
         for d in range(self.max_depth):
-            x1 = Decision3DLayer(INPUTS=x1,
-                                 name="{}_stage_{}".format(name, self.max_depth - d - 1),
-                                 kernel=kernel,
-                                 kernel_shape="ellipse",
-                                 down_scale=self.max_depth - d - 1,
-                                 clf=self.clf,
-                                 clf_options=self.clf_options,
-                                 data_reduction=self.data_reduction)
+            x1 = get_decision_layer_3d(INPUTS=x1,
+                                       decision_type=self.decision_type,
+                                       name="{}_stage_{}".format(name, self.max_depth - d - 1),
+                                       kernel=kernel,
+                                       kernel_shape="ellipse",
+                                       down_scale=self.max_depth - d - 1,
+                                       clf=self.clf,
+                                       clf_options=self.clf_options,
+                                       data_reduction=self.data_reduction)
         return x1
 

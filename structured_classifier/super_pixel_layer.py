@@ -1,11 +1,8 @@
 import os
 import numpy as np
 from tqdm import tqdm
-from skimage.segmentation import felzenszwalb, slic, quickshift, watershed
-from skimage.color import rgb2gray
-from skimage.filters import sobel
-from skimage.util import img_as_float
 
+from utils.super_pixel import get_features_for_segments, generate_segments, map_segments, get_y_for_segments
 
 from structured_classifier.classifier_handler import ClassifierHandler
 from structured_classifier.layer_operations import resize
@@ -18,8 +15,9 @@ class SuperPixelLayer:
     def __init__(self,
                  INPUTS,
                  name,
-                 super_pixel_method,
+                 super_pixel_method="slic",
                  down_scale=0,
+                 feature_aggregation="quantiles",
                  clf="b_rf",
                  clf_options=None,
                  param_grid=None,
@@ -39,7 +37,8 @@ class SuperPixelLayer:
             "name": self.name,
             "layer_type": self.layer_type,
             "super_pixel_method": super_pixel_method,
-            "down_scale": down_scale
+            "down_scale": down_scale,
+            "feature_aggregation": feature_aggregation,
         }
         if clf_options is None:
             clf_options = {"type": clf}
@@ -57,74 +56,15 @@ class SuperPixelLayer:
                                                               self.opt["super_pixel_method"],
                                                               self.opt["down_scale"])
 
-    def get_features_for_segments(self, tensor, segments):
-        if len(tensor.shape) < 3:
-            tensor = np.expand_dims(tensor, axis=2)
-        h, w, num_f = tensor.shape
-        x_img = []
-        segments = resize(segments, width=w, height=h)
-
-        f_tensor = np.reshape(tensor, (w*h, num_f))
-        f_segments = np.reshape(segments, (w*h))
-
-        for u in np.unique(segments):
-            ids = np.where(f_segments == u)[0]
-            u_val = f_tensor[ids, :]
-            x_seg = np.array([
-                np.mean(u_val, axis=0),
-                np.std(u_val, axis=0),
-                np.sum(u_val, axis=0),
-                np.percentile(u_val, 0.75, axis=0),
-                np.percentile(u_val, 0.25, axis=0),
-            ])
-            x_seg = np.reshape(x_seg, (1, -1))
-            x_img.append(x_seg)
-        x_img = np.concatenate(x_img, axis=0)
-        return x_img
-
-    def get_y_for_segments(self, y_img, segments):
-        y = []
-        segments = resize(segments, width=y_img.shape[1], height=y_img.shape[0])
-        for u in np.unique(segments):
-            counts = np.bincount(y_img[segments == u].astype(np.int))
-            y_seg = np.argmax(counts)
-            y.append(y_seg)
-        return np.array(y)
-
-    def map_segments(self, segments, y_pred):
-        label_map = np.zeros((segments.shape[0], segments.shape[1], 1))
-        for i, u in enumerate(np.unique(segments)):
-            label_map[segments == u] = y_pred[i]
-        return label_map
-
-    def generate_segments(self, x_input):
-        img = img_as_float(x_input[::2, ::2])
-        if "felzenszwalb" in self.opt["super_pixel_method"]:
-            scale = 2 ** self.opt["down_scale"]
-            segments = felzenszwalb(img, scale=scale, sigma=0.5, min_size=50)
-        elif "slic" in self.opt["super_pixel_method"]:
-            n_segments = 1024 / (2 ** self.opt["down_scale"])
-            segments = slic(img, n_segments=n_segments, compactness=10, sigma=1, start_label=1)
-        elif "quickshift" in self.opt["super_pixel_method"]:
-            kernel_size = 5 * (2 ** self.opt["down_scale"])
-            segments = quickshift(img, kernel_size=kernel_size, max_dist=6, ratio=0.5)
-        elif "watershed" in self.opt["super_pixel_method"]:
-            n_segments = 1024 / (2 ** self.opt["down_scale"])
-            gradient = sobel(rgb2gray(img))
-            segments = watershed(gradient, markers=n_segments, compactness=0.001)
-        else:
-            raise ValueError("SuperPixel-Option: {} unknown!".format(self.opt["super_pixel_method"]))
-        return segments
-
     def inference(self, x_input, interpolation="nearest"):
-        segments = self.generate_segments(x_input)
+        segments = generate_segments(x_input, self.opt)
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
-        x_img = self.get_features_for_segments(x_img, segments)
+        x_img = get_features_for_segments(x_img, segments, self.opt["feature_aggregation"])
         y_pred = self.clf.predict(x_img)
         segments = resize(segments, width=x_width, height=x_height, interpolation="nearest")
-        y_img = self.map_segments(segments, y_pred)
+        y_img = map_segments(segments, y_pred)
         x_img_pass = resize(x_pass, width=o_width, height=o_height, interpolation="nearest")
         y_img = resize(y_img, width=o_width, height=o_height, interpolation=interpolation)
 
@@ -136,14 +76,14 @@ class SuperPixelLayer:
         return y_img
 
     def predict(self, x_input):
-        segments = self.generate_segments(x_input)
+        segments = generate_segments(x_input, self.opt)
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
-        x_img = self.get_features_for_segments(x_img, segments)
+        x_img = get_features_for_segments(x_img, segments, self.opt["feature_aggregation"])
         y_img = self.clf.predict(x_img)
         segments = resize(segments, width=x_width, height=x_height, interpolation="nearest")
-        y_img = self.map_segments(segments, y_img)
+        y_img = map_segments(segments, y_img)
         y_img = resize(y_img, width=o_width, height=o_height, interpolation="nearest")
         return y_img
 
@@ -172,12 +112,12 @@ class SuperPixelLayer:
 
             if use_sample:
                 x_img = t.load_x()
-                segments = self.generate_segments(x_img)
+                segments = generate_segments(x_img, self.opt)
                 x_img, _ = self.get_features(x_img)
                 h_img, w_img = x_img.shape[:2]
-                x_img = self.get_features_for_segments(x_img, segments)
+                x_img = get_features_for_segments(x_img, segments, self.opt["feature_aggregation"])
                 y_img = t.load_y([h_img, w_img])
-                y_img = self.get_y_for_segments(y_img, segments)
+                y_img = get_y_for_segments(y_img, segments)
                 assert x_img.shape[0] == y_img.shape[0], "Not equal dimensions. [{} - {}]".format(
                     x_img.shape, y_img.shape)
 
@@ -187,9 +127,6 @@ class SuperPixelLayer:
                 else:
                     x = np.append(x, x_img, axis=0)
                     y = np.append(y, y_img, axis=0)
-        x = x.astype(np.float32)
-        x[np.isnan(x)] = 0
-        x[np.isinf(x)] = 0
         return x, y
 
     def fit(self, train_tags, validation_tags):
@@ -211,7 +148,8 @@ class SuperPixelLayer:
             self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50, n_jobs=2)
         else:
             self.clf.fit(x_train, y_train)
-        self.clf.evaluate(x_val, y_val)
+        if x_val is not None:
+            self.clf.evaluate(x_val, y_val)
 
     def save(self, model_path):
         model_path = os.path.join(model_path, self.layer_type + "-" + self.name)

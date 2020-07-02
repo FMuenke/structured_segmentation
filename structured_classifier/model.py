@@ -15,6 +15,7 @@ from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
+from structured_classifier.feature_extraction_layer import FeatureExtractionLayer
 
 
 class Model:
@@ -136,7 +137,8 @@ class Model:
             prev_layer = self.load_previous_layers(model_folder)
             layer = SuperPixelLayer(prev_layer, opt["name"],
                                     super_pixel_method=opt["super_pixel_method"],
-                                    down_scale=opt["down_scale"])
+                                    down_scale=opt["down_scale"],
+                                    feature_aggregation=opt["feature_aggregation"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer
@@ -146,7 +148,15 @@ class Model:
             layer = SuperPixel3DLayer(prev_layer, opt["name"],
                                       time_range=opt["time_range"],
                                       super_pixel_method=opt["super_pixel_method"],
-                                      down_scale=opt["down_scale"])
+                                      down_scale=opt["down_scale"]
+                                      )
+
+        if opt["layer_type"] == "FEATURE_EXTRACTION_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = FeatureExtractionLayer(prev_layer, opt["name"],
+                                           down_scale=opt["down_scale"],
+                                           kernel=opt["kernel"], kernel_shape=opt["kernel_shape"]
+                                           )
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer

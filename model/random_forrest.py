@@ -11,9 +11,9 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
-from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
-from structured_classifier.super_pixel_layer import SuperPixelLayer
-from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
+
+
+from model.base_structures import get_decision_layer, get_decision_layer_3d
 
 
 class RandomStructuredRandomForrest3D:
@@ -57,30 +57,15 @@ class RandomStructuredRandomForrest3D:
                     clf = np.random.choice(self.clf)
                 else:
                     clf = self.clf
-
-                if type(self.tree_type) is list:
-                    tree_type = np.random.choice(self.tree_type)
-                else:
-                    tree_type = self.tree_type
-
                 d = np.random.randint(self.max_down_scale)
-
-                if tree_type == "kernel":
-                    tree = Decision3DLayer(INPUTS=tree,
-                                           name="tree_{}_{}".format(i, ii),
-                                           kernel=k, kernel_shape=self.kernel_shape,
-                                           down_scale=d, data_reduction=self.data_reduction,
-                                           clf=clf, clf_options=self.clf_options)
-                elif tree_type in ["slic", "watershed", "felzenszwalb", "quickshift"]:
-                    tree = SuperPixel3DLayer(INPUTS=tree,
-                                             name="tree_{}_{}".format(i, ii),
-                                             super_pixel_method=tree_type,
-                                             down_scale=d, data_reduction=self.data_reduction,
-                                             time_range=k_t,
-                                             clf=clf, clf_options=self.clf_options)
-                else:
-                    raise ValueError("Unknown tree_type: {}".format(self.tree_type))
-
+                tree = get_decision_layer_3d(
+                    INPUTS=tree,
+                    name="tree_{}_{}".format(i, ii),
+                    decision_type=self.tree_type,
+                    kernel=k, kernel_shape=self.kernel_shape,
+                    down_scale=d, data_reduction=self.data_reduction,
+                    clf=clf, clf_options=self.clf_options
+                )
             trees.append(tree)
 
         if output_option == "voting":
@@ -143,28 +128,16 @@ class RandomStructuredRandomForrest:
                 else:
                     clf = self.clf
 
-                if type(self.tree_type) is list:
-                    tree_type = np.random.choice(self.tree_type)
-                else:
-                    tree_type = self.tree_type
-
                 d = np.random.randint(self.max_down_scale)
 
-                if tree_type == "kernel":
-                    tree = DecisionLayer(INPUTS=tree,
-                                         name="tree_{}_{}".format(i, ii),
-                                         kernel=k, kernel_shape=self.kernel_shape,
-                                         down_scale=d, data_reduction=self.data_reduction,
-                                         clf=clf, clf_options=self.clf_options)
-                elif tree_type in ["slic", "watershed", "felzenszwalb", "quickshift"]:
-                    tree = SuperPixelLayer(INPUTS=tree,
-                                           name="tree_{}_{}".format(i, ii),
-                                           super_pixel_method=tree_type,
-                                           down_scale=d, data_reduction=self.data_reduction,
-                                           clf=clf, clf_options=self.clf_options)
-                else:
-                    raise ValueError("Unknown tree_type: {}".format(self.tree_type))
-
+                tree = get_decision_layer(
+                    INPUTS=tree,
+                    name="tree_{}_{}".format(i, ii),
+                    decision_type=self.tree_type,
+                    kernel=k, kernel_shape=self.kernel_shape,
+                    down_scale=d, data_reduction=self.data_reduction,
+                    clf=clf, clf_options=self.clf_options
+                )
             trees.append(tree)
 
         if output_option == "voting":

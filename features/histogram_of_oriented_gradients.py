@@ -14,15 +14,15 @@ class HistogramOfOrientedGradients:
         gy = cv2.Sobel(np.copy(image.astype(np.uint8)), cv2.CV_32F, 0, 1)
 
         mag, ang = cv2.cartToPolar(gx, gy)
-        # ang_sorted = ang / (2 * np.pi) * self.orientations
-        # ang_sorted = ang_sorted.astype(np.int)
+        ang_sorted = ang / (2 * np.pi) * self.orientations
+        ang_sorted = ang_sorted.astype(np.int)
 
-        # gradient_maps = []
-        # for ori_idx in range(self.orientations):
-        #     grad_map = np.zeros(mag.shape)
-        #     grad_map[ang_sorted == ori_idx] = mag[ang_sorted == ori_idx]
-        #     gradient_maps.append(grad_map)
-        return np.stack([mag, ang], axis=2)
+        gradient_maps = []
+        for ori_idx in range(self.orientations):
+            grad_map = np.zeros(mag.shape)
+            grad_map[ang_sorted == ori_idx] = mag[ang_sorted == ori_idx]
+            gradient_maps.append(grad_map)
+        return np.stack(gradient_maps, axis=2)
 
     def _compute(self, channels):
         f_maps = []

@@ -4,6 +4,17 @@ import numpy as np
 from skimage.transform import rotate
 
 
+def make_structuring_element(kernel, kernel_shape):
+    k_x, k_y = kernel
+    if kernel_shape == "square":
+        return np.ones((k_y, k_x))
+    if kernel_shape == "ellipse":
+        return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_x, k_y))
+    if kernel_shape == "cross":
+        return cv2.getStructuringElement(cv2.MORPH_CROSS, (k_x, k_y))
+    raise ValueError("Kernel-Shape option: {} not known".format(kernel_shape))
+
+
 def resize(data, width, height, interpolation="nearest"):
     if interpolation == "nearest":
         data = cv2.resize(data, (width, height), interpolation=cv2.INTER_NEAREST)

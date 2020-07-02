@@ -1,110 +1,85 @@
+import numpy as np
+
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.decision_3d_layer import Decision3DLayer
 
-
-def down_pyramid(input_layer, name, kernel=(5, 5), clf="b_rf", depth=5, repeat=1, clf_options=None):
-    x1 = input_layer
-
-    for d in range(depth):
-        for r in range(repeat):
-            x1 = DecisionLayer(INPUTS=x1,
-                               name="{}_down_{}_{}".format(name, d, r),
-                               kernel=kernel,
-                               kernel_shape="ellipse",
-                               down_scale=d,
-                               clf=clf,
-                               clf_options=clf_options,
-                               data_reduction=3)
-    return x1
+from structured_classifier.super_pixel_layer import SuperPixelLayer
+from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
 
 
-def up_pyramid(input_layer, name, kernel=(5, 5), clf="b_rf", depth=5, repeat=1, clf_options=None):
-    x1 = input_layer
+def get_decision_layer(
+        INPUTS,
+        name,
+        decision_type,
+        clf,
+        clf_options,
+        down_scale,
+        data_reduction,
+        kernel=None,
+        kernel_shape=None,
+        ):
+    if type(decision_type) is list:
+        dt = np.random.choice(decision_type)
+    else:
+        dt = decision_type
 
-    for d in range(depth):
-        for r in range(repeat):
-            x1 = DecisionLayer(INPUTS=x1,
-                               name="{}_up_{}_{}".format(name, depth - d - 1, r),
-                               kernel=kernel,
-                               kernel_shape="ellipse",
-                               down_scale=depth - d - 1,
-                               clf=clf,
-                               clf_options=clf_options,
-                               data_reduction=3)
-    return x1
-
-
-def u_layer(input_layer, name, kernel=(5, 5), clf="b_rf", depth=5, repeat=1, clf_options=None):
-    x1 = input_layer
-
-    for d in range(depth):
-        for r in range(repeat):
-            x1 = DecisionLayer(INPUTS=x1,
-                               name="{}_down_{}_{}".format(name, d, r),
-                               kernel=kernel,
-                               kernel_shape="ellipse",
-                               down_scale=d,
-                               clf=clf,
-                               clf_options=clf_options,
-                               data_reduction=3)
-
-    for r in range(repeat):
-        x1 = DecisionLayer(INPUTS=x1,
-                           name="{}_latent_{}".format(name, r),
+    if dt == "kernel":
+        xx = DecisionLayer(INPUTS=INPUTS,
+                           name=name,
                            kernel=kernel,
-                           kernel_shape="ellipse",
-                           down_scale=depth,
+                           kernel_shape=kernel_shape,
+                           down_scale=down_scale,
                            clf=clf,
                            clf_options=clf_options,
-                           data_reduction=3)
-
-    for d in range(depth):
-        for r in range(repeat):
-            x1 = DecisionLayer(INPUTS=x1,
-                               name="{}_up_{}_{}".format(name, depth - d - 1, r),
-                               kernel=kernel,
-                               kernel_shape="ellipse",
-                               down_scale=depth - d - 1,
-                               clf=clf,
-                               clf_options=clf_options,
-                               data_reduction=3)
-
-    return x1
-
-
-def u_layer_3d(input_layer, name, kernel=(1, 5, 5), clf="b_rf", depth=5, repeat=1, clf_options=None):
-    x1 = input_layer
-
-    for d in range(depth):
-        for r in range(repeat):
-            x1 = Decision3DLayer(INPUTS=x1,
-                                 name="{}_down_{}_{}".format(name, d, r),
-                                 kernel=kernel,
-                                 kernel_shape="ellipse",
-                                 down_scale=d,
-                                 clf=clf,
-                                 clf_options=clf_options,
-                                 data_reduction=3)
-
-    for r in range(repeat):
-        x1 = Decision3DLayer(INPUTS=x1,
-                             name="{}_latent_{}".format(name, r),
-                             kernel=kernel,
-                             kernel_shape="ellipse",
-                             down_scale=depth,
+                           data_reduction=data_reduction)
+    elif dt in ["slic", "watershed", "felzenszwalb", "quickshift"]:
+        xx = SuperPixelLayer(INPUTS=INPUTS,
+                             name=name,
+                             super_pixel_method=dt,
+                             down_scale=down_scale,
                              clf=clf,
                              clf_options=clf_options,
-                             data_reduction=3)
+                             data_reduction=data_reduction)
+    else:
+        raise ValueError("Unknown decision_type: {}".format(dt))
+    return xx
 
-    for d in range(depth):
-        for r in range(repeat):
-            x1 = Decision3DLayer(INPUTS=x1,
-                                 name="{}_up_{}_{}".format(name, depth - d - 1, r),
-                                 kernel=kernel,
-                                 kernel_shape="ellipse",
-                                 down_scale=depth - d - 1,
-                                 clf=clf,
-                                 clf_options=clf_options,
-                                 data_reduction=3)
 
-    return x1
+def get_decision_layer_3d(
+            INPUTS,
+            name,
+            decision_type,
+            clf,
+            clf_options,
+            down_scale,
+            data_reduction,
+            kernel=None,
+            kernel_shape=None,
+            ):
+
+    if type(decision_type) is list:
+        dt = np.random.choice(decision_type)
+    else:
+        dt = decision_type
+
+    if dt == "kernel":
+        xx = Decision3DLayer(
+            INPUTS=INPUTS,
+            name=name,
+            kernel=kernel, kernel_shape=kernel_shape,
+            down_scale=down_scale, data_reduction=data_reduction,
+            clf=clf, clf_options=clf_options
+        )
+    elif dt in ["slic", "watershed", "felzenszwalb", "quickshift"]:
+        k_t, k_x, k_y = kernel
+        xx = SuperPixel3DLayer(
+            INPUTS=INPUTS,
+            name=name,
+            super_pixel_method=dt,
+            down_scale=down_scale, data_reduction=data_reduction,
+            time_range=k_t,
+            clf=clf, clf_options=clf_options
+        )
+    else:
+        raise ValueError("Unknown decision_type: {}".format(dt))
+    return xx

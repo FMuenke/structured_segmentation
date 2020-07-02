@@ -36,6 +36,8 @@ class ClassifierHandler:
         self.best_params = None
         self.best_score = None
 
+        self.report = None
+
     def __str__(self):
         s = ""
         s += "Classifier: {}".format(self.opt["type"])
@@ -77,19 +79,21 @@ class ClassifierHandler:
             prob_pos = np.expand_dims(prob_pos, axis=1)
         return prob_pos
 
-    def evaluate(self, x_test, y_test, save_path=None):
-        print("Predicting on the test set")
+    def evaluate(self, x_test, y_test, save_path=None, verbose=True):
+        if verbose:
+            print("Predicting on the test set")
         t0 = time()
         y_pred = self.predict(x_test)
-        print("done in %0.3fs" % (time() - t0))
-
-        print(classification_report(y_test, y_pred))
+        self.report = str(classification_report(y_test, y_pred))
+        if verbose:
+            print("done in %0.3fs" % (time() - t0))
+            print(self.report)
         if save_path is not None:
             d = os.path.dirname(save_path)
             if not os.path.isdir(d):
                 os.mkdir(d)
             with open(save_path, "w") as f:
-                f.write(classification_report(y_test, y_pred))
+                f.write(self.report)
 
         return f1_score(y_true=y_test, y_pred=y_pred, average="macro")
 
@@ -176,6 +180,9 @@ class ClassifierHandler:
         save_dict(self.opt, os.path.join(model_path, "{}_opt.json".format(name)))
         if self.classifier is not None:
             joblib.dump(self.classifier, os.path.join(model_path, "{}.pkl".format(name)))
+        if self.report is not None:
+            with open(os.path.join(model_path, "classification_report.txt"), "w") as f:
+                f.write(self.report)
 
     def is_fitted(self):
         if self.classifier is not None:

@@ -13,8 +13,7 @@ from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.normalization_layer import NormalizationLayer
-
-from model.base_structures import u_layer, up_pyramid, down_pyramid
+from structured_classifier.feature_extraction_layer import FeatureExtractionLayer
 
 from utils import parameter_grid as pg
 
@@ -26,7 +25,7 @@ def main(args_):
         # "js": [[1, 1, 1], [255, 255, 0]],
         # "cr": [[255, 255, 255], [255, 0, 255]],
         # "ellipse": [[200, 0, 0], [0, 255, 255]],
-        # "street_sign": [[155, 155, 155], [0, 255, 0]],
+        "street_sign": [[155, 155, 155], [0, 255, 0]],
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
@@ -34,7 +33,7 @@ def main(args_):
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        "shadow": [[1, 1, 1], [255, 0, 0]],
+        # "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
         # "lines": [[1, 1, 1], [255, 0, 0]],
     }
@@ -45,18 +44,36 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    rf = RandomStructuredRandomForrest(n_estimators=5, features_to_use="hsv-color", norm_input="normalize_mean",
-                                       tree_type=["slic", "watershed"])
-    x = rf.build(width=300, output_option="boosting")
 
-    # ed = EncoderDecoder(norm_input="normalize_mean", features_to_use="hsv-color", depth=3)
-    # x = ed.build(width=300)
-    # x = SuperPixelLayer(INPUTS=x, name="sp3", super_pixel_method="slic", down_scale=2, data_reduction=3)
 
-    # x = InputLayer(name="in", features_to_use="gray-lm", initial_down_scale=2)
-    # x = DecisionLayer(INPUTS=x, name="cls", kernel=(3, 3), clf="kmeans")
-    # x = SuperPixelLayer(name="sp", INPUTS=x, super_pixel_method="slic", down_scale=3, clf="kmeans")
+    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=0, clf="b_rf", data_reduction=3)
+    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=1, clf="b_rf", data_reduction=3)
+    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=2, clf="b_rf", data_reduction=3)
+    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=1, clf="b_rf", data_reduction=3)
 
+    clf = "ada_boost"
+    opt = {"layer_structure": (256, 64, ),
+           "n_estimators": 500}
+    width = 600
+
+    x = InputLayer(name="input_interes", width=width, features_to_use=["rgb-color", "gray-lbp"])
+    x = SuperPixelLayer(INPUTS=x, name="sp",
+                        super_pixel_method="patches", down_scale=0,
+                        feature_aggregation="hist32")
+    x = SuperPixelLayer(INPUTS=x, name="sp",
+                        super_pixel_method="patches", down_scale=1,
+                        feature_aggregation="hist32")
+    x = SuperPixelLayer(INPUTS=x, name="sp",
+                        super_pixel_method="patches", down_scale=2,
+                        feature_aggregation="hist32")
+    x = SuperPixelLayer(INPUTS=x, name="sp",
+                        super_pixel_method="patches", down_scale=1,
+                        feature_aggregation="hist32")
+    x = SuperPixelLayer(INPUTS=x, name="sp",
+                        super_pixel_method="patches", down_scale=0,
+                        feature_aggregation="hist32")
+
+    x = DecisionLayer(INPUTS=x, name="kernel", kernel=(5, 5), down_scale=0, data_reduction=4, clf=clf, clf_options=opt)
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
