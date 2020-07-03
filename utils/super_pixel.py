@@ -12,14 +12,13 @@ def patches(img, patch_size):
     segment_id = 1
     height, width = img.shape[:2]
     segment_map = np.zeros((height, width))
-    step_i = int(width / patch_size)
-    step_j = int(height / patch_size)
-    for i in range(0, width, step_i):
-        for j in range(0, height, step_j):
-            jmax = min(j + step_j, height - 1)
-            imax = min(i + step_i, width - 1)
+    for i in range(0, width, patch_size):
+        for j in range(0, height, patch_size):
+            jmax = min(j + patch_size, height - 1)
+            imax = min(i + patch_size, width - 1)
             segment_map[j:jmax, i:imax] = segment_id
             segment_id += 1
+
     return segment_map
 
 
@@ -111,23 +110,22 @@ def get_features_for_segments(tensor, segments, feature_aggregation):
 
 def generate_segments(x_input, opt):
     img = img_as_float(x_input[::2, ::2])
-    n = 1024
+    height, width = img.shape[:2]
+    patch_size = 8 * 2 ** (opt["down_scale"])
+    n_segments = int(height / patch_size) * int(width / patch_size)
     if "felzenszwalb" in opt["super_pixel_method"]:
         scale = 2 ** opt["down_scale"]
         segments = felzenszwalb(img, scale=scale, sigma=0.5, min_size=50)
     elif "slic" in opt["super_pixel_method"]:
-        n_segments = n / (2 ** opt["down_scale"])
         segments = slic(img, n_segments=n_segments, compactness=30, sigma=1, start_label=1)
     elif "quickshift" in opt["super_pixel_method"]:
         kernel_size = 5 * (opt["down_scale"] + 1)
         segments = quickshift(img, kernel_size=kernel_size, max_dist=6, ratio=0.5)
     elif "watershed" in opt["super_pixel_method"]:
-        n_segments = n / (2 ** opt["down_scale"])
         gradient = sobel(rgb2gray(img))
         segments = watershed(gradient, markers=n_segments, compactness=0.001)
     elif "patches" in opt["super_pixel_method"]:
-        n_segments = 8 * 2 ** (opt["down_scale"])
-        segments = patches(img, patch_size=n_segments)
+        segments = patches(img, patch_size=patch_size)
     else:
         raise ValueError("SuperPixel-Option: {} unknown!".format(opt["super_pixel_method"]))
     return segments

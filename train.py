@@ -52,28 +52,19 @@ def main(args_):
     # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=1, clf="b_rf", data_reduction=3)
 
     clf = "ada_boost"
-    opt = {"layer_structure": (256, 64, ),
-           "n_estimators": 500}
+    opt = {
+        "layer_structure": (126, 32, ),
+        "n_estimators": 500,
+        "num_parallel_tree": 5,
+        "base_estimator": {"type": "rf"},
+        }
     width = 600
 
     x = InputLayer(name="input_interes", width=width, features_to_use=["rgb-color", "gray-lbp"])
     x = SuperPixelLayer(INPUTS=x, name="sp",
-                        super_pixel_method="patches", down_scale=0,
-                        feature_aggregation="hist32")
-    x = SuperPixelLayer(INPUTS=x, name="sp",
                         super_pixel_method="patches", down_scale=1,
-                        feature_aggregation="hist32")
-    x = SuperPixelLayer(INPUTS=x, name="sp",
-                        super_pixel_method="patches", down_scale=2,
-                        feature_aggregation="hist32")
-    x = SuperPixelLayer(INPUTS=x, name="sp",
-                        super_pixel_method="patches", down_scale=1,
-                        feature_aggregation="hist32")
-    x = SuperPixelLayer(INPUTS=x, name="sp",
-                        super_pixel_method="patches", down_scale=0,
-                        feature_aggregation="hist32")
+                        feature_aggregation="hist32", clf=clf, clf_options=opt)
 
-    x = DecisionLayer(INPUTS=x, name="kernel", kernel=(5, 5), down_scale=0, data_reduction=4, clf=clf, clf_options=opt)
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
