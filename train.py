@@ -25,7 +25,7 @@ def main(args_):
         # "js": [[1, 1, 1], [255, 255, 0]],
         # "cr": [[255, 255, 255], [255, 0, 255]],
         # "ellipse": [[200, 0, 0], [0, 255, 255]],
-        "street_sign": [[155, 155, 155], [0, 255, 0]],
+        # "street_sign": [[155, 155, 155], [0, 255, 0]],
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
@@ -36,6 +36,16 @@ def main(args_):
         # "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
         # "lines": [[1, 1, 1], [255, 0, 0]],
+        "bark": [[1, 1, 1], [13, 128, 228]],
+        "wood": [[2, 2, 2], [144, 230, 85]],
+        "textile": [[3, 3, 3], [122, 200, 59]],
+        "man-made": [[4, 4, 4], [5, 56, 152]],
+        "plants": [[5, 5, 5], [51, 122, 78]],
+        "flowers": [[6, 6, 6], [193, 85, 180]],
+        "nature": [[7, 7, 7], [192, 87, 160]],
+        "glass": [[8, 8, 8], [226, 178, 123]],
+        "rock": [[9, 9, 9], [17, 50, 20]],
+        "stone": [[10, 10, 10], [70, 84, 67]],
     }
 
     randomized_split = True
@@ -51,13 +61,9 @@ def main(args_):
         "num_parallel_tree": 5,
         "base_estimator": {"type": "rf"},
         }
-    width = 600
+    width = 400
 
     x = InputLayer(name="input_interes", width=width, features_to_use=["rgb-color", "gray-lbp"])
-    x = DecisionLayer(name="kernel", INPUTS=x, kernel=(5, 5), down_scale=2)
-    x = SuperPixelLayer(INPUTS=x, name="sp",
-                        super_pixel_method="patches", down_scale=2,
-                        feature_aggregation="hist32", clf=clf, clf_options=opt)
     x = SuperPixelLayer(INPUTS=x, name="sp",
                         super_pixel_method="patches", down_scale=1,
                         feature_aggregation="hist32", clf=clf, clf_options=opt)

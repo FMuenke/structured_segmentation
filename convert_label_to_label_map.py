@@ -21,7 +21,7 @@ def label_folder(clmp, folder):
     lb_dir = os.path.join(folder, "labels")
     for lb in os.listdir(lb_dir):
         lb_f = os.path.join(lb_dir, lb)
-        if os.path.isfile(lb_f):
+        if os.path.isfile(lb_f) and lb.endswith(".txt"):
             labels = read_classification_label_file(lb_f)
             label = labels[0]
 
@@ -31,7 +31,7 @@ def label_folder(clmp, folder):
                 ]]
             im = Image.open(os.path.join(im_dir, lb[:-4] + ".png"))
             w, h = im.size
-            label_map = np.ones((h, w, 3)) * clmp[label][0][0]
+            label_map = np.ones((h, w, 3), dtype=np.uint8) * clmp[label][0][0]
             label_map = Image.fromarray(label_map)
             label_map.save(os.path.join(lb_dir, lb[:-4] + ".png"))
 
@@ -43,6 +43,15 @@ def main(args_):
         c_df = os.path.join(df, d)
         if os.path.isdir(c_df):
             label_folder(clmp, c_df)
+
+    print(clmp)
+    s = ""
+    for i, label in enumerate(clmp):
+
+        s += "\"{}\": [{}, {}],\n".format(label, clmp[label][0], clmp[label][1])
+
+    with open(os.path.join(df, "seg_info.txt"), "w") as f:
+        f.write(s)
 
 
 def parse_args():
