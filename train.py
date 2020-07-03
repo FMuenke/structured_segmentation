@@ -44,14 +44,7 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-
-
-    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=0, clf="b_rf", data_reduction=3)
-    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=1, clf="b_rf", data_reduction=3)
-    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=2, clf="b_rf", data_reduction=3)
-    # x = SuperPixelLayer(INPUTS=x, name="sp_lbp_0", down_scale=1, clf="b_rf", data_reduction=3)
-
-    clf = "ada_boost"
+    clf = "xgboost"
     opt = {
         "layer_structure": (126, 32, ),
         "n_estimators": 500,
@@ -61,6 +54,10 @@ def main(args_):
     width = 600
 
     x = InputLayer(name="input_interes", width=width, features_to_use=["rgb-color", "gray-lbp"])
+    x = DecisionLayer(name="kernel", INPUTS=x, kernel=(5, 5), down_scale=2)
+    x = SuperPixelLayer(INPUTS=x, name="sp",
+                        super_pixel_method="patches", down_scale=2,
+                        feature_aggregation="hist32", clf=clf, clf_options=opt)
     x = SuperPixelLayer(INPUTS=x, name="sp",
                         super_pixel_method="patches", down_scale=1,
                         feature_aggregation="hist32", clf=clf, clf_options=opt)
