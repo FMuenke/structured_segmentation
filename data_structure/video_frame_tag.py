@@ -17,7 +17,7 @@ class VideoFrameTag:
     def get_offset_frame(self, offset):
         return VideoFrameTag(video=self.video, frame_no=self.frame_no+offset, color_coding=self.color_coding)
 
-    def load_x(self, neighbours=5, offset=0):
+    def load_x(self, neighbours=0, offset=0):
         frame_no = self.frame_no + offset
         if neighbours == 0:
             data = self.video.get_frame_of_index(frame_no)

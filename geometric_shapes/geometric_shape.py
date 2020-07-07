@@ -3,6 +3,7 @@ from geometric_shapes.ellipse_al import EllipseAl
 from geometric_shapes.circle import Circle
 from geometric_shapes.rectangle import Rectangle
 from geometric_shapes.centroid import Centroid
+from geometric_shapes.arbitrary import Arbitrary
 
 
 def get_shape(target_shape):
@@ -10,10 +11,14 @@ def get_shape(target_shape):
         return Ellipse()
     if target_shape == "centroid":
         return Centroid()
+    if target_shape == "circle":
+        return Circle()
     if target_shape == "rectangle":
         return Rectangle()
     if target_shape == "ellipse_al":
         return EllipseAl()
+    if target_shape == "arbitrary":
+        return Arbitrary()
     raise ValueError("Shape - {} - not implemented yet".format(target_shape))
 
 

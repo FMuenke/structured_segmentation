@@ -24,6 +24,7 @@ class RandomStructuredRandomForrest3D:
                  max_down_scale=6,
                  features_to_use="gray-color",
                  tree_type="kernel",
+                 feature_aggregation="hist32",
                  clf="b_rf",
                  clf_options=None,
                  kernel_shape="square",
@@ -36,6 +37,7 @@ class RandomStructuredRandomForrest3D:
         self.data_reduction = data_reduction
         self.kernel_shape = kernel_shape
         self.tree_type = tree_type
+        self.feature_aggregation = feature_aggregation
 
         self.clf = clf
         self.clf_options = clf_options
@@ -63,6 +65,7 @@ class RandomStructuredRandomForrest3D:
                     name="tree_{}_{}".format(i, ii),
                     decision_type=self.tree_type,
                     kernel=k, kernel_shape=self.kernel_shape,
+                    feature_aggregation=self.feature_aggregation,
                     down_scale=d, data_reduction=self.data_reduction,
                     clf=clf, clf_options=self.clf_options
                 )
@@ -84,6 +87,7 @@ class RandomStructuredRandomForrest:
                  max_down_scale=6,
                  features_to_use="gray-color",
                  tree_type="kernel",
+                 feature_aggregation="hist32",
                  norm_input=None,
                  clf="b_rf",
                  kernel_shape="square",
@@ -98,6 +102,7 @@ class RandomStructuredRandomForrest:
         self.kernel_shape = kernel_shape
         self.data_reduction = data_reduction
         self.tree_type = tree_type
+        self.feature_aggregation = feature_aggregation
 
         self.clf = clf
         self.clf_options = clf_options
@@ -135,6 +140,7 @@ class RandomStructuredRandomForrest:
                     name="tree_{}_{}".format(i, ii),
                     decision_type=self.tree_type,
                     kernel=k, kernel_shape=self.kernel_shape,
+                    feature_aggregation=self.feature_aggregation,
                     down_scale=d, data_reduction=self.data_reduction,
                     clf=clf, clf_options=self.clf_options
                 )

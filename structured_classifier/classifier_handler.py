@@ -85,6 +85,10 @@ class ClassifierHandler:
         t0 = time()
         y_pred = self.predict(x_test)
         self.report = str(classification_report(y_test, y_pred))
+        if len(y_pred.shape) > 1:
+            if y_pred.shape[1] > 10:
+                self.report = "Macro F1-Score:\n"
+                self.report += str(f1_score(y_true=y_test, y_pred=y_pred, average="micro", zero_division=0))
         if verbose:
             print("done in %0.3fs" % (time() - t0))
             print(self.report)

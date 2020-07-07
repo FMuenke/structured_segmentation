@@ -6,6 +6,7 @@ from tqdm import tqdm
 from geometric_shapes.geometric_shape import get_shape
 
 from structured_classifier.regressor_handler import RegressorHandler
+from structured_classifier.classifier_handler import ClassifierHandler
 from structured_classifier.layer_operations import resize, dropout, augment_tag
 from utils.utils import check_n_make_dir, save_dict
 
@@ -50,8 +51,13 @@ class ShapeRefinementLayer:
         else:
             clf_opt = copy(clf_options)
             clf_opt["type"] = clf
-        self.clf = RegressorHandler(opt=clf_opt)
-        self.clf.new_regressor()
+
+        if shape == "arbitrary":
+            self.clf = ClassifierHandler(opt=clf_opt)
+            self.clf.new_classifier()
+        else:
+            self.clf = RegressorHandler(opt=clf_opt)
+            self.clf.new_regressor()
         self.param_grid = param_grid
 
     def __str__(self):
@@ -88,7 +94,7 @@ class ShapeRefinementLayer:
     def get_features(self, x_input):
         x = []
         for p in self.previous:
-            x_p = p.inference(x_input, interpolation="cubic")
+            x_p = p.inference(x_input, interpolation="linear")
             if len(x_p.shape) < 3:
                 x_p = np.expand_dims(x_p, axis=2)
             x.append(x_p)
@@ -98,12 +104,19 @@ class ShapeRefinementLayer:
 
     def label_map_to_shape_parameters(self, label_map):
         s = get_shape(self.shape)
-        p = s.get_parameter(label_map)
+        if self.opt["shape"] == "arbitrary":
+            p = s.get_parameter(label_map, self.global_kernel)
+        else:
+            p = s.get_parameter(label_map)
         return np.reshape(p, (1, -1))
 
     def shape_parameters_to_label_map(self, shape_parameters, height, width):
         s = get_shape(self.shape)
-        return s.get_label_map(shape_parameters, height, width)
+        if self.opt["shape"] == "arbitrary":
+            label_map = s.get_label_map(shape_parameters, height, width, self.global_kernel)
+        else:
+            label_map = s.get_label_map(shape_parameters, height, width)
+        return label_map
 
     def transform_features(self, x_img):
         # height, width = x_img.shape[:2]

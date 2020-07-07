@@ -15,6 +15,7 @@ def get_decision_layer(
         clf_options,
         down_scale,
         data_reduction,
+        feature_aggregation="hist32",
         kernel=None,
         kernel_shape=None,
         ):
@@ -32,11 +33,12 @@ def get_decision_layer(
                            clf=clf,
                            clf_options=clf_options,
                            data_reduction=data_reduction)
-    elif dt in ["slic", "watershed", "felzenszwalb", "quickshift"]:
+    elif dt in ["slic", "watershed", "felzenszwalb", "quickshift", "patches"]:
         xx = SuperPixelLayer(INPUTS=INPUTS,
                              name=name,
                              super_pixel_method=dt,
                              down_scale=down_scale,
+                             feature_aggregation=feature_aggregation,
                              clf=clf,
                              clf_options=clf_options,
                              data_reduction=data_reduction)
@@ -53,6 +55,7 @@ def get_decision_layer_3d(
             clf_options,
             down_scale,
             data_reduction,
+            feature_aggregation="hist32",
             kernel=None,
             kernel_shape=None,
             ):
@@ -70,13 +73,14 @@ def get_decision_layer_3d(
             down_scale=down_scale, data_reduction=data_reduction,
             clf=clf, clf_options=clf_options
         )
-    elif dt in ["slic", "watershed", "felzenszwalb", "quickshift"]:
+    elif dt in ["slic", "watershed", "felzenszwalb", "quickshift", "patches"]:
         k_t, k_x, k_y = kernel
         xx = SuperPixel3DLayer(
             INPUTS=INPUTS,
             name=name,
             super_pixel_method=dt,
             down_scale=down_scale, data_reduction=data_reduction,
+            feature_aggregation=feature_aggregation,
             time_range=k_t,
             clf=clf, clf_options=clf_options
         )

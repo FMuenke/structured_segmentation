@@ -148,8 +148,12 @@ class Model:
             layer = SuperPixel3DLayer(prev_layer, opt["name"],
                                       time_range=opt["time_range"],
                                       super_pixel_method=opt["super_pixel_method"],
-                                      down_scale=opt["down_scale"]
+                                      down_scale=opt["down_scale"],
+                                      feature_aggregation=opt["feature_aggregation"],
                                       )
+            layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
+            return layer
 
         if opt["layer_type"] == "FEATURE_EXTRACTION_LAYER":
             prev_layer = self.load_previous_layers(model_folder)

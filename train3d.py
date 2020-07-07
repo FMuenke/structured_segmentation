@@ -13,10 +13,9 @@ from structured_classifier.shape_refinement_3d_layer import ShapeRefinement3DLay
 
 from model.random_forrest import RandomStructuredRandomForrest3D
 from model.pyramid_boosting import PyramidBoosting3D
+from model.encoder_decoder import EncoderDecoder3D
 
 from utils import parameter_grid as pg
-
-from model.base_structures import u_layer_3d
 
 from utils.utils import save_dict
 
@@ -40,28 +39,31 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
+    clf = "b_rf"
+    opt = {"n_estimators": 500,
+           "num_parallel_tree": 5,
+           "layer_structure": (126, 32, )}
+
     rf = RandomStructuredRandomForrest3D(n_estimators=25, features_to_use=["gray-lbp"],
-                                         kernel_shape="ellipse",
-                                         max_down_scale=5, max_depth=1, max_kernel_sum=25,
-                                         clf="b_rf", clf_options={"n_estimators": 100})
-    x = rf.build(width=300, output_option="boosting")
+                                         kernel_shape="square",
+                                         max_down_scale=3, max_depth=1, max_kernel_sum=25,
+                                         clf=clf, clf_options=opt)
+    x = rf.build(width=64, height=64, output_option="boosting")
 
-    # pb = PyramidBoosting3D(n_estimators=3, max_depth=1, max_kernel_sum=5, data_reduction=6, features_to_use="gray-lbp")
-    # x = pb.build(width=300)
+    x_in = Input3DLayer(name="in", features_to_use="gray-lbp", width=300)
+    x1 = SuperPixel3DLayer(INPUTS=x_in, name="pa0", time_range=5,
+                           super_pixel_method="patches", down_scale=2,
+                           feature_aggregation="hist25", clf=clf, clf_options=opt)
+    x2 = SuperPixel3DLayer(INPUTS=x_in, name="pa1", time_range=5,
+                           super_pixel_method="quickshift", down_scale=1,
+                           feature_aggregation="hist25", clf=clf, clf_options=opt)
+    x3 = SuperPixel3DLayer(INPUTS=x_in, name="pa2", time_range=5,
+                           super_pixel_method="quickshift", down_scale=2,
+                           feature_aggregation="hist25", clf=clf, clf_options=opt)
 
-    # x_in = Input3DLayer(name="in", features_to_use="gray-lbp", width=300)
-    x = BottleNeck3DLayer(INPUTS=x, name="shape_bottlenet")
-    x = ShapeRefinement3DLayer(INPUTS=x, global_kernel=(3, 9, 9), shape="ellipse", name="sr")
-    # x1 = SuperPixel3DLayer(INPUTS=x_in, name="sp1", time_range=5, super_pixel_method="slic", option=200)
-    # x2 = SuperPixel3DLayer(INPUTS=x_in, name="sp2", time_range=11, super_pixel_method="slic", option=50)
-    # x3 = SuperPixel3DLayer(INPUTS=x_in, name="sp3", time_range=7, super_pixel_method="slic", option=100)
-    # x = SuperPixel3DLayer(INPUTS=x, name="sp2", time_range=11, super_pixel_method="slic", option=100)
-    # x = SuperPixel3DLayer(INPUTS=x, name="sp3", time_range= 5, super_pixel_method="slic", option= 50)
-    # x = Decision3DLayer(INPUTS=[x1, x2, x3], kernel=(15, 3, 3), name="dl-1", down_scale=0, data_reduction=3)
-    # x = Decision3DLayer(INPUTS=x, kernel=(1, 5, 5), name="dl-2", down_scale=2, data_reduction=3)
-    # x = Decision3DLayer(INPUTS=x, kernel=(1, 5, 5), name="dl-3", down_scale=3, data_reduction=3)
-    # x = Decision3DLayer(INPUTS=x, kernel=(1, 5, 5), name="dl-4", down_scale=2, data_reduction=3)
-    # x = Decision3DLayer(INPUTS=x, kernel=(1, 3, 3), name="dl-5", down_scale=0)
+    x = BottleNeck3DLayer(INPUTS=[x1, x2, x3], name="bott")
+    x_in2 = Input3DLayer(name="in2", features_to_use="gray-lbp", width=300)
+    x = Decision3DLayer(INPUTS=[x, x_in2], name="merge", clf=clf, clf_options=opt, kernel=(1, 5, 5))
 
     model = Model(graph=x)
 

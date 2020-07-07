@@ -7,11 +7,13 @@ from structured_classifier.model import Model
 from model.random_forrest import RandomStructuredRandomForrest
 from model.pyramid_boosting import PyramidBoosting
 from model.encoder_decoder import EncoderDecoder
+from model.patch_work import PatchWork
 
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.decision_layer import DecisionLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
+from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.feature_extraction_layer import FeatureExtractionLayer
 
@@ -29,23 +31,13 @@ def main(args_):
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
-        # "heart": [[4, 4, 4], [0, 255, 0]],
+        "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
         # "lines": [[1, 1, 1], [255, 0, 0]],
-        "bark": [[1, 1, 1], [13, 128, 228]],
-        "wood": [[2, 2, 2], [144, 230, 85]],
-        "textile": [[3, 3, 3], [122, 200, 59]],
-        "man-made": [[4, 4, 4], [5, 56, 152]],
-        "plants": [[5, 5, 5], [51, 122, 78]],
-        "flowers": [[6, 6, 6], [193, 85, 180]],
-        "nature": [[7, 7, 7], [192, 87, 160]],
-        "glass": [[8, 8, 8], [226, 178, 123]],
-        "rock": [[9, 9, 9], [17, 50, 20]],
-        "stone": [[10, 10, 10], [70, 84, 67]],
     }
 
     randomized_split = True
@@ -54,19 +46,28 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "xgboost"
+    clf = "rf"
     opt = {
-        "layer_structure": (126, 32, ),
-        "n_estimators": 500,
+        "layer_structure": (8, ),
+        "n_estimators": 1000,
         "num_parallel_tree": 5,
-        "base_estimator": {"type": "rf"},
+        # "base_estimator": {"type": "rf"},
         }
-    width = 400
+    width = 300
 
-    x = InputLayer(name="input_interes", width=width, features_to_use=["rgb-color", "gray-lbp"])
-    x = SuperPixelLayer(INPUTS=x, name="sp",
-                        super_pixel_method="patches", down_scale=1,
-                        feature_aggregation="hist32", clf=clf, clf_options=opt)
+    pw = PatchWork(patch_types=["patches", "slic"], down_scales=[0, 1, 2, 3], features_to_use="gray-lbp",
+                   feature_aggregations=["hist25"], clf=clf, clf_options=opt)
+    x = pw.build(width=width, output_option="boosting")
+
+    x = InputLayer(name="INPUT", features_to_use="gray-lbp", width=width)
+
+    # x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(16, 16), shape="arbitrary", clf=clf, clf_options=opt)
+    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=0, data_reduction=3)
+    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=1, data_reduction=3)
+    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=2, data_reduction=3)
+    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=1, data_reduction=1)
+    x = BottleNeckLayer(INPUTS=x, name="bottle")
+    x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(16, 16), shape="arbitrary", clf=clf, clf_options=opt)
 
     model = Model(graph=x)
 

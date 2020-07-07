@@ -19,6 +19,7 @@ class PyramidBoosting:
                  features_to_use="gray-color",
                  decision_type="kernel",
                  kernel_shape="square",
+                 feature_aggregation="hist32",
                  norm_input=None,
                  clf="b_rf",
                  clf_options=None,
@@ -30,6 +31,7 @@ class PyramidBoosting:
         self.norm_input = norm_input
         self.kernel_shape = kernel_shape
         self.decision_type = decision_type
+        self.feature_aggregation = feature_aggregation
 
         self.clf = clf
         self.clf_options = clf_options
@@ -63,6 +65,7 @@ class PyramidBoosting:
                                     kernel=kernel,
                                     kernel_shape=self.kernel_shape,
                                     down_scale=self.max_depth - d - 1,
+                                    feature_aggregation=self.feature_aggregation,
                                     clf=self.clf,
                                     clf_options=self.clf_options,
                                     data_reduction=self.data_reduction)
@@ -77,6 +80,7 @@ class PyramidBoosting3D:
                  features_to_use="gray-color",
                  decision_type="kernel",
                  kernel_shape="square",
+                 feature_aggregation="hist32",
                  norm_input=None,
                  clf="b_rf",
                  clf_options=None,
@@ -88,6 +92,7 @@ class PyramidBoosting3D:
         self.norm_input = norm_input
         self.kernel_shape = kernel_shape
         self.decision_type = decision_type
+        self.feature_aggregation = feature_aggregation
 
         self.clf = clf
         self.clf_options = clf_options
@@ -119,6 +124,7 @@ class PyramidBoosting3D:
                                        kernel=kernel,
                                        kernel_shape="ellipse",
                                        down_scale=self.max_depth - d - 1,
+                                       feature_aggregation=self.feature_aggregation,
                                        clf=self.clf,
                                        clf_options=self.clf_options,
                                        data_reduction=self.data_reduction)

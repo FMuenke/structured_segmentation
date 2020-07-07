@@ -25,7 +25,7 @@ class Circle:
             prop["radius"] = 0
             return prop
         centroid = regions[0].centroid
-        prop["radius"] = ((regions[0].major_axis_length + regions[0].minor_axis_length) / 2)
+        prop["radius"] = regions[0].major_axis_length
         prop["cy"] = centroid[0] / height
         prop["cx"] = centroid[1] / width
         prop["radius"] = prop["radius"] / np.sqrt(height**2 + width**2)

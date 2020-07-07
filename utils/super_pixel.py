@@ -119,7 +119,7 @@ def generate_segments(x_input, opt):
     elif "slic" in opt["super_pixel_method"]:
         segments = slic(img, n_segments=n_segments, compactness=30, sigma=1, start_label=1)
     elif "quickshift" in opt["super_pixel_method"]:
-        kernel_size = 5 * (opt["down_scale"] + 1)
+        kernel_size = 3 * (opt["down_scale"] + 1)
         segments = quickshift(img, kernel_size=kernel_size, max_dist=6, ratio=0.5)
     elif "watershed" in opt["super_pixel_method"]:
         gradient = sobel(rgb2gray(img))
