@@ -7,7 +7,7 @@ from scipy.ndimage import convolve
 from structured_classifier.layer_operations import make_structuring_element
 
 
-from structured_classifier.encoder_handler import EncoderHandler
+from learner.encoder_handler import EncoderHandler
 from structured_classifier.layer_operations import resize
 from utils.utils import check_n_make_dir, save_dict
 

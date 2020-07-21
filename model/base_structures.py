@@ -1,7 +1,7 @@
 import numpy as np
 
-from structured_classifier.decision_layer import DecisionLayer
-from structured_classifier.decision_3d_layer import Decision3DLayer
+from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.graph_3d_layer import Graph3DLayer
 
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
@@ -25,14 +25,14 @@ def get_decision_layer(
         dt = decision_type
 
     if dt == "kernel":
-        xx = DecisionLayer(INPUTS=INPUTS,
-                           name=name,
-                           kernel=kernel,
-                           kernel_shape=kernel_shape,
-                           down_scale=down_scale,
-                           clf=clf,
-                           clf_options=clf_options,
-                           data_reduction=data_reduction)
+        xx = GraphLayer(INPUTS=INPUTS,
+                        name=name,
+                        kernel=kernel,
+                        kernel_shape=kernel_shape,
+                        down_scale=down_scale,
+                        clf=clf,
+                        clf_options=clf_options,
+                        data_reduction=data_reduction)
     elif dt in ["slic", "watershed", "felzenszwalb", "quickshift", "patches"]:
         xx = SuperPixelLayer(INPUTS=INPUTS,
                              name=name,
@@ -66,7 +66,7 @@ def get_decision_layer_3d(
         dt = decision_type
 
     if dt == "kernel":
-        xx = Decision3DLayer(
+        xx = Graph3DLayer(
             INPUTS=INPUTS,
             name=name,
             kernel=kernel, kernel_shape=kernel_shape,

@@ -21,7 +21,9 @@ def convert_cls_to_color(cls_map, color_coding, unsupervised=False):
                                         [np.random.randint(255), np.random.randint(255), np.random.randint(255)]]
     for idx, cls in enumerate(color_coding):
         iy, ix = np.where(cls_map == idx + 1)
-        color_map[iy, ix, :] = color_coding[cls][1]
+        color_map[iy, ix, :] = [color_coding[cls][1][2],
+                                color_coding[cls][1][1],
+                                color_coding[cls][1][0]]
     return color_map
 
 

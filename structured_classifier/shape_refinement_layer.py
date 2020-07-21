@@ -5,8 +5,8 @@ from tqdm import tqdm
 
 from geometric_shapes.geometric_shape import get_shape
 
-from structured_classifier.regressor_handler import RegressorHandler
-from structured_classifier.classifier_handler import ClassifierHandler
+from learner.regressor_handler import RegressorHandler
+from learner.classifier_handler import ClassifierHandler
 from structured_classifier.layer_operations import resize, dropout, augment_tag
 from utils.utils import check_n_make_dir, save_dict
 
@@ -119,7 +119,6 @@ class ShapeRefinementLayer:
         return label_map
 
     def transform_features(self, x_img):
-        # height, width = x_img.shape[:2]
         x = resize(x_img, width=self.global_kernel[0], height=self.global_kernel[1], interpolation="linear")
         x = np.reshape(x, (1, -1))
         return x

@@ -4,7 +4,7 @@ import os
 from data_structure.video_set import VideoSet
 from structured_classifier.model import Model
 
-from structured_classifier.decision_3d_layer import Decision3DLayer
+from structured_classifier.graph_3d_layer import Graph3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
@@ -45,25 +45,12 @@ def main(args_):
            "layer_structure": (126, 32, )}
 
     rf = RandomStructuredRandomForrest3D(n_estimators=25, features_to_use=["gray-lbp"],
-                                         kernel_shape="square",
-                                         max_down_scale=3, max_depth=1, max_kernel_sum=25,
+                                         max_down_scale=5, max_depth=1, max_kernel_sum=25,
                                          clf=clf, clf_options=opt)
-    x = rf.build(width=64, height=64, output_option="boosting")
+    x = rf.build(width=300, output_option="boosting")
 
-    x_in = Input3DLayer(name="in", features_to_use="gray-lbp", width=300)
-    x1 = SuperPixel3DLayer(INPUTS=x_in, name="pa0", time_range=5,
-                           super_pixel_method="patches", down_scale=2,
-                           feature_aggregation="hist25", clf=clf, clf_options=opt)
-    x2 = SuperPixel3DLayer(INPUTS=x_in, name="pa1", time_range=5,
-                           super_pixel_method="quickshift", down_scale=1,
-                           feature_aggregation="hist25", clf=clf, clf_options=opt)
-    x3 = SuperPixel3DLayer(INPUTS=x_in, name="pa2", time_range=5,
-                           super_pixel_method="quickshift", down_scale=2,
-                           feature_aggregation="hist25", clf=clf, clf_options=opt)
-
-    x = BottleNeck3DLayer(INPUTS=[x1, x2, x3], name="bott")
-    x_in2 = Input3DLayer(name="in2", features_to_use="gray-lbp", width=300)
-    x = Decision3DLayer(INPUTS=[x, x_in2], name="merge", clf=clf, clf_options=opt, kernel=(1, 5, 5))
+    x = ShapeRefinement3DLayer(INPUTS=x, name="SR", shape="arbitrary", global_kernel=(1, 15, 15), data_reduction=3,
+                               clf_options={"n_estimators": 1000})
 
     model = Model(graph=x)
 

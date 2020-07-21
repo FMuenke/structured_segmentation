@@ -4,7 +4,7 @@ from tqdm import tqdm
 from utils.super_pixel import get_features_for_segments, generate_segments, map_segments, get_y_for_segments
 
 
-from structured_classifier.classifier_handler import ClassifierHandler
+from learner.classifier_handler import ClassifierHandler
 from structured_classifier.layer_operations import resize
 from utils.utils import check_n_make_dir, save_dict
 

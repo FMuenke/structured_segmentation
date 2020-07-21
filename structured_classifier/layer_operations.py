@@ -81,7 +81,7 @@ def shift_image(X, dx, dy):
 
 
 def augment_tag(data, label):
-    ang = np.random.randint(0, 179)
+    ang = np.random.randint(0, 179) - 90
     data = rotate(np.copy(data.astype(np.float)), angle=ang)
     label = rotate(np.copy(label.astype(np.float)), angle=ang)
     if np.random.randint(2):

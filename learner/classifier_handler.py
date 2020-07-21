@@ -84,7 +84,7 @@ class ClassifierHandler:
             print("Predicting on the test set")
         t0 = time()
         y_pred = self.predict(x_test)
-        self.report = str(classification_report(y_test, y_pred))
+        self.report = str(classification_report(y_test, y_pred, zero_division=0))
         if len(y_pred.shape) > 1:
             if y_pred.shape[1] > 10:
                 self.report = "Macro F1-Score:\n"
@@ -99,7 +99,7 @@ class ClassifierHandler:
             with open(save_path, "w") as f:
                 f.write(self.report)
 
-        return f1_score(y_true=y_test, y_pred=y_pred, average="macro")
+        return f1_score(y_true=y_test, y_pred=y_pred, average="macro", zero_division=0)
 
     def _init_classifier(self, opt):
         if "base_estimator" in opt:

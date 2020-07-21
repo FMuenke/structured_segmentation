@@ -13,8 +13,8 @@ class StatsHandler:
     def __str__(self):
         return self.generate_r_string()
 
-    def count(self, cls, t):
-        self.s[cls][t] += 1
+    def count(self, cls, t, n=1):
+        self.s[cls][t] += n
 
     def eval(self):
         for cls in self.s:

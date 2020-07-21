@@ -1,8 +1,8 @@
-from structured_classifier.decision_3d_layer import Decision3DLayer
+from structured_classifier.graph_3d_layer import Graph3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 
-from structured_classifier.decision_layer import DecisionLayer
+from structured_classifier.graph_layer import GraphLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer

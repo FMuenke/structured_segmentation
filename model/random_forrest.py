@@ -1,12 +1,12 @@
 import numpy as np
 
 
-from structured_classifier.decision_3d_layer import Decision3DLayer
+from structured_classifier.graph_3d_layer import Graph3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
 
-from structured_classifier.decision_layer import DecisionLayer
+from structured_classifier.graph_layer import GraphLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer
@@ -75,8 +75,9 @@ class RandomStructuredRandomForrest3D:
             return Voting3DLayer(INPUTS=trees, name="voting")
         elif output_option == "boosting":
             b = BottleNeck3DLayer(INPUTS=trees, name="cls_preparation")
-            return Decision3DLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
-        return trees
+            return Graph3DLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
+        else:
+            return trees
 
 
 class RandomStructuredRandomForrest:
@@ -150,5 +151,5 @@ class RandomStructuredRandomForrest:
             return VotingLayer(INPUTS=trees, name="voting")
         elif output_option == "boosting":
             b = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
-            return DecisionLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
+            return GraphLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
         return trees

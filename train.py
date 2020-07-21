@@ -11,7 +11,7 @@ from model.patch_work import PatchWork
 
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
-from structured_classifier.decision_layer import DecisionLayer
+from structured_classifier.graph_layer import GraphLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.normalization_layer import NormalizationLayer
@@ -33,11 +33,15 @@ def main(args_):
         # "crack": [[3, 3, 3], [255, 255, 0]],
         "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "heart": [[4, 4, 4], [0, 255, 0]],
-        # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
         # "lines": [[1, 1, 1], [255, 0, 0]],
+        # "street": [[255, 0, 255], [255, 0, 255]],
+        # "cobblestone": [[180, 50, 180], [180, 50, 180]],
+        # "side_walk": [[180, 149, 200], [180, 149, 200]],
+        # "vegetation": [[147, 253, 194], [147, 253, 194]],
+        # "sky": [[135, 206, 255], [135, 206, 255]],
+        # "human": [[199, 150, 250], [199, 150, 250]],
     }
 
     randomized_split = True
@@ -46,28 +50,28 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "rf"
+    clf = "xgboost"
     opt = {
-        "layer_structure": (8, ),
-        "n_estimators": 1000,
+        "layer_structure": (32, ),
+        "n_estimators": 2500,
         "num_parallel_tree": 5,
         # "base_estimator": {"type": "rf"},
         }
     width = 300
 
-    pw = PatchWork(patch_types=["patches", "slic"], down_scales=[0, 1, 2, 3], features_to_use="gray-lbp",
-                   feature_aggregations=["hist25"], clf=clf, clf_options=opt)
+    pw = PatchWork(patch_types=["patches"], down_scales=[2, 3],
+                   features=["rgb-lbp+hist25"],
+                   data_reduction=3)
     x = pw.build(width=width, output_option="boosting")
 
-    x = InputLayer(name="INPUT", features_to_use="gray-lbp", width=width)
+    ed = EncoderDecoder(features_to_use="gray-lbp", kernel_shape="ellipse")
+    x = ed.build(width=300)
+    x = BottleNeckLayer(INPUTS=x, name="bot")
+    x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(21, 21), shape="arbitrary", clf_options=opt)
+    x = GraphLayer(INPUTS=x, name="final", kernel=(5, 5), down_scale=1)
 
-    # x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(16, 16), shape="arbitrary", clf=clf, clf_options=opt)
-    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=0, data_reduction=3)
-    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=1, data_reduction=3)
-    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=2, data_reduction=3)
-    x = DecisionLayer(INPUTS=x, name="dl1", kernel=(5, 5), down_scale=1, data_reduction=1)
-    x = BottleNeckLayer(INPUTS=x, name="bottle")
-    x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(16, 16), shape="arbitrary", clf=clf, clf_options=opt)
+    # rf = RandomStructuredRandomForrest(n_estimators=20, max_kernel_sum=15, features_to_use=["gray-lbp", "hsv-color"])
+    # x = rf.build(width=300, output_option="boosting")
 
     model = Model(graph=x)
 

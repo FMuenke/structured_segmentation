@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from utils.super_pixel import get_features_for_segments, generate_segments, map_segments, get_y_for_segments
 
-from structured_classifier.classifier_handler import ClassifierHandler
+from learner.classifier_handler import ClassifierHandler
 from structured_classifier.layer_operations import resize
 from utils.utils import check_n_make_dir, save_dict
 
@@ -50,11 +50,12 @@ class SuperPixelLayer:
         self.data_reduction = data_reduction
 
     def __str__(self):
-        return "{} - {} - {} - SP: {} - Downscale: {}".format(self.layer_type,
-                                                              self.name,
-                                                              self.clf,
-                                                              self.opt["super_pixel_method"],
-                                                              self.opt["down_scale"])
+        return "{} - {} - {} - SP: {}+{} - Downscale: {}".format(self.layer_type,
+                                                                 self.name,
+                                                                 self.clf,
+                                                                 self.opt["super_pixel_method"],
+                                                                 self.opt["feature_aggregation"],
+                                                                 self.opt["down_scale"])
 
     def inference(self, x_input, interpolation="nearest"):
         segments = generate_segments(x_input, self.opt)
@@ -62,7 +63,7 @@ class SuperPixelLayer:
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
         x_img = get_features_for_segments(x_img, segments, self.opt["feature_aggregation"])
-        y_pred = self.clf.predict(x_img)
+        y_pred = self.clf.predict_proba(x_img)
         segments = resize(segments, width=x_width, height=x_height, interpolation="nearest")
         y_img = map_segments(segments, y_pred)
         x_img_pass = resize(x_pass, width=o_width, height=o_height, interpolation="nearest")

@@ -20,6 +20,6 @@ class Arbitrary:
 
     def get_label_map(self, parameters, height, width, global_kernel):
         label_map = np.reshape(parameters, (global_kernel[0], global_kernel[1], 1))
-        label_map = cv2.resize(label_map, (width, height))
+        label_map = cv2.resize(label_map, (width, height), interpolation=cv2.INTER_NEAREST)
         return label_map
 

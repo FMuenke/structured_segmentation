@@ -5,12 +5,12 @@ from tqdm import tqdm
 from scipy.ndimage import convolve
 
 
-from structured_classifier.classifier_handler import ClassifierHandler
+from learner.classifier_handler import ClassifierHandler
 from structured_classifier.layer_operations import resize
 from utils.utils import check_n_make_dir, save_dict
 
 
-class Decision3DLayer:
+class Graph3DLayer:
     layer_type = "DECISION3D_LAYER"
 
     def __init__(self,

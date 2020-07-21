@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import os
 from tqdm import tqdm
-from structured_classifier.classifier_handler import ClassifierHandler
+from learner.classifier_handler import ClassifierHandler
 from structured_classifier.layer_operations import resize
 from utils.utils import check_n_make_dir, save_dict
 
