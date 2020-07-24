@@ -55,14 +55,14 @@ class Model:
         if "layer_type" not in opt:
             raise ValueError("No LayerType Option is defined!")
 
-        if opt["layer_type"] == "DECISION_LAYER":
+        if opt["layer_type"] == "GRAPH_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = GraphLayer(prev_layer, opt["name"], opt["kernel"], opt["kernel_shape"], opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer
 
-        if opt["layer_type"] == "DECISION3D_LAYER":
+        if opt["layer_type"] == "GRAPH3D_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = Graph3DLayer(prev_layer, opt["name"], opt["kernel"], opt["kernel_shape"], opt["down_scale"])
             layer.set_index(int(opt["index"]))

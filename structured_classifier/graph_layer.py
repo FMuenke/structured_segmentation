@@ -11,7 +11,7 @@ from utils.utils import check_n_make_dir, save_dict
 
 
 class GraphLayer:
-    layer_type = "DECISION_LAYER"
+    layer_type = "GRAPH_LAYER"
 
     def __init__(self,
                  INPUTS,

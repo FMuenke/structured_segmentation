@@ -31,17 +31,19 @@ def main(args_):
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
         # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
         # "crack": [[3, 3, 3], [255, 255, 0]],
-        "heart": [[4, 4, 4], [0, 255, 0]],
+        # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
         # "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
         # "lines": [[1, 1, 1], [255, 0, 0]],
-        # "street": [[255, 0, 255], [255, 0, 255]],
+        "street": [[255, 0, 255], [255, 0, 255]],
         # "cobblestone": [[180, 50, 180], [180, 50, 180]],
         # "side_walk": [[180, 149, 200], [180, 149, 200]],
-        # "vegetation": [[147, 253, 194], [147, 253, 194]],
-        # "sky": [[135, 206, 255], [135, 206, 255]],
+        "vegetation": [[147, 253, 194], [147, 253, 194]],
+        "sky": [[135, 206, 255], [135, 206, 255]],
         # "human": [[199, 150, 250], [199, 150, 250]],
+        "Building": [[241, 230, 255], [241, 230, 255]],
+        "TrafficSign": [[7, 255, 255], [7, 255, 255]],
     }
 
     randomized_split = True
@@ -50,25 +52,25 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "xgboost"
+    clf = "lr"
     opt = {
         "layer_structure": (32, ),
-        "n_estimators": 2500,
+        "n_estimators": 100,
         "num_parallel_tree": 5,
         # "base_estimator": {"type": "rf"},
         }
     width = 300
 
-    pw = PatchWork(patch_types=["patches"], down_scales=[2, 3],
+    pw = PatchWork(patch_types=["slic"], down_scales=[2, 3],
                    features=["rgb-lbp+hist25"],
                    data_reduction=3)
     x = pw.build(width=width, output_option="boosting")
 
-    ed = EncoderDecoder(features_to_use="gray-lbp", kernel_shape="ellipse")
-    x = ed.build(width=300)
-    x = BottleNeckLayer(INPUTS=x, name="bot")
-    x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(21, 21), shape="arbitrary", clf_options=opt)
-    x = GraphLayer(INPUTS=x, name="final", kernel=(5, 5), down_scale=1)
+    # ed = EncoderDecoder(features_to_use="rgb-lbp", kernel_shape="ellipse", clf=clf, clf_options=opt)
+    # x = ed.build(width=256)
+    # x = BottleNeckLayer(INPUTS=x, name="bot")
+    # x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(21, 21), shape="arbitrary", clf_options=opt)
+    # x = GraphLayer(INPUTS=x, name="final", kernel=(5, 5), down_scale=1)
 
     # rf = RandomStructuredRandomForrest(n_estimators=20, max_kernel_sum=15, features_to_use=["gray-lbp", "hsv-color"])
     # x = rf.build(width=300, output_option="boosting")

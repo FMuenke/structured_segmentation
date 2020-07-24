@@ -1,12 +1,7 @@
-from structured_classifier.graph_3d_layer import Graph3DLayer
 from structured_classifier.input_3d_layer import Input3DLayer
-from structured_classifier.voting_3d_layer import Voting3DLayer
-
-from structured_classifier.graph_layer import GraphLayer
 from structured_classifier.input_layer import InputLayer
-from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer
-from structured_classifier.bottle_neck_layer import BottleNeckLayer
+from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
 
 from model.base_structures import get_decision_layer, get_decision_layer_3d
 
@@ -115,9 +110,10 @@ class PyramidBoosting3D:
     def _build_single_unit(self, input_layer, name):
         x1 = input_layer
 
-        kernel = (self.max_kernel_sum, self.max_kernel_sum, self.max_kernel_sum)
-
         for d in range(self.max_depth):
+            kernel = (self.max_kernel_sum - 2 * d,
+                      self.max_kernel_sum - 2 * d,
+                      self.max_kernel_sum - 2 * d)
             x1 = get_decision_layer_3d(INPUTS=x1,
                                        decision_type=self.decision_type,
                                        name="{}_stage_{}".format(name, self.max_depth - d - 1),
@@ -128,5 +124,6 @@ class PyramidBoosting3D:
                                        clf=self.clf,
                                        clf_options=self.clf_options,
                                        data_reduction=self.data_reduction)
+            x1 = BottleNeck3DLayer(INPUTS=x1, name="{}_bottle_neck_{}".format(name, self.max_depth - d - 1))
         return x1
 

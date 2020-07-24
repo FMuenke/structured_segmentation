@@ -53,3 +53,6 @@ class BottleNeck3DLayer:
 
     def set_index(self, i):
         self.index = i
+
+    def load(self, model_path):
+        pass

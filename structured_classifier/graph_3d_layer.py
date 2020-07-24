@@ -11,7 +11,7 @@ from utils.utils import check_n_make_dir, save_dict
 
 
 class Graph3DLayer:
-    layer_type = "DECISION3D_LAYER"
+    layer_type = "GRAPH3D_LAYER"
 
     def __init__(self,
                  INPUTS,

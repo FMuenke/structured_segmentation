@@ -39,18 +39,21 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "b_rf"
+    clf = "lr"
     opt = {"n_estimators": 500,
            "num_parallel_tree": 5,
            "layer_structure": (126, 32, )}
 
-    rf = RandomStructuredRandomForrest3D(n_estimators=25, features_to_use=["gray-lbp"],
-                                         max_down_scale=5, max_depth=1, max_kernel_sum=25,
+    rf = RandomStructuredRandomForrest3D(n_estimators=2, features_to_use=["gray-lbp"],
+                                         max_down_scale=5, max_depth=3, max_kernel_sum=25,
                                          clf=clf, clf_options=opt)
-    x = rf.build(width=300, output_option="boosting")
+    x = rf.build(width=256, output_option="boosting")
 
-    x = ShapeRefinement3DLayer(INPUTS=x, name="SR", shape="arbitrary", global_kernel=(1, 15, 15), data_reduction=3,
-                               clf_options={"n_estimators": 1000})
+    pb = PyramidBoosting3D(n_estimators=1, max_depth=2, max_kernel_sum=7, features_to_use="gray-lbp", clf=clf, clf_options=opt)
+    x = pb.build(width=256)
+
+    # ed = EncoderDecoder3D(depth=3, kernel_shape="ellipse", clf=clf, clf_options=opt, features_to_use="gray-lbp")
+    # x = ed.build(width=256)
 
     model = Model(graph=x)
 
