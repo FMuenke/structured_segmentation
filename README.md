@@ -13,8 +13,15 @@ It is strongly recommended to use a virtual environment (like anaconda).
 
 ## Example
 
-ToDo
+An encoder-decoder model was used to segment cracks in images.
 
+Input Image:
+
+![Input Image of the EncoderDecoder Model](examples/example_0_image.jpg)
+
+Ground-Truth (right) / Result (left):
+
+![](examples/example_0_result.png)
 ## Documentation
 
 In this repository there are multiple layer implemented.
