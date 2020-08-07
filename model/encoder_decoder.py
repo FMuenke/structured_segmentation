@@ -31,12 +31,13 @@ class EncoderDecoder:
         self.clf_options = clf_options
         self.data_reduction = data_reduction
 
-    def build(self, width=None, height=None, initial_down_scale=None):
-        xx = InputLayer(name="in",
-                        features_to_use=self.features_to_use,
-                        initial_down_scale=initial_down_scale,
-                        width=width,
-                        height=height)
+    def build(self, xx=None, width=None, height=None, initial_down_scale=None):
+        if xx is None:
+            xx = InputLayer(name="in",
+                            features_to_use=self.features_to_use,
+                            initial_down_scale=initial_down_scale,
+                            width=width,
+                            height=height)
 
         kernel = (self.max_kernel_sum, self.max_kernel_sum)
 
@@ -108,13 +109,14 @@ class EncoderDecoder3D:
         self.clf_options = clf_options
         self.data_reduction = data_reduction
 
-    def build(self, width=None, height=None, initial_down_scale=None):
-        xx = Input3DLayer(
-            name="in",
-            features_to_use=self.features_to_use,
-            initial_down_scale=initial_down_scale,
-            width=width,
-            height=height)
+    def build(self, xx=None, width=None, height=None, initial_down_scale=None):
+        if xx is None:
+            xx = Input3DLayer(
+                name="in",
+                features_to_use=self.features_to_use,
+                initial_down_scale=initial_down_scale,
+                width=width,
+                height=height)
 
         kernel = (self.max_kernel_sum, self.max_kernel_sum, self.max_kernel_sum)
 

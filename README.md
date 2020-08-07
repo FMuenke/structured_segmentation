@@ -30,6 +30,15 @@ The Layer can be stacked and used as one end-to-end trainable model.
 Learning Layer:
 * GraphLayer
 * SuperPixelLayer
+    + INPUTS : previous layers as list or as layer object
+    + name : Identifying Name
+    + super_pixel_method="slic" : Method used to create SuperPixels [slic, patches, felzenszwalb, quickshift, watershed]
+    + down_scale=0 : Octave used to downscale relative to the initial input
+    + feature_aggregation="quantiles",
+    + clf="b_rf",
+    + clf_options=None,
+    + param_grid=None,
+    + data_reduction=0
 * ShapeRefinementLayer
 
 Helper Layer:

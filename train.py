@@ -25,7 +25,7 @@ from utils.utils import save_dict
 def main(args_):
     color_coding = {
         # "js": [[1, 1, 1], [255, 255, 0]],
-        "crack": [[255, 255, 255], [255, 0, 255]],
+        # "crack": [[255, 255, 255], [255, 0, 255]],
         # "ellipse": [[200, 0, 0], [0, 255, 255]],
         # "street_sign": [[155, 155, 155], [0, 255, 0]],
         # "man_hole": [[1, 1, 1], [0, 255, 0]],
@@ -33,7 +33,7 @@ def main(args_):
         # "crack": [[3, 3, 3], [255, 255, 0]],
         # "heart": [[4, 4, 4], [0, 255, 0]],
         # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "shadow": [[1, 1, 1], [255, 0, 0]],
+        "shadow": [[1, 1, 1], [255, 0, 0]],
         # "filled_crack": [[2, 2, 2], [0, 255, 0]],
         # "lines": [[1, 1, 1], [255, 0, 0]],
         # "street": [[255, 0, 255], [255, 0, 255]],
@@ -52,30 +52,20 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "lr"
+    clf = "xgboost"
     opt = {
-        "layer_structure": (32, ),
+        # "layer_structure": (32, ),
         "n_estimators": 100,
         "num_parallel_tree": 5,
-        # "base_estimator": {"type": "rf"},
         }
-    width = 128
 
-    pw = PatchWork(patch_types=["patches"], down_scales=[1, 2, 3],
-                   features=["rgb-lbp+hist25"],
-                   data_reduction=3)
-    x = pw.build(width=width, output_option="boosting")
+    width = 300
 
-    ed = EncoderDecoder(features_to_use=["gray-gradient", "gray-color"], depth=4, max_kernel_sum=7,
-                        kernel_shape="ellipse", clf=clf, clf_options=opt)
+    ed = EncoderDecoder(features_to_use=["hsv-color"],
+                        norm_input="normalize_mean",
+                        kernel_shape="ellipse",
+                        clf=clf, clf_options=opt)
     x = ed.build(width=width)
-    # x = BottleNeckLayer(INPUTS=x, name="bot")
-    # x = ShapeRefinementLayer(INPUTS=x, name="sr", global_kernel=(21, 21), shape="arbitrary", clf_options=opt)
-    # x = GraphLayer(INPUTS=x, name="final", kernel=(5, 5), down_scale=1)
-
-    # rf = RandomStructuredRandomForrest(n_estimators=20, max_kernel_sum=15, features_to_use=["gray-lbp", "hsv-color"])
-    # x = rf.build(width=300, output_option="boosting")
-
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
