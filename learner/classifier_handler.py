@@ -189,8 +189,11 @@ class ClassifierHandler:
                 f.write(self.report)
 
     def is_fitted(self):
-        if self.classifier is not None:
-            return check_is_fitted(self.classifier)
-        else:
+        try:
+            if self.classifier is not None:
+                return check_is_fitted(self.classifier)
+            else:
+                return False
+        except Exception as e:
             return False
 

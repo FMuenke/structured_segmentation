@@ -1,6 +1,6 @@
 class StatsHandler:
     def __init__(self, color_coding):
-        self.s = {}
+        self.s = {"total": {"tp": 0, "fp": 0, "fn": 0}}
         self.r = {}
 
         for cls in color_coding:
@@ -15,6 +15,7 @@ class StatsHandler:
 
     def count(self, cls, t, n=1):
         self.s[cls][t] += n
+        self.s["total"][t] += n
 
     def eval(self):
         for cls in self.s:

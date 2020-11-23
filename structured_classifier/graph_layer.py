@@ -189,6 +189,9 @@ class GraphLayer:
         for p in self.previous:
             p.fit(train_tags, validation_tags)
 
+        if self.clf.is_fitted():
+            return None
+
         print("Collecting Features for Stage: {}".format(self))
         print("Data is reduced by factor: {}".format(self.data_reduction))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
@@ -203,7 +206,7 @@ class GraphLayer:
             self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50, n_jobs=2)
         else:
             self.clf.fit(x_train, y_train)
-        self.clf.evaluate(x_val, y_val)
+        return self.clf.evaluate(x_val, y_val)
 
     def save(self, model_path):
         model_path = os.path.join(model_path, self.layer_type + "-" + self.name)
