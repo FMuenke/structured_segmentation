@@ -45,11 +45,11 @@ def main(args_):
         # "human": [[199, 150, 250], [199, 150, 250]],
         # "Building": [[241, 230, 255], [241, 230, 255]],
         # "TrafficSign": [[7, 255, 255], [7, 255, 255]],
-        # "asphalt": [[1, 1, 1], [255, 0, 0]],
+        "asphalt": [[1, 1, 1], [255, 0, 0]],
         # "marking": [[2, 2, 2], [0, 255, 0]],
         "nature": [[3, 3, 3], [0, 0, 255]],
-        # "stones": [[4, 4, 4], [255, 255, 0]],
-        "earth": [[5, 5, 5], [0, 255, 255]],
+        "stones": [[4, 4, 4], [255, 255, 0]],
+        # "earth": [[5, 5, 5], [0, 255, 255]],
         # "drains": [[7, 7, 7], [255, 255, 255]]
     }
 
@@ -67,15 +67,13 @@ def main(args_):
         }
 
     width = 1200
-    x1 = InputLayer(name="0", features_to_use=["hsv-lm"], width=width)
+    x1 = InputLayer(name="0", features_to_use=["hsv-gradient"], width=width)
     x1 = SuperPixelLayer(x1,
                          name="sp_0",
                          super_pixel_method="slic",
                          down_scale=2,
-                         feature_aggregation="gauss",
-                         data_reduction=2,
+                         feature_aggregation="hog",
                          clf=clf, clf_options=opt)
-    x1 = GraphLayer(INPUTS=x1, name="refinement", kernel=(1, 1), clf=clf, clf_options=opt)
     model = Model(graph=x1)
 
     d_set = SegmentationDataSet(df, color_coding)
