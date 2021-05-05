@@ -10,6 +10,8 @@ from model.encoder_decoder import EncoderDecoder
 from model.patch_work import PatchWork
 
 from structured_classifier.input_layer import InputLayer
+from structured_classifier.object_selection_layer import ObjectSelectionLayer
+from structured_classifier.simple_layer import SimpleLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.graph_layer import GraphLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
@@ -25,32 +27,8 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        # "js": [[1, 1, 1], [255, 255, 0]],
-        # "crack": [[255, 255, 255], [255, 0, 255]],
-        # "ellipse": [[200, 0, 0], [0, 255, 255]],
-        # "street_sign": [[155, 155, 155], [0, 255, 0]],
-        # "man_hole": [[1, 1, 1], [0, 255, 0]],
-        # "crack_cluster": [[1, 1, 1], [255, 255, 0]],
-        # "crack": [[3, 3, 3], [255, 255, 0]],
-        # "heart": [[4, 4, 4], [0, 255, 0]],
-        # "muscle": [[255, 255, 255], [255, 0, 0]],
-        # "shadow": [[1, 1, 1], [255, 0, 0]],
-        # "filled_crack": [[2, 2, 2], [0, 255, 0]],
-        # "lines": [[1, 1, 1], [255, 0, 0]],
-        # "street": [[255, 0, 255], [255, 0, 255]],
-        # "cobblestone": [[180, 50, 180], [180, 50, 180]],
-        # "side_walk": [[180, 149, 200], [180, 149, 200]],
-        # "vegetation": [[147, 253, 194], [147, 253, 194]],
-        # "sky": [[135, 206, 255], [135, 206, 255]],
-        # "human": [[199, 150, 250], [199, 150, 250]],
-        # "Building": [[241, 230, 255], [241, 230, 255]],
-        # "TrafficSign": [[7, 255, 255], [7, 255, 255]],
-        "asphalt": [[1, 1, 1], [255, 0, 0]],
-        # "marking": [[2, 2, 2], [0, 255, 0]],
-        "nature": [[3, 3, 3], [0, 0, 255]],
-        "stones": [[4, 4, 4], [255, 255, 0]],
-        # "earth": [[5, 5, 5], [0, 255, 255]],
-        # "drains": [[7, 7, 7], [255, 255, 255]]
+        # "crack": [[255, 255, 255], [255, 255, 255]],
+        "blob": [[1, 1, 1], [255, 255, 255]],
     }
 
     randomized_split = True
@@ -59,21 +37,24 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "xgboost"
+    clf = "rf"
     opt = {
         # "layer_structure": (32, ),
-        "n_estimators": 100,
-        "num_parallel_tree": 5,
+        # "n_estimators": 100,
+        # "num_parallel_tree": 5,
         }
 
-    width = 1200
-    x1 = InputLayer(name="0", features_to_use=["hsv-gradient"], width=width)
-    x1 = SuperPixelLayer(x1,
-                         name="sp_0",
-                         super_pixel_method="slic",
-                         down_scale=2,
-                         feature_aggregation="hog",
-                         clf=clf, clf_options=opt)
+    width = 512
+    # x1 = InputLayer(name="0", features_to_use=["gray-color"], width=width)
+    # x1 = SimpleLayer(INPUTS=x1, name="simple", operations=["invert", "threshold", "opening", "closing"])
+    x1 = InputLayer(name="0", features_to_use=["gray-color"], width=width)
+    x1 = SimpleLayer(INPUTS=x1, name="simple", operations=["invert", "threshold", "opening", "closing"])
+    x1 = ObjectSelectionLayer(INPUTS=x1, name="obj_sel")
+
+    # x2 = InputLayer(name="0", features_to_use=["gray-lbp"], width=width)
+    # x1 = GraphLayer(INPUTS=[x1, x2], name="0", kernel=(5, 5), clf=clf, data_reduction=2, down_scale=1)
+
+    #
     model = Model(graph=x1)
 
     d_set = SegmentationDataSet(df, color_coding)

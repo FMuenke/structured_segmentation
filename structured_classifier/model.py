@@ -16,6 +16,8 @@ from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
 from structured_classifier.feature_extraction_layer import FeatureExtractionLayer
+from structured_classifier.simple_layer import SimpleLayer
+from structured_classifier.object_selection_layer import ObjectSelectionLayer
 
 
 class Model:
@@ -143,6 +145,13 @@ class Model:
             layer.load(model_folder)
             return layer
 
+        if opt["layer_type"] == "SIMPLE_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = SimpleLayer(prev_layer, opt["name"], None)
+            layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
+            return layer
+
         if opt["layer_type"] == "SUPER_PIXEL_3D_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = SuperPixel3DLayer(prev_layer, opt["name"],
@@ -161,6 +170,13 @@ class Model:
                                            down_scale=opt["down_scale"],
                                            kernel=opt["kernel"], kernel_shape=opt["kernel_shape"]
                                            )
+            layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
+            return layer
+
+        if opt["layer_type"] == "OBJECT_SELECTION_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = ObjectSelectionLayer(prev_layer, opt["name"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer
