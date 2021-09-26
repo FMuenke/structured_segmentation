@@ -59,20 +59,19 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "xgboost"
+    clf = "kmeans"
     opt = {
         # "layer_structure": (32, ),
-        "n_estimators": 100,
-        "num_parallel_tree": 5,
+        "n_clusters": 16,
         }
 
-    width = 1200
-    x1 = InputLayer(name="0", features_to_use=["hsv-gradient"], width=width)
+    width = 400
+    x1 = InputLayer(name="0", features_to_use=["gray-lm"], width=width)
     x1 = SuperPixelLayer(x1,
                          name="sp_0",
                          super_pixel_method="slic",
-                         down_scale=2,
-                         feature_aggregation="hog",
+                         down_scale=0,
+                         feature_aggregation="gauss",
                          clf=clf, clf_options=opt)
     model = Model(graph=x1)
 
