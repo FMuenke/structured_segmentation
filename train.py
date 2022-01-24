@@ -27,8 +27,8 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        # "crack": [[255, 255, 255], [255, 255, 255]],
-        "blob": [[1, 1, 1], [255, 255, 255]],
+        "crack": [[1, 1, 1], [0, 0, 255]],
+        # "blob": [[1, 1, 1], [255, 255, 255]],
     }
 
     randomized_split = True
@@ -45,16 +45,14 @@ def main(args_):
         }
 
     width = 512
-    # x1 = InputLayer(name="0", features_to_use=["gray-color"], width=width)
-    # x1 = SimpleLayer(INPUTS=x1, name="simple", operations=["invert", "threshold", "opening", "closing"])
-    x1 = InputLayer(name="0", features_to_use=["gray-color"], width=width)
-    x1 = SimpleLayer(INPUTS=x1, name="simple", operations=["invert", "threshold", "opening", "closing"])
-    x1 = ObjectSelectionLayer(INPUTS=x1, name="obj_sel")
-
-    # x2 = InputLayer(name="0", features_to_use=["gray-lbp"], width=width)
-    # x1 = GraphLayer(INPUTS=[x1, x2], name="0", kernel=(5, 5), clf=clf, data_reduction=2, down_scale=1)
-
-    #
+    ed = EncoderDecoder(
+        kernel_shape="ellipse",
+        features_to_use="gray-color",
+        max_kernel_sum=3,
+        norm_input="normalize_and_standardize",
+        depth=3,
+    )
+    x1 = ed.build(initial_down_scale=1)
     model = Model(graph=x1)
 
     d_set = SegmentationDataSet(df, color_coding)

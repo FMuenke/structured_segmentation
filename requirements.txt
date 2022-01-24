@@ -5,3 +5,4 @@ opencv-python
 imblearn
 xgboost
 tqdm
+umap-learn
