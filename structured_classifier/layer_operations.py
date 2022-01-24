@@ -30,10 +30,17 @@ def resize(data, width, height, interpolation="nearest"):
 def normalize(data):
     epsilon = 1e-6
     # mat_mean = np.mean(np.mean(data, axis=0), axis=0)
-    mat_norm = data#  - mat_mean
+    mat_norm = data
     min_mat = np.min(np.min(mat_norm, axis=0), axis=0)
     max_mat = np.max(np.max(mat_norm, axis=0), axis=0)
-    mat_norm = mat_norm / (max_mat - min_mat + epsilon)
+    idx = np.where(max_mat - min_mat == 0)[0]
+
+    if len(idx) > 0:
+        if type(max_mat) != np.ndarray:
+            max_mat = epsilon
+        else:
+            max_mat[idx] = epsilon
+    mat_norm = (mat_norm - min_mat) / (max_mat - min_mat)
     return mat_norm
 
 
@@ -54,7 +61,7 @@ def normalize_and_standardize(data):
 
     min_mat = np.min(np.min(mat_norm, axis=0), axis=0)
     max_mat = np.max(np.max(mat_norm, axis=0), axis=0)
-    mat_norm = mat_norm / (max_mat - min_mat + epsilon)
+    mat_norm = (mat_norm - min_mat) / (max_mat - min_mat + epsilon)
     return mat_norm
 
 

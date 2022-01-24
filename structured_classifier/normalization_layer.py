@@ -57,6 +57,11 @@ class NormalizationLayer:
             return normalize_and_standardize(x_img)
         if norm_option == "min_max_scaling":
             return normalize(x_img)
+        if norm_option == "percentile_scaling_5":
+            percentile = 5
+            i_max = np.percentile(np.percentile(x_img, 100 - percentile, axis=0), 100 - percentile, axis=0)
+            i_min = np.percentile(np.percentile(x_img, percentile, axis=0), percentile, axis=0)
+            return (x_img.astype(np.float64) - i_min) / (i_max - i_min)
         if norm_option == "normalize_median":
             median_mat = np.median(np.median(x_img, axis=0), axis=0)
             x_img = x_img - median_mat
@@ -64,24 +69,6 @@ class NormalizationLayer:
         if norm_option == "normalize_mean":
             median_mat = np.mean(np.mean(x_img, axis=0), axis=0)
             x_img = x_img - median_mat
-            return x_img
-        if norm_option == "normalize_mean_y_axis":
-            median_mat = np.mean(x_img, axis=0)
-            x_img = np.add(x_img, median_mat)
-            return x_img
-
-        if norm_option == "normalize_mean_y_axis_mean":
-            median_mat = np.mean(np.mean(x_img, axis=0), axis=0)
-            x_img = x_img - median_mat
-            median_mat = np.mean(x_img, axis=0)
-            x_img = np.add(x_img, median_mat)
-            return x_img
-
-        if norm_option == "normalize_mean_axis":
-            median_mat_y = np.mean(x_img, axis=0)
-            median_mat_x = np.mean(x_img, axis=0)
-            x_img = np.add(x_img, np.multiply(median_mat_y, 0.5))
-            x_img = np.add(x_img, np.multiply(median_mat_x, 0.5))
             return x_img
         raise ValueError("Option: {} unknown".format(self.norm_option))
 

@@ -27,8 +27,7 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        "crack": [[1, 1, 1], [0, 0, 255]],
-        # "blob": [[1, 1, 1], [255, 255, 255]],
+        "crack": [[1, 1, 1], [255, 255, 255]],
     }
 
     randomized_split = True
@@ -37,23 +36,10 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    clf = "rf"
-    opt = {
-        # "layer_structure": (32, ),
-        # "n_estimators": 100,
-        # "num_parallel_tree": 5,
-        }
-
-    width = 512
-    ed = EncoderDecoder(
-        kernel_shape="ellipse",
-        features_to_use="gray-color",
-        max_kernel_sum=3,
-        norm_input="normalize_and_standardize",
-        depth=3,
-    )
-    x1 = ed.build(initial_down_scale=1)
-    model = Model(graph=x1)
+    x = InputLayer("input", features_to_use="gray-color")
+    x = NormalizationLayer(x, "NORM", norm_option="min_max_scaling")
+    x = SimpleLayer(x, "SIMPLE", operations=["blurring", "edge", "threshold_percentile"])
+    model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()

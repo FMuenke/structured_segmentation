@@ -181,7 +181,6 @@ class Model:
             layer.load(model_folder)
             return layer
 
-        print(opt)
         raise ValueError("Layer: {} not recognised!".format(opt["layer_type"]))
 
     def load_previous_layers(self, model_folder):

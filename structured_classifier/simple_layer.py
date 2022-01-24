@@ -12,6 +12,24 @@ from utils.utils import check_n_make_dir, save_dict, load_dict
 
 class EdgeDetector:
     list_of_parameters = [
+        None, 1, 2, 3, 4, 5, 6
+    ]
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = 255 * x_img
+        k = 2**self.parameter + 1
+        x_img_blur = cv2.blur(np.copy(x_img.astype(np.uint8)), ksize=(k, k))
+        ed_xy = np.abs(x_img.astype(np.float64) - x_img_blur.astype(np.float64))
+        return normalize(ed_xy)
+
+
+class Blurring:
+    list_of_parameters = [
         None, 3, 5, 7, 9, 11, 13, 15
     ]
 
@@ -21,9 +39,9 @@ class EdgeDetector:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
-        sobel_x = cv2.Sobel(x_img, cv2.CV_64F, 1, 0, ksize=self.parameter)
-        sobel_y = cv2.Sobel(x_img, cv2.CV_64F, 0, 1, ksize=self.parameter)
-        return np.sqrt(sobel_x**2 + sobel_y**2)
+        x_img = 255 * x_img
+        x_img = cv2.blur(np.copy(x_img.astype(np.uint8)), ksize=(self.parameter, self.parameter))
+        return x_img.astype(np.float64) / 255
 
 
 class Threshold:
@@ -37,9 +55,25 @@ class Threshold:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
-        x_img = normalize(x_img)
         x_img[x_img < self.parameter] = 0
         x_img[x_img >= self.parameter] = 1
+        return x_img
+
+
+class ThresholdPercentile:
+    list_of_parameters = [
+        None, 1, 2, 5, 10, 25
+    ]
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        threshold = np.percentile(x_img, self.parameter)
+        x_img[x_img < threshold] = 0
+        x_img[x_img >= threshold] = 1
         return x_img
 
 
@@ -55,7 +89,43 @@ class MorphologicalOpening:
         if self.parameter is None:
             return x_img
         kernel = np.ones((self.parameter, self.parameter), np.uint8)
-        return cv2.morphologyEx(x_img, cv2.MORPH_OPEN, kernel)
+        x_img = 255 * x_img
+        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_OPEN, kernel)
+        return x_img.astype(np.float64) / 255
+
+
+class MorphologicalErosion:
+    list_of_parameters = [
+        None, 3, 5, 7, 9, 11, 13, 15
+    ]
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        kernel = np.ones((self.parameter, self.parameter), np.uint8)
+        x_img = 255 * x_img
+        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_ERODE, kernel)
+        return x_img.astype(np.float64) / 255
+
+
+class MorphologicalDilatation:
+    list_of_parameters = [
+        None, 3, 5, 7, 9, 11, 13, 15
+    ]
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        kernel = np.ones((self.parameter, self.parameter), np.uint8)
+        x_img = 255 * x_img
+        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_DILATE, kernel)
+        return x_img.astype(np.float64) / 255
 
 
 class MorphologicalClosing:
@@ -70,7 +140,9 @@ class MorphologicalClosing:
         if self.parameter is None:
             return x_img
         kernel = np.ones((self.parameter, self.parameter), np.uint8)
-        return cv2.morphologyEx(x_img, cv2.MORPH_CLOSE, kernel)
+        x_img = 255 * x_img
+        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_CLOSE, kernel)
+        return x_img.astype(np.float64) / 255
 
 
 class Invert:
@@ -104,8 +176,9 @@ class Resize:
 
 
 class Pipeline:
-    def __init__(self, config):
+    def __init__(self, config, recall_importance=1.0):
         self.stats = {"TP": 0, "FP": 0, "FN": 0}
+        self.beta = recall_importance
         self.config = config
         self.operations = []
         for layer, parameter in config:
@@ -121,10 +194,19 @@ class Pipeline:
                 self.operations.append(Invert(parameter))
             elif layer == "resize":
                 self.operations.append(Resize(parameter))
+            elif layer == "threshold_percentile":
+                self.operations.append(ThresholdPercentile(parameter))
+            elif layer == "dilate":
+                self.operations.append(MorphologicalDilatation(parameter))
+            elif layer == "erode":
+                self.operations.append(MorphologicalErosion(parameter))
+            elif layer == "blurring":
+                self.operations.append(Blurring(parameter))
             else:
                 raise ValueError("OPERATION IS NOT KNOWN: {}".format(layer))
 
     def inference(self, x_img):
+        assert np.max(x_img) <= 1 and np.min(x_img) >= 0, "Image should be between 0 - 1. USE SCALING"
         if len(x_img.shape) == 3:
             x_img = x_img[:, :, -1]
         for op in self.operations:
@@ -139,13 +221,23 @@ class Pipeline:
         p_img = np.reshape(p_img, h_img * w_img)
 
         self.stats["TP"] += np.sum(np.logical_and(y_img == 1, p_img == 1))
-        self.stats["FP"] += np.sum(np.logical_and(y_img == 0, p_img == 1))
-        self.stats["FN"] += np.sum(np.logical_and(y_img == 1, p_img == 0))
+        self.stats["FP"] += np.sum(np.logical_and(y_img != 1, p_img == 1))
+        self.stats["FN"] += np.sum(np.logical_and(y_img == 1, p_img != 1))
 
     def summarize(self):
-        pre = self.stats["TP"] / (self.stats["TP"] + self.stats["FP"] + 1e-5)
-        rec = self.stats["TP"] / (self.stats["TP"] + self.stats["FN"] + 1e-5)
-        return 2 * pre * rec / (pre + rec + 1e-5)
+        if self.stats["TP"] + self.stats["FP"] == 0:
+            pre = 0
+        else:
+            pre = self.stats["TP"] / (self.stats["TP"] + self.stats["FP"])
+        if self.stats["TP"] + self.stats["FN"] == 0:
+            rec = 0
+        else:
+            rec = self.stats["TP"] / (self.stats["TP"] + self.stats["FN"])
+
+        if pre + rec == 0:
+            return 0
+        else:
+            return (1 + self.beta**2) * pre * rec / (self.beta ** 2 * pre + rec)
 
 
 class SimpleLayer:
@@ -172,6 +264,9 @@ class SimpleLayer:
             "name": self.name,
             "layer_type": self.layer_type,
         }
+
+    def __str__(self):
+        return "{} {}".format(self.layer_type, self.pipeline.config)
 
     def inference(self, x_input, interpolation="nearest"):
         x_img, x_pass = self.get_features(x_input)
@@ -221,7 +316,15 @@ class SimpleLayer:
             "closing": MorphologicalClosing.list_of_parameters,
             "opening": MorphologicalOpening.list_of_parameters,
             "resize": Resize.list_of_parameters,
+            "threshold_percentile": ThresholdPercentile.list_of_parameters,
+            "erode": MorphologicalErosion.list_of_parameters,
+            "dilate": MorphologicalDilatation.list_of_parameters,
+            "blurring": Blurring.list_of_parameters,
         }
+        for op in self.operations:
+            if op not in possible_configs:
+                pos_ops = [op for op in possible_configs]
+                raise Exception("INVALID OPERATION OPTION. CHOSE: {}".format(pos_ops))
         selected_configs = {op: possible_configs[op] for op in possible_configs if op in self.operations}
         for parameters in list(ParameterGrid(selected_configs)):
             cfg = [[op, parameters[op]] for op in self.operations]
