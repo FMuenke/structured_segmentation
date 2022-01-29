@@ -27,7 +27,7 @@ from utils.utils import save_dict
 
 def main(args_):
     color_coding = {
-        "crack": [[1, 1, 1], [255, 255, 255]],
+        "crack": [[1, 1, 1], [255, 0, 0]],
     }
 
     randomized_split = True
@@ -37,8 +37,10 @@ def main(args_):
     mf = args_.model_folder
 
     x = InputLayer("input", features_to_use="gray-color")
-    x = NormalizationLayer(x, "NORM", norm_option="min_max_scaling")
-    x = SimpleLayer(x, "SIMPLE", operations=["blurring", "edge", "threshold_percentile"])
+    # x = NormalizationLayer(x, "NORM", norm_option="min_max_scaling")
+    x = SimpleLayer(x, "SIMPLE", operations=["top_clipping_percentile", "frangi", "threshold_percentile", "opening"])
+    x = GraphLayer(x, "RF", kernel=(11, 11), kernel_shape="ellipse", clf="rf", clf_options={"n_estimators": 100})
+    # x = SimpleLayer(x, "SIMPLE", operations=["threshold", "opening"])
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)

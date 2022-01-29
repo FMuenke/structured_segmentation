@@ -2,177 +2,30 @@ from tqdm import tqdm
 import numpy as np
 import cv2
 import os
-from multiprocessing import Pool
 
 from structured_classifier.layer_operations import normalize, resize
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import ParameterGrid
 from utils.utils import check_n_make_dir, save_dict, load_dict
 
+from structured_classifier.image_processing_operations import *
 
-class EdgeDetector:
-    list_of_parameters = [
-        None, 1, 2, 3, 4, 5, 6
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        x_img = 255 * x_img
-        k = 2**self.parameter + 1
-        x_img_blur = cv2.blur(np.copy(x_img.astype(np.uint8)), ksize=(k, k))
-        ed_xy = np.abs(x_img.astype(np.float64) - x_img_blur.astype(np.float64))
-        return normalize(ed_xy)
-
-
-class Blurring:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        x_img = 255 * x_img
-        x_img = cv2.blur(np.copy(x_img.astype(np.uint8)), ksize=(self.parameter, self.parameter))
-        return x_img.astype(np.float64) / 255
-
-
-class Threshold:
-    list_of_parameters = [
-        None, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        x_img[x_img < self.parameter] = 0
-        x_img[x_img >= self.parameter] = 1
-        return x_img
-
-
-class ThresholdPercentile:
-    list_of_parameters = [
-        None, 1, 2, 5, 10, 25
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        threshold = np.percentile(x_img, self.parameter)
-        x_img[x_img < threshold] = 0
-        x_img[x_img >= threshold] = 1
-        return x_img
-
-
-class MorphologicalOpening:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        kernel = np.ones((self.parameter, self.parameter), np.uint8)
-        x_img = 255 * x_img
-        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_OPEN, kernel)
-        return x_img.astype(np.float64) / 255
-
-
-class MorphologicalErosion:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        kernel = np.ones((self.parameter, self.parameter), np.uint8)
-        x_img = 255 * x_img
-        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_ERODE, kernel)
-        return x_img.astype(np.float64) / 255
-
-
-class MorphologicalDilatation:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        kernel = np.ones((self.parameter, self.parameter), np.uint8)
-        x_img = 255 * x_img
-        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_DILATE, kernel)
-        return x_img.astype(np.float64) / 255
-
-
-class MorphologicalClosing:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        kernel = np.ones((self.parameter, self.parameter), np.uint8)
-        x_img = 255 * x_img
-        x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_CLOSE, kernel)
-        return x_img.astype(np.float64) / 255
-
-
-class Invert:
-    list_of_parameters = [
-        -1, 1
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter == -1:
-            stamp = np.ones(x_img.shape) * np.max(x_img)
-            return stamp - x_img
-        else:
-            return x_img
-
-
-class Resize:
-    list_of_parameters = [
-        None, 32, 64, 128, 256, 512
-    ]
-
-    def __init__(self, parameter):
-        self.parameter = parameter
-
-    def inference(self, x_img):
-        if self.parameter is None:
-            return x_img
-        return resize(x_img, width=self.parameter, height=self.parameter)
+LIST_OF_OPERATIONS = [
+    Resize,
+    Invert,
+    MorphologicalClosing,
+    EdgeDetector,
+    FrangiFilter,
+    Threshold,
+    MorphologicalOpening,
+    MorphologicalClosing,
+    ThresholdPercentile,
+    MorphologicalDilatation,
+    MorphologicalErosion,
+    Blurring,
+    TopClippingPercentile
+]
 
 
 class Pipeline:
@@ -182,31 +35,20 @@ class Pipeline:
         self.config = config
         self.operations = []
         for layer, parameter in config:
-            if layer == "edge":
-                self.operations.append(EdgeDetector(parameter))
-            elif layer == "threshold":
-                self.operations.append(Threshold(parameter))
-            elif layer == "opening":
-                self.operations.append(MorphologicalOpening(parameter))
-            elif layer == "closing":
-                self.operations.append(MorphologicalClosing(parameter))
-            elif layer == "invert":
-                self.operations.append(Invert(parameter))
-            elif layer == "resize":
-                self.operations.append(Resize(parameter))
-            elif layer == "threshold_percentile":
-                self.operations.append(ThresholdPercentile(parameter))
-            elif layer == "dilate":
-                self.operations.append(MorphologicalDilatation(parameter))
-            elif layer == "erode":
-                self.operations.append(MorphologicalErosion(parameter))
-            elif layer == "blurring":
-                self.operations.append(Blurring(parameter))
-            else:
-                raise ValueError("OPERATION IS NOT KNOWN: {}".format(layer))
+            option_valid = False
+            for Operation in LIST_OF_OPERATIONS:
+                if layer == Operation.key:
+                    self.operations.append(Operation(parameter))
+                    option_valid = True
+                    break
+            if not option_valid:
+                raise Exception("UNKNOWN OPTION: {}".format(layer))
 
     def inference(self, x_img):
-        assert np.max(x_img) <= 1 and np.min(x_img) >= 0, "Image should be between 0 - 1. USE SCALING"
+        if np.max(x_img) <= 1 and np.min(x_img) >= 0:
+            pass
+        else:
+            x_img = x_img / 255
         if len(x_img.shape) == 3:
             x_img = x_img[:, :, -1]
         for op in self.operations:
@@ -309,18 +151,8 @@ class SimpleLayer:
 
     def build_configs(self):
         list_of_configs = []
-        possible_configs = {
-            "invert": Invert.list_of_parameters,
-            "edge": EdgeDetector.list_of_parameters,
-            "threshold": Threshold.list_of_parameters,
-            "closing": MorphologicalClosing.list_of_parameters,
-            "opening": MorphologicalOpening.list_of_parameters,
-            "resize": Resize.list_of_parameters,
-            "threshold_percentile": ThresholdPercentile.list_of_parameters,
-            "erode": MorphologicalErosion.list_of_parameters,
-            "dilate": MorphologicalDilatation.list_of_parameters,
-            "blurring": Blurring.list_of_parameters,
-        }
+        possible_configs = {Op.key: Op.list_of_parameters for Op in LIST_OF_OPERATIONS}
+
         for op in self.operations:
             if op not in possible_configs:
                 pos_ops = [op for op in possible_configs]
