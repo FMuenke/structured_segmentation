@@ -5,6 +5,45 @@ from skimage.filters import frangi, hessian, sato
 from structured_classifier.layer_operations import normalize, resize
 
 
+class LocalNormalization:
+    list_of_parameters = [
+        None, 11, 25, 51, 101
+    ]
+    key = "local_normalization"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = 255 * x_img
+        total_avg = np.mean(x_img)
+        avg = cv2.filter2D(
+            np.copy(x_img), -1,
+            kernel=cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.parameter, self.parameter))
+        )
+        img_norm = x_img - total_avg + avg
+        return img_norm.astype(np.float64) / 255
+
+
+class CannyEdgeDetector:
+    list_of_parameters = [
+        None, [25, 50], [50, 100], [100, 150], [150, 200]
+    ]
+    key = "canny_edge"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = 255 * x_img
+        x_img = cv2.Canny(x_img.astype(np.uint8), self.parameter[0], self.parameter[1])
+        return x_img.astype(np.float64) / 255
+
+
 class TopClippingPercentile:
     list_of_parameters = [
         None, 1, 5, 10, 25, 50

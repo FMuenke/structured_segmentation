@@ -24,7 +24,9 @@ LIST_OF_OPERATIONS = [
     MorphologicalDilatation,
     MorphologicalErosion,
     Blurring,
-    TopClippingPercentile
+    TopClippingPercentile,
+    CannyEdgeDetector,
+    LocalNormalization
 ]
 
 

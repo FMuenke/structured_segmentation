@@ -38,8 +38,8 @@ def main(args_):
 
     x = InputLayer("input", features_to_use="gray-color")
     # x = NormalizationLayer(x, "NORM", norm_option="min_max_scaling")
-    x = SimpleLayer(x, "SIMPLE", operations=["top_clipping_percentile", "frangi", "threshold_percentile", "opening"])
-    x = GraphLayer(x, "RF", kernel=(11, 11), kernel_shape="ellipse", clf="rf", clf_options={"n_estimators": 100})
+    x = SimpleLayer(x, "SIMPLE", operations=["top_clipping_percentile", "local_normalization", "invert", "threshold_percentile"])
+    # x = GraphLayer(x, "RF", kernel=(11, 11), kernel_shape="ellipse", clf="rf", clf_options={"n_estimators": 100})
     # x = SimpleLayer(x, "SIMPLE", operations=["threshold", "opening"])
     model = Model(graph=x)
 
