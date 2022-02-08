@@ -26,7 +26,8 @@ LIST_OF_OPERATIONS = [
     Blurring,
     TopClippingPercentile,
     CannyEdgeDetector,
-    LocalNormalization
+    LocalNormalization,
+    RemoveSmallObjects,
 ]
 
 

@@ -1,14 +1,13 @@
 import numpy as np
 import cv2
 from skimage.filters import frangi, hessian, sato
+from skimage.morphology import remove_small_objects
 
 from structured_classifier.layer_operations import normalize, resize
 
 
 class LocalNormalization:
-    list_of_parameters = [
-        None, 11, 25, 51, 101
-    ]
+    list_of_parameters = [None, 4+1, 8+1, 16+1, 32+1, 64+1, 128+1]
     key = "local_normalization"
 
     def __init__(self, parameter):
@@ -27,10 +26,22 @@ class LocalNormalization:
         return img_norm.astype(np.float64) / 255
 
 
+class RemoveSmallObjects:
+    list_of_parameters = [None, 2, 4, 8, 16, 32, 64, 128, 256]
+    key = "remove_small_objects"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = remove_small_objects(x_img, min_size=self.parameter)
+        return x_img
+
+
 class CannyEdgeDetector:
-    list_of_parameters = [
-        None, [25, 50], [50, 100], [100, 150], [150, 200]
-    ]
+    list_of_parameters = [None, [25, 50], [50, 100], [100, 150], [150, 200]]
     key = "canny_edge"
 
     def __init__(self, parameter):
@@ -45,9 +56,7 @@ class CannyEdgeDetector:
 
 
 class TopClippingPercentile:
-    list_of_parameters = [
-        None, 1, 5, 10, 25, 50
-    ]
+    list_of_parameters = [None, 2, 4, 8, 16, 32, 64]
     key = "top_clipping_percentile"
 
     def __init__(self, parameter):
@@ -56,14 +65,12 @@ class TopClippingPercentile:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
-        x_img = np.clip(x_img, 0, np.percentile(x_img, self.parameter))
+        x_img = np.clip(x_img, 0, np.percentile(x_img, 100 - self.parameter))
         return x_img
 
 
 class FrangiFilter:
-    list_of_parameters = [
-        None, 1
-    ]
+    list_of_parameters = [None, 1]
     key = "frangi"
 
     def __init__(self, parameter):
@@ -79,9 +86,7 @@ class FrangiFilter:
 
 
 class EdgeDetector:
-    list_of_parameters = [
-        None, 1, 2, 3, 4, 5, 6
-    ]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1, 64+1]
     key = "edge"
 
     def __init__(self, parameter):
@@ -91,16 +96,12 @@ class EdgeDetector:
         if self.parameter is None:
             return x_img
         x_img = 255 * x_img
-        k = 2**self.parameter + 1
-        x_img_blur = cv2.blur(np.copy(x_img.astype(np.uint8)), ksize=(k, k))
-        ed_xy = np.abs(x_img.astype(np.float64) - x_img_blur.astype(np.float64))
-        return normalize(ed_xy)
+        x_img = cv2.Laplacian(np.copy(x_img.astype(np.uint8)), -1, ksize=(self.parameter, self.parameter))
+        return normalize(x_img.astype(np.float64))
 
 
 class Blurring:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1, 64+1]
     key = "blurring"
 
     def __init__(self, parameter):
@@ -115,9 +116,7 @@ class Blurring:
 
 
 class Threshold:
-    list_of_parameters = [
-        None, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9
-    ]
+    list_of_parameters = [ None, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9]
     key = "threshold"
 
     def __init__(self, parameter):
@@ -132,9 +131,7 @@ class Threshold:
 
 
 class ThresholdPercentile:
-    list_of_parameters = [
-        None, 1, 2, 5, 10, 25, 50, 75, 90, 95, 99
-    ]
+    list_of_parameters = [None, 2, 4, 8, 16, 32, 64]
     key = "threshold_percentile"
 
     def __init__(self, parameter):
@@ -150,9 +147,7 @@ class ThresholdPercentile:
 
 
 class MorphologicalOpening:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
     key = "opening"
 
     def __init__(self, parameter):
@@ -168,9 +163,7 @@ class MorphologicalOpening:
 
 
 class MorphologicalErosion:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
     key = "erode"
 
     def __init__(self, parameter):
@@ -186,9 +179,7 @@ class MorphologicalErosion:
 
 
 class MorphologicalDilatation:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
     key = "dilate"
 
     def __init__(self, parameter):
@@ -204,9 +195,7 @@ class MorphologicalDilatation:
 
 
 class MorphologicalClosing:
-    list_of_parameters = [
-        None, 3, 5, 7, 9, 11, 13, 15
-    ]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
     key = "closing"
 
     def __init__(self, parameter):
@@ -222,9 +211,7 @@ class MorphologicalClosing:
 
 
 class Invert:
-    list_of_parameters = [
-        -1, 1
-    ]
+    list_of_parameters = [-1, 1]
     key = "invert"
 
     def __init__(self, parameter):
@@ -239,9 +226,7 @@ class Invert:
 
 
 class Resize:
-    list_of_parameters = [
-        None, 32, 64, 128, 256, 512
-    ]
+    list_of_parameters = [None, 32, 64, 128, 256, 512]
     key = "resize"
 
     def __init__(self, parameter):

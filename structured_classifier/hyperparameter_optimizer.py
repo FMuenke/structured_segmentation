@@ -1,7 +1,7 @@
 from sklearn.model_selection import ParameterGrid
 
 
-class HyperparameterOptimizer:
+class HyperParameterOptimizer:
     def __init__(self, LayerPrototype, parameter_grid):
         self.layer_prototype = LayerPrototype
         self.pg = parameter_grid
