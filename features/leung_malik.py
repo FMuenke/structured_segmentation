@@ -11,7 +11,7 @@ class LeungMalik:
 
     def __init__(self, color_space="gray"):
         self.color_space = color_space
-        self.resolution = 64
+        # self.resolution = 64
         self.lm_filters = self._make_lm_filters()
 
     def _build_feature_tensor(self, image):

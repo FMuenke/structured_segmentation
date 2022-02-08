@@ -5,10 +5,11 @@ from data_structure.image_handler import ImageHandler
 
 
 class LocalBinaryPattern:
-    def __init__(self, color_space="gray", radius=7, num_points=24):
+    def __init__(self, color_space="gray", radius=7, num_points=24, normalise=True):
         self.color_space = color_space
         self.radius = radius
         self.num_points = num_points
+        self.normalise = normalise
 
     def _compute(self, channels):
         lbp_maps = []
@@ -17,6 +18,8 @@ class LocalBinaryPattern:
                                                    self.num_points,
                                                    self.radius,
                                                    method="uniform")
+            if self.normalise:
+                lbp_map = 255 * (lbp_map - np.min(lbp_map)) / (np.max(lbp_map) - np.min(lbp_map))
             lbp_map = np.expand_dims(lbp_map, axis=2)
             lbp_maps.append(lbp_map)
         return lbp_maps

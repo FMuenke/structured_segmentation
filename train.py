@@ -36,10 +36,12 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    x = InputLayer("input", features_to_use="gray-color")
-    # x = NormalizationLayer(x, "NORM", norm_option="min_max_scaling")
-    x = SimpleLayer(x, "SIMPLE", operations=["top_clipping_percentile", "local_normalization", "invert", "threshold_percentile"])
-    # x = GraphLayer(x, "RF", kernel=(11, 11), kernel_shape="ellipse", clf="rf", clf_options={"n_estimators": 100})
+    x = InputLayer("input", features_to_use="gray-lm")
+    x = GraphLayer(x, "RF", kernel=(1, 1), kernel_shape="ellipse", clf="lr", down_scale=0)
+    x = GraphLayer(x, "RF", kernel=(1, 1), kernel_shape="ellipse", clf="lr", down_scale=2)
+    # x = GraphLayer(x, "RF", kernel=(11, 11), kernel_shape="ellipse", clf="lr", down_scale=3)
+    # x = GraphLayer(x, "RF", kernel=(11, 11), kernel_shape="ellipse", clf="lr", down_scale=4)
+    x = GraphLayer(x, "RF", kernel=(1, 1), kernel_shape="ellipse", clf="lr", down_scale=0)
     # x = SimpleLayer(x, "SIMPLE", operations=["threshold", "opening"])
     model = Model(graph=x)
 

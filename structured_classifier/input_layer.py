@@ -80,7 +80,15 @@ class InputLayer:
                 tensors.append(image)
             if "lbp" in f_type:
                 color_space, descriptor_type = f_type.split("-")
-                lbp = LocalBinaryPattern(color_space=color_space)
+                if descriptor_type == "lbp":
+                    lbp = LocalBinaryPattern(color_space=color_space)
+                else:
+                    name, radius, num_points = descriptor_type.split(".")
+                    lbp = LocalBinaryPattern(
+                        color_space=color_space,
+                        radius=int(radius),
+                        num_points=int(num_points)
+                    )
                 f = lbp.compute(image)
                 tensors.append(f)
             if "color" in f_type:
