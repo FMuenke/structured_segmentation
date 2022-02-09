@@ -1,5 +1,6 @@
 from tqdm import tqdm
 import os
+from multiprocessing.pool import Pool
 
 from sklearn.model_selection import ParameterGrid
 from utils.utils import check_n_make_dir, save_dict, load_dict
@@ -24,6 +25,12 @@ LIST_OF_OPERATIONS = [
     LocalNormalization,
     RemoveSmallObjects,
 ]
+
+
+def eval_pipeline(args):
+    pl, x_img, y_img = args
+    pl.eval(x_img, y_img)
+    return pl
 
 
 class Pipeline:
@@ -59,7 +66,6 @@ class Pipeline:
         y_img = resize(y_img, w_img, h_img)
         y_img = np.reshape(y_img, h_img * w_img)
         p_img = np.reshape(p_img, h_img * w_img)
-
         self.stats["TP"] += np.sum(np.logical_and(y_img == 1, p_img == 1))
         self.stats["FP"] += np.sum(np.logical_and(y_img != 1, p_img == 1))
         self.stats["FN"] += np.sum(np.logical_and(y_img == 1, p_img != 1))
@@ -178,8 +184,10 @@ class SimpleLayer:
             h_img, w_img = x_img.shape[:2]
             y_img = t.load_y([h_img, w_img])
 
-            for pl in pipelines:
-                pl.eval(x_img, y_img)
+            tasks = [[pl, x_img, y_img] for pl in pipelines]
+
+            with Pool() as p:
+                pipelines = p.map(eval_pipeline, tasks)
 
         best_score = 0
         best_pipeline = None

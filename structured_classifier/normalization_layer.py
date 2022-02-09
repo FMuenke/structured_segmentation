@@ -70,7 +70,7 @@ class NormalizationLayer:
             median_mat = np.mean(np.mean(x_img, axis=0), axis=0)
             x_img = x_img - median_mat
             return x_img
-        raise ValueError("Option: {} unknown".format(self.norm_option))
+        raise Exception("Option: {} unknown".format(self.norm_option))
 
     def save(self, model_path):
         model_path = os.path.join(model_path, self.layer_type + "-" + self.name)

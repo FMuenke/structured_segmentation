@@ -1,66 +1,56 @@
 import os
-import cv2
 import numpy as np
-
+from PIL import Image
+import cv2
 from data_structure.image_container import ImageContainer
 
 
-class LbmTag:
-    def __init__(self, path_to_image_file, path_to_label_file, color_coding):
-        self.path_to_image_file = path_to_image_file
-        self.path_to_label_file = path_to_label_file
-        self.path_to_label_file = self.get_pot_label_path()
+def get_file_name(base_path, data_id, extensions):
+    for ext in extensions:
+        filename = os.path.join(base_path, data_id + ext)
+        if os.path.isfile(filename):
+            return filename
+    return None
 
+
+class LabeledImage:
+
+    image_extensions = [".jpg", ".JPG", ".png", "PNG", ".jpeg", ".ppm"]
+    label_extensions = [".png", ".tif", "_label.tif", "_label.tiff", ".tiff", ".ppm"]
+
+    def __init__(self, base_path, data_id, color_coding):
+        self.id = data_id
+        self.path = base_path
         self.color_coding = color_coding
+
+        self.image_path = os.path.join(base_path, "images")
+        self.label_path = os.path.join(base_path, "labels")
+
+        self.image_file = get_file_name(self.image_path, self.id, self.image_extensions)
+        self.label_file = get_file_name(self.label_path, self.id, self.label_extensions)
 
     def summary(self):
         y = self.load_y([100, 100])
         unique, counts = np.unique(y, return_counts=True)
         return unique, counts
 
-    def get_pot_label_path(self):
-        """
-        Used to guess the matching ground truth labelfile
-        Args:
-            img_id: complete path to image
-
-        Returns:
-            estimated full path to label file
-        """
-        path_to_label_file = self.path_to_image_file.replace("images", "labels")
-
-        path_to_label_file = path_to_label_file[:-4] + ".png"
-        if os.path.isfile(path_to_label_file):
-            return path_to_label_file
-        path_to_label_file = path_to_label_file[:-4] + ".tif"
-        if os.path.isfile(path_to_label_file):
-            return path_to_label_file
-        path_to_label_file = path_to_label_file[:-4] + ".tiff"
-        if os.path.isfile(path_to_label_file):
-            return path_to_label_file
-        path_to_label_file = path_to_label_file[:-5] + "_label.tiff"
-        if os.path.isfile(path_to_label_file):
-            return path_to_label_file
-        path_to_label_file = path_to_label_file[:-5] + ".tif"
-        if os.path.isfile(path_to_label_file):
-            return path_to_label_file
-        path_to_label_file = self.path_to_image_file.replace("images", "labels")
-        path_to_label_file = path_to_label_file.replace("camera", "label")
-        path_to_label_file = path_to_label_file[:-4] + ".png"
-        if os.path.isfile(path_to_label_file):
-            return path_to_label_file
-        return None
+    def get_image_size(self):
+        if self.image_file is None:
+            raise Exception("NO IMAGE FILE AVAILABLE")
+        im = Image.open(self.image_file)
+        width, height = im.size
+        return height, width
 
     def load_x(self):
-        img = cv2.imread(self.path_to_image_file)
+        img = cv2.imread(self.image_file)
         if img is None:
-            print(self.path_to_image_file)
+            print(self.image_file)
         return img
 
     def load_y_as_color_map(self, label_size):
         y_img = np.zeros((label_size[0], label_size[1], 3))
-        if self.path_to_label_file is not None:
-            lbm = cv2.imread(self.path_to_label_file)
+        if self.label_file is not None:
+            lbm = cv2.imread(self.label_file)
             lbm = cv2.resize(lbm, (label_size[1], label_size[0]), interpolation=cv2.INTER_NEAREST)
             for idx, cls in enumerate(self.color_coding):
                 c0 = np.zeros((label_size[0], label_size[1]))
@@ -80,8 +70,8 @@ class LbmTag:
 
     def load_y(self, label_size):
         y_img = np.zeros((label_size[0], label_size[1]))
-        if self.path_to_label_file is not None:
-            lbm = cv2.imread(self.path_to_label_file)
+        if self.label_file is not None:
+            lbm = cv2.imread(self.label_file)
             lbm = cv2.resize(lbm, (label_size[1], label_size[0]), interpolation=cv2.INTER_NEAREST)
             for idx, cls in enumerate(self.color_coding):
                 c0 = np.zeros((label_size[0], label_size[1]))
@@ -97,7 +87,7 @@ class LbmTag:
         return y_img
 
     def write_result(self, res_path, color_map):
-        im_id = os.path.basename(self.path_to_image_file)
+        im_id = os.path.basename(self.image_file)
         h, w = color_map.shape[:2]
         label = self.load_y_as_color_map((h, w))
         border = 255 * np.ones((h, 10, 3))
@@ -107,7 +97,7 @@ class LbmTag:
 
     def eval(self, color_map, stats_handler):
         height, width = color_map.shape[:2]
-        if self.path_to_label_file is not None:
+        if self.label_file is not None:
             lbm = self.load_y_as_color_map((height, width))
             for idx, cls in enumerate(self.color_coding):
                 cls_key = self.color_coding[cls][1]
@@ -141,7 +131,7 @@ class LbmTag:
                 stats_handler.count(cls, "fn", np.sum(fn_map))
 
     def visualize_result(self, vis_path, color_map):
-        im_id = os.path.basename(self.path_to_image_file)
+        im_id = os.path.basename(self.image_file)
         vis_file = os.path.join(vis_path, im_id)
         img_h = ImageContainer(self.load_x())
         cv2.imwrite(vis_file, img_h.overlay(color_map))

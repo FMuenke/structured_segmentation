@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from skimage.filters import frangi, hessian, sato
+import time
 from skimage.morphology import remove_small_objects
 
 from structured_classifier.layer_operations import normalize, resize
@@ -36,8 +37,11 @@ class RemoveSmallObjects:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
-        x_img = remove_small_objects(x_img, min_size=self.parameter)
-        return x_img
+        x_img = x_img.astype(np.int)
+        if len(np.unique(x_img)) == 1:
+            return x_img
+        x_img = remove_small_objects(x_img.astype(np.bool), min_size=self.parameter)
+        return x_img.astype(np.float64)
 
 
 class CannyEdgeDetector:
@@ -86,7 +90,7 @@ class FrangiFilter:
 
 
 class EdgeDetector:
-    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1, 64+1]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1]
     key = "edge"
 
     def __init__(self, parameter):
@@ -96,7 +100,7 @@ class EdgeDetector:
         if self.parameter is None:
             return x_img
         x_img = 255 * x_img
-        x_img = cv2.Laplacian(np.copy(x_img.astype(np.uint8)), -1, ksize=(self.parameter, self.parameter))
+        x_img = cv2.Laplacian(np.copy(x_img.astype(np.uint8)), -1, ksize=self.parameter)
         return normalize(x_img.astype(np.float64))
 
 
@@ -116,7 +120,7 @@ class Blurring:
 
 
 class Threshold:
-    list_of_parameters = [ None, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9]
+    list_of_parameters = [0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9]
     key = "threshold"
 
     def __init__(self, parameter):
@@ -131,7 +135,7 @@ class Threshold:
 
 
 class ThresholdPercentile:
-    list_of_parameters = [None, 2, 4, 8, 16, 32, 64]
+    list_of_parameters = [1, 2, 5, 10, 25, 50, 75, 90, 95, 98, 99]
     key = "threshold_percentile"
 
     def __init__(self, parameter):

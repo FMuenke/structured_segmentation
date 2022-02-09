@@ -3,7 +3,8 @@ from tqdm import tqdm
 import numpy as np
 from data_structure.folder import Folder
 
-from data_structure.lbm_tag import LbmTag
+# from data_structure.lbm_tag import LbmTag
+from data_structure.labeled_image import LabeledImage
 
 
 class SegmentationDataSet:
@@ -13,15 +14,14 @@ class SegmentationDataSet:
         self.color_coding = color_coding
 
     def _load(self, tag_set, summary, path):
-        path = Folder(path)
-        img_path = Folder(os.path.join(str(path), "images"))
         print("Try Loading Data from: {}".format(path))
-        if img_path.exists():
+        if os.path.isdir(os.path.join(path, "images")):
             print("loading...")
-            for img_f in tqdm(sorted(os.listdir(str(img_path)))):
-                if img_f.endswith((".jpg", ".png", ".tif", ".ppm")):
-                    tag_set[len(tag_set)] = LbmTag(os.path.join(str(img_path), img_f),
-                                                   self.color_coding)
+            for img_f in tqdm(sorted(os.listdir(os.path.join(path, "images")))):
+                if img_f.endswith((".jpg", ".png", ".tif", ".tiff", ".ppm")):
+                    tag_set[len(tag_set)] = LabeledImage(
+                        base_path=path, data_id=img_f[:-4], color_coding=self.color_coding
+                    )
                     unique, counts = tag_set[len(tag_set)-1].summary()
                     for u, c in zip(unique, counts):
                         if u not in summary:
