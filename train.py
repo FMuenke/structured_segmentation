@@ -63,7 +63,10 @@ def parse_args():
         help="Path to directory with predictions",
     )
     parser.add_argument(
-        "--model_folder", "-m", default="./test", help="Path to model directory"
+        "--model_folder",
+        "-model",
+        default="./test",
+        help="Path to model directory"
     )
     return parser.parse_args()
 

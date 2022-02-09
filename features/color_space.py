@@ -1,6 +1,6 @@
 import numpy as np
 
-from data_structure.image_handler import ImageHandler
+from data_structure.image_container import ImageContainer
 
 
 class ColorSpace:
@@ -8,7 +8,7 @@ class ColorSpace:
         self.color_space = color_space
 
     def _prepare_image(self, image):
-        img_h = ImageHandler(image)
+        img_h = ImageContainer(image)
         return img_h.prepare_image_for_processing(self.color_space)
 
     def compute(self, image):

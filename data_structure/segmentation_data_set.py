@@ -19,7 +19,7 @@ class SegmentationDataSet:
         if img_path.exists():
             print("loading...")
             for img_f in tqdm(sorted(os.listdir(str(img_path)))):
-                if img_f.endswith((".jpg", ".png", "tif", ".ppm")):
+                if img_f.endswith((".jpg", ".png", ".tif", ".ppm")):
                     tag_set[len(tag_set)] = LbmTag(os.path.join(str(img_path), img_f),
                                                    self.color_coding)
                     unique, counts = tag_set[len(tag_set)-1].summary()

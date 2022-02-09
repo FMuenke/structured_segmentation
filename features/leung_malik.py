@@ -1,7 +1,7 @@
 import numpy as np
 
-from data_structure.matrix_handler import MatrixHandler
-from data_structure.image_handler import ImageHandler
+from data_structure.matrix_container import MatrixContainer
+from data_structure.image_container import ImageContainer
 
 
 class LeungMalik:
@@ -17,7 +17,7 @@ class LeungMalik:
     def _build_feature_tensor(self, image):
         feature_maps = []
         for f_kernel_idx in range(self.lm_filters.shape[2]):
-            mat_h = MatrixHandler(image)
+            mat_h = MatrixContainer(image)
             feature_maps.append(mat_h.apply_convolution(self.lm_filters[:, :, f_kernel_idx]))
         return np.stack(feature_maps, axis=2)
 
@@ -29,7 +29,7 @@ class LeungMalik:
         return tensors
 
     def compute(self, image):
-        img_h = ImageHandler(image)
+        img_h = ImageContainer(image)
         channels = img_h.prepare_image_for_processing(self.color_space)
         feature_tensors = self._compute(channels)
         return np.concatenate(feature_tensors, axis=2)

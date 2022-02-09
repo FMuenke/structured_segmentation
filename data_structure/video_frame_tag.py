@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 
-from data_structure.image_handler import ImageHandler
+from data_structure.image_container import ImageContainer
 
 
 class VideoFrameTag:
@@ -138,5 +138,5 @@ class VideoFrameTag:
     def visualize_result(self, vis_path, color_map):
         im_id = "{}-{}.jpg".format(self.video.id, self.frame_no)
         vis_file = os.path.join(vis_path, im_id)
-        img_h = ImageHandler(self.load_x(neighbours=0))
+        img_h = ImageContainer(self.load_x(neighbours=0))
         cv2.imwrite(vis_file, img_h.overlay(color_map))

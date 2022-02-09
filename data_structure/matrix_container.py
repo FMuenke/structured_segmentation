@@ -3,7 +3,7 @@ import cv2
 from skimage.measure import block_reduce
 
 
-class MatrixHandler:
+class MatrixContainer:
     def __init__(self, matrix):
         self.matrix = matrix
 

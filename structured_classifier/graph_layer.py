@@ -71,7 +71,7 @@ class GraphLayer:
             return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_x, k_y))
         if kernel_shape == "cross":
             return cv2.getStructuringElement(cv2.MORPH_CROSS, (k_x, k_y))
-        raise ValueError("Kernel-Shape option: {} not known".format(kernel_shape))
+        raise Exception("Kernel-Shape option: {} not known".format(kernel_shape))
 
     def __str__(self):
         return "{} - {} - {} - DownScale: {} - K: {}".format(

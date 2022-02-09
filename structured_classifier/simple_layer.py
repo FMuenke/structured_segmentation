@@ -1,15 +1,10 @@
 from tqdm import tqdm
-import numpy as np
-import cv2
 import os
-
-from structured_classifier.layer_operations import normalize, resize
-import matplotlib.pyplot as plt
 
 from sklearn.model_selection import ParameterGrid
 from utils.utils import check_n_make_dir, save_dict, load_dict
 
-from structured_classifier.image_processing_operations import *
+from utils.image_processing_operations import *
 
 LIST_OF_OPERATIONS = [
     Resize,

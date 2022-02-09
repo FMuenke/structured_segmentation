@@ -1,7 +1,7 @@
 import numpy as np
 from skimage.filters import frangi, hessian, sato
 
-from data_structure.image_handler import ImageHandler
+from data_structure.image_container import ImageContainer
 
 
 class FilterOperator:
@@ -28,7 +28,7 @@ class FilterOperator:
         return lbp_maps
 
     def compute(self, image):
-        img = ImageHandler(image)
+        img = ImageContainer(image)
         channels = img.prepare_image_for_processing(self.color_space)
         lbp_maps = self._compute(channels)
         return np.concatenate(lbp_maps, axis=2)

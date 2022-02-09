@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from data_structure.image_handler import ImageHandler
+from data_structure.image_container import ImageContainer
 
 
 class Gradients:
@@ -23,7 +23,7 @@ class Gradients:
         return f_maps
 
     def compute(self, image):
-        img_h = ImageHandler(image)
+        img_h = ImageContainer(image)
         channels = img_h.prepare_image_for_processing(self.color_space)
         f_maps = self._compute(channels)
         return np.concatenate(f_maps, axis=2)

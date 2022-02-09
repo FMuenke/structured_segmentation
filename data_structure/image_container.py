@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from skimage.transform import integral_image
 
-from data_structure.matrix_handler import MatrixHandler
+from data_structure.matrix_container import MatrixContainer
 
 
 class ImageContainer:
@@ -101,7 +101,7 @@ class ImageContainer:
 
     def normalize(self):
         image = np.copy(self.image)
-        mat = MatrixHandler(image)
+        mat = MatrixContainer(image)
         img_norm = 255 * mat.normalize()
         return img_norm.astype(np.uint8)
 

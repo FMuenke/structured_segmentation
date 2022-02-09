@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 
-from data_structure.image_handler import ImageHandler
+from data_structure.image_container import ImageContainer
 
 
 class LbmTag:
@@ -142,5 +142,5 @@ class LbmTag:
     def visualize_result(self, vis_path, color_map):
         im_id = os.path.basename(self.path_to_image_file)
         vis_file = os.path.join(vis_path, im_id)
-        img_h = ImageHandler(self.load_x())
+        img_h = ImageContainer(self.load_x())
         cv2.imwrite(vis_file, img_h.overlay(color_map))
