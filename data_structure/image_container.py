@@ -5,7 +5,7 @@ from skimage.transform import integral_image
 from data_structure.matrix_handler import MatrixHandler
 
 
-class ImageHandler:
+class ImageContainer:
     def __init__(self, image):
         self.image = image
 
