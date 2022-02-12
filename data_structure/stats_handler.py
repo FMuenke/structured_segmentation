@@ -32,10 +32,9 @@ class StatsHandler:
         r_string = ""
         for cls in self.r:
             r_string += "------------------\n"
-            r_string += "{}\n".format(cls)
-            r_string += "PRE: {}\n".format(self.r[cls]["pre"])
-            r_string += "REC: {}\n".format(self.r[cls]["rec"])
-            r_string += "F_1: {}\n".format(self.r[cls]["f_1"])
+            r_string += "{}-PRE: {}\n".format(cls, self.r[cls]["pre"])
+            r_string += "{}-REC: {}\n".format(cls, self.r[cls]["rec"])
+            r_string += "{}-F_1: {}\n".format(cls, self.r[cls]["f_1"])
             r_string += "------------------\n"
         return r_string
 

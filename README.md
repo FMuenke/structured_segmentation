@@ -19,10 +19,12 @@ Input Image:
 
 ![Input Image of the EncoderDecoder Model](examples/example_0_image.jpg)
 
-Ground-Truth (right) / Result (left):
+Ground-Truth (left) / Result (right):
 
 ![](examples/example_0_result.png)
 ## Documentation
+
+For example code to train a model yourself checkout the train.py file.
 
 In this repository there are multiple layer implemented.
 The Layer can be stacked and used as one end-to-end trainable model.
