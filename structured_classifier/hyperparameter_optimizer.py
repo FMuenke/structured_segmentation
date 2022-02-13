@@ -19,7 +19,7 @@ class HyperParameterOptimizer:
     def fit(self, train_tags, validation_tags):
         max_score = 0
         if self.selected_layer is None:
-            print("Start Hyperparameter Optimization:")
+            print("Start HyperParameter Optimization:")
             for kwargs in list(ParameterGrid(self.pg)):
                 try:
                     layer = self.layer_prototype(**kwargs)
@@ -32,7 +32,7 @@ class HyperParameterOptimizer:
                 except Exception as e:
                     print(e)
                     pass
-            print("Hyperparameter Optimization complete!")
+            print("HyperParameter Optimization complete!")
             print("Selected Model: {}".format(self.selected_layer))
 
     def save(self, model_path):

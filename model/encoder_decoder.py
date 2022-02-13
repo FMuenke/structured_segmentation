@@ -7,9 +7,10 @@ from model.base_structures import get_decision_layer, get_decision_layer_3d
 
 class EncoderDecoder:
     def __init__(self,
-                 depth=5,
+                 depth=3,
                  repeat=1,
                  max_kernel_sum=5,
+                 max_stride_sum=2,
                  features_to_use="gray-color",
                  norm_input=None,
                  coder_type="kernel",
@@ -21,6 +22,7 @@ class EncoderDecoder:
         self.repeat = repeat
         self.depth = depth
         self.max_kernel_sum = max_kernel_sum
+        self.max_stride_sum = max_stride_sum
         self.features_to_use = features_to_use
         self.norm_input = norm_input
         self.coder_type = coder_type
@@ -40,6 +42,7 @@ class EncoderDecoder:
                             height=height)
 
         kernel = (self.max_kernel_sum, self.max_kernel_sum)
+        strides = (self.max_stride_sum, self.max_stride_sum)
 
         if self.norm_input is not None:
             xx = NormalizationLayer(INPUTS=xx,
@@ -52,6 +55,7 @@ class EncoderDecoder:
                                         name="enc_{}_{}".format(d, r),
                                         decision_type=self.coder_type,
                                         kernel=kernel,
+                                        strides=strides,
                                         kernel_shape=self.kernel_shape,
                                         feature_aggregation=self.feature_aggregation,
                                         down_scale=d,
@@ -63,6 +67,7 @@ class EncoderDecoder:
                                     name="lat_{}".format(r),
                                     decision_type=self.coder_type,
                                     kernel=kernel,
+                                    strides=strides,
                                     kernel_shape=self.kernel_shape,
                                     feature_aggregation=self.feature_aggregation,
                                     down_scale=self.depth,
@@ -75,6 +80,7 @@ class EncoderDecoder:
                                         name="dec_{}_{}".format(self.depth - d - 1, r),
                                         decision_type=self.coder_type,
                                         kernel=kernel,
+                                        strides=strides,
                                         kernel_shape=self.kernel_shape,
                                         feature_aggregation=self.feature_aggregation,
                                         down_scale=self.depth - d - 1,

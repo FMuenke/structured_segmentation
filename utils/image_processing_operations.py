@@ -40,6 +40,7 @@ class RemoveSmallObjects:
         x_img = x_img.astype(np.int)
         if len(np.unique(x_img)) == 1:
             return x_img
+        x_img = x_img.astype(np.int)
         x_img = remove_small_objects(x_img.astype(np.bool), min_size=self.parameter)
         return x_img.astype(np.float64)
 

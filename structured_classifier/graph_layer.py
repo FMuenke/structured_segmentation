@@ -17,6 +17,7 @@ class GraphLayer:
                  INPUTS,
                  name,
                  kernel=(1, 1),
+                 strides=(1, 1),
                  kernel_shape="square",
                  down_scale=0,
                  clf="b_rf",
@@ -40,7 +41,8 @@ class GraphLayer:
             "layer_type": self.layer_type,
             "kernel": kernel,
             "kernel_shape": kernel_shape,
-            "down_scale": down_scale
+            "down_scale": down_scale,
+            "strides": strides,
         }
 
         self.down_scale = down_scale
@@ -54,17 +56,19 @@ class GraphLayer:
         self.data_reduction = data_reduction
 
         k_x, k_y = kernel
-        s_element = self.make_s_element(kernel, kernel_shape)
+        s_element = self.make_s_element()
         self.look_ups = []
+        s_x, s_y = self.opt["strides"]
         for i in range(k_x):
             for j in range(k_y):
                 if s_element[j, i] == 1:
-                    look = np.zeros((k_y, k_x, 1))
-                    look[j, i, 0] = 1
+                    look = np.zeros((int(s_y * k_y), int(s_x * k_x), 1))
+                    look[int(j * s_y), int(i * s_x), 0] = 1
                     self.look_ups.append(look)
 
-    def make_s_element(self, kernel, kernel_shape):
-        k_x, k_y = kernel
+    def make_s_element(self):
+        k_x, k_y = self.opt["kernel"]
+        kernel_shape = self.opt["kernel_shape"]
         if kernel_shape == "square":
             return np.ones((k_y, k_x))
         if kernel_shape == "ellipse":
@@ -136,7 +140,7 @@ class GraphLayer:
         x = np.concatenate(x, axis=2)
         x_pass = np.copy(x)
         o_height, o_width = x.shape[:2]
-        new_height = int(o_height / 2**self.down_scale)
+        new_height = int(o_height / 2 ** self.down_scale)
         new_width = int(o_width / 2 ** self.down_scale)
         if new_width < 2:
             new_width = 2
@@ -199,7 +203,8 @@ class GraphLayer:
             return None
 
         print("Collecting Features for Stage: {}".format(self))
-        print("Data is reduced by factor: {}".format(self.data_reduction))
+        print("Training: {}, Validation: {}. Data is reduced by factor: {}".format(
+            len(train_tags), len(validation_tags), self.data_reduction))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
         x_val, y_val = self.get_x_y(validation_tags)
 

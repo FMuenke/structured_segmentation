@@ -1,5 +1,6 @@
 from tqdm import tqdm
 import os
+import matplotlib.pyplot as plt
 from multiprocessing.pool import Pool
 
 from sklearn.model_selection import ParameterGrid
@@ -50,12 +51,13 @@ class Pipeline:
                 raise Exception("UNKNOWN OPTION: {}".format(layer))
 
     def inference(self, x_img):
+        if len(x_img.shape) == 3:
+            x_img = x_img[:, :, -1]
+
         if np.max(x_img) <= 1 and np.min(x_img) >= 0:
             pass
         else:
             x_img = x_img / 255
-        if len(x_img.shape) == 3:
-            x_img = x_img[:, :, -1]
         for op in self.operations:
             x_img = op.inference(x_img)
         return x_img

@@ -59,7 +59,14 @@ class Model:
 
         if opt["layer_type"] == "GRAPH_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = GraphLayer(prev_layer, opt["name"], opt["kernel"], opt["kernel_shape"], opt["down_scale"])
+            layer = GraphLayer(
+                prev_layer,
+                opt["name"],
+                opt["kernel"],
+                opt["strides"],
+                opt["kernel_shape"],
+                opt["down_scale"]
+            )
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer

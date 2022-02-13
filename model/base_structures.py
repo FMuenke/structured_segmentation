@@ -17,6 +17,7 @@ def get_decision_layer(
         data_reduction,
         feature_aggregation="hist32",
         kernel=None,
+        strides=None,
         kernel_shape=None,
         ):
     if type(decision_type) is list:
@@ -28,6 +29,7 @@ def get_decision_layer(
         xx = GraphLayer(INPUTS=INPUTS,
                         name=name,
                         kernel=kernel,
+                        strides=strides,
                         kernel_shape=kernel_shape,
                         down_scale=down_scale,
                         clf=clf,

@@ -14,10 +14,8 @@ from structured_classifier.object_selection_layer import ObjectSelectionLayer
 from structured_classifier.simple_layer import SimpleLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.graph_layer import GraphLayer
-from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.normalization_layer import NormalizationLayer
-from structured_classifier.feature_extraction_layer import FeatureExtractionLayer
 from structured_classifier.hyperparameter_optimizer import HyperParameterOptimizer
 
 from utils import parameter_grid as pg
@@ -36,9 +34,9 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    x = InputLayer("input", features_to_use="gray-color", initial_down_scale=1)
-    # x = GraphLayer(x, "RF", kernel=(1, 1), kernel_shape="ellipse", clf="lr", down_scale=0)
-    x = SimpleLayer(x, "SIMPLE", operations=["blurring", "edge", "threshold_percentile", "remove_small_objects"])
+    x = InputLayer("IN", features_to_use="gray-lm", initial_down_scale=1)
+    x = GraphLayer(x, "RF", clf="rf")
+    x = SimpleLayer(x, "SIMPLE", operations=["remove_small_objects"])
     # x = ObjectSelectionLayer(x, "SELECT")
     model = Model(graph=x)
 

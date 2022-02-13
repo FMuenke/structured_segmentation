@@ -34,8 +34,10 @@ def run_training(df, mf, number_of_tags):
     randomized_split = True
     train_test_ratio = 0.20
 
-    x = InputLayer("input", features_to_use="gray-color", initial_down_scale=1)
-    x = SimpleLayer(x, "SIMPLE", operations=["blurring", "edge", "threshold_percentile", "remove_small_objects"])
+    # x = InputLayer("input", features_to_use="gray-color", initial_down_scale=1)
+    # x = SimpleLayer(x, "SIMPLE", operations=["blurring", "edge", "threshold_percentile", "remove_small_objects"])
+    ed = EncoderDecoder(depth=2, clf="rf", data_reduction=0)
+    x = ed.build(initial_down_scale=1)
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
@@ -58,10 +60,14 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    number_of_images = [0, 1, 2, 5, 10, 25, 50, 100]
+    if not os.path.isdir(mf):
+        os.mkdir(mf)
+
+    number_of_images = [1, 2, 5, 10, 25, 50]
+    iterations = 20
 
     for n in number_of_images:
-        for i in range(5):
+        for i in range(iterations):
             if os.path.isdir(os.path.join(mf, "-{}-RUN-{}".format(n, i))):
                 continue
             run_training(df, os.path.join(mf, "-{}-RUN-{}".format(n, i)), n)
