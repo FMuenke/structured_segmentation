@@ -1,6 +1,6 @@
 import numpy as np
 
-from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.pixel_layer import PixelLayer
 from structured_classifier.graph_3d_layer import Graph3DLayer
 
 from structured_classifier.super_pixel_layer import SuperPixelLayer
@@ -26,7 +26,7 @@ def get_decision_layer(
         dt = decision_type
 
     if dt == "kernel":
-        xx = GraphLayer(INPUTS=INPUTS,
+        xx = PixelLayer(INPUTS=INPUTS,
                         name=name,
                         kernel=kernel,
                         strides=strides,

@@ -17,7 +17,7 @@ class SuperPixelLayer:
                  name,
                  super_pixel_method="slic",
                  down_scale=0,
-                 feature_aggregation="quantiles",
+                 feature_aggregation="gauss",
                  clf="b_rf",
                  clf_options=None,
                  param_grid=None,

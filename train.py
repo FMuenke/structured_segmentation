@@ -13,7 +13,7 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.object_selection_layer import ObjectSelectionLayer
 from structured_classifier.simple_layer import SimpleLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
-from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.pixel_layer import PixelLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.hyperparameter_optimizer import HyperParameterOptimizer
@@ -26,17 +26,18 @@ from utils.utils import save_dict
 def main(args_):
     color_coding = {
         "crack": [[255, 255, 255], [255, 0, 0]],
+        # "shadow": [[1, 1, 1], [0, 100, 255]]
     }
 
     randomized_split = True
-    train_test_ratio = 0.20
+    train_test_ratio = 0.80
 
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    x = InputLayer("IN", features_to_use="gray-lm", initial_down_scale=1)
-    x = GraphLayer(x, "RF", clf="rf")
-    x = SimpleLayer(x, "SIMPLE", operations=["remove_small_objects"])
+    x = InputLayer("IN", features_to_use="gray-color", initial_down_scale=1)
+    x = SimpleLayer(x, "SIMPLE", operations=["opening", "invert", "edge", "blurring", "threshold_percentile"], selected_layer=[0])
+    # x = SuperPixelLayer(x, "SP", down_scale=2, feature_aggregation="hist16", clf="rf")
     # x = ObjectSelectionLayer(x, "SELECT")
     model = Model(graph=x)
 

@@ -2,7 +2,7 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.voting_layer import VotingLayer
-from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.pixel_layer import PixelLayer
 
 from model.base_structures import get_decision_layer
 
@@ -76,5 +76,5 @@ class PatchWork:
             return VotingLayer(INPUTS=model, name="voting")
         elif output_option == "boosting":
             b = BottleNeckLayer(INPUTS=model, name="cls_preparation")
-            return GraphLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options, kernel=(5, 5))
+            return PixelLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options, kernel=(5, 5))
         return model

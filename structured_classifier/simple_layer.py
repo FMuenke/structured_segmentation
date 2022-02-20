@@ -1,6 +1,5 @@
 from tqdm import tqdm
 import os
-import matplotlib.pyplot as plt
 from multiprocessing.pool import Pool
 
 from sklearn.model_selection import ParameterGrid
@@ -35,10 +34,11 @@ def eval_pipeline(args):
 
 
 class Pipeline:
-    def __init__(self, config, recall_importance=1.0):
+    def __init__(self, config, selected_layer, recall_importance=1.0):
         self.stats = {"TP": 0, "FP": 0, "FN": 0}
         self.beta = recall_importance
         self.config = config
+        self.selected_layer = selected_layer
         self.operations = []
         for layer, parameter in config:
             option_valid = False
@@ -52,7 +52,7 @@ class Pipeline:
 
     def inference(self, x_img):
         if len(x_img.shape) == 3:
-            x_img = x_img[:, :, -1]
+            x_img = x_img[:, :, [self.selected_layer]]
 
         if np.max(x_img) <= 1 and np.min(x_img) >= 0:
             pass
@@ -91,7 +91,7 @@ class Pipeline:
 class SimpleLayer:
     layer_type = "SIMPLE_LAYER"
 
-    def __init__(self, INPUTS, name, operations):
+    def __init__(self, INPUTS, name, operations, selected_layer, use_multiprocessing=True):
         self.name = str(name)
         if type(INPUTS) is not list:
             INPUTS = [INPUTS]
@@ -107,14 +107,16 @@ class SimpleLayer:
 
         self.config = None
         self.pipeline = None
+        self.use_multi_processing = use_multiprocessing
 
         self.opt = {
             "name": self.name,
             "layer_type": self.layer_type,
+            "selected_layer": selected_layer,
         }
 
     def __str__(self):
-        return "{} {}".format(self.layer_type, self.pipeline.config)
+        return "{} TARGET:{} - {}".format(self.layer_type, self.opt["selected_layer"], self.pipeline.config)
 
     def inference(self, x_input, interpolation="nearest"):
         x_img, x_pass = self.get_features(x_input)
@@ -167,7 +169,6 @@ class SimpleLayer:
         for parameters in list(ParameterGrid(selected_configs)):
             cfg = [[op, parameters[op]] for op in self.operations]
             list_of_configs.append(cfg)
-        print("Evaluating - {} - Configurations".format(len(list_of_configs)))
         return list_of_configs
 
     def fit(self, train_tags, validation_tags):
@@ -178,18 +179,27 @@ class SimpleLayer:
             return None
 
         print("Fitting {} with {}".format(self.layer_type, self.operations))
-        pipelines = [Pipeline(config) for config in self.build_configs()]
+        if type(self.opt["selected_layer"]) is not list:
+            pipelines = [Pipeline(config, self.opt["selected_layer"]) for config in self.build_configs()]
+        else:
+            pipelines = []
+            for selected_index in self.opt["selected_layer"]:
+                pipelines += [Pipeline(config, selected_index) for config in self.build_configs()]
 
+        print("Evaluating - {} - Configurations".format(len(pipelines)))
         for t in tqdm(train_tags):
             x_img = t.load_x()
             x_img, _ = self.get_features(x_img)
             h_img, w_img = x_img.shape[:2]
             y_img = t.load_y([h_img, w_img])
 
-            tasks = [[pl, x_img, y_img] for pl in pipelines]
-
-            with Pool() as p:
-                pipelines = p.map(eval_pipeline, tasks)
+            if self.use_multi_processing:
+                tasks = [[pl, x_img, y_img] for pl in pipelines]
+                with Pool() as p:
+                    pipelines = p.map(eval_pipeline, tasks)
+            else:
+                for pl in pipelines:
+                    pl.eval(x_img, y_img)
 
         best_score = 0
         best_pipeline = None
@@ -201,7 +211,8 @@ class SimpleLayer:
 
         print("BestScore: {} with config {}".format(best_score, best_pipeline.config))
         self.config = best_pipeline.config
-        self.pipeline = Pipeline(self.config)
+        self.opt["selected_layer"] = best_pipeline.selected_layer
+        self.pipeline = Pipeline(self.config, self.opt["selected_layer"])
 
         for t in validation_tags:
             x_img = t.load_x()
@@ -223,7 +234,7 @@ class SimpleLayer:
 
     def load(self, model_path):
         self.config = load_dict(os.path.join(model_path, "config.json"))
-        self.pipeline = Pipeline(self.config)
+        self.pipeline = Pipeline(self.config, selected_layer=self.opt["selected_layer"])
 
     def set_index(self, i):
         self.index = i

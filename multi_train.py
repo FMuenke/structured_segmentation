@@ -14,7 +14,7 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.object_selection_layer import ObjectSelectionLayer
 from structured_classifier.simple_layer import SimpleLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
-from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.pixel_layer import PixelLayer
 from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
 from structured_classifier.normalization_layer import NormalizationLayer
@@ -63,7 +63,7 @@ def main(args_):
     if not os.path.isdir(mf):
         os.mkdir(mf)
 
-    number_of_images = [1, 2, 5, 10, 25, 50]
+    number_of_images = [1, 2, 5, 10, 25, 50, 100, 0]
     iterations = 20
 
     for n in number_of_images:

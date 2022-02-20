@@ -17,6 +17,7 @@ class LocalNormalization:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
+        print(x_img.shape)
         x_img = 255 * x_img
         total_avg = np.mean(x_img)
         avg = cv2.filter2D(
@@ -24,6 +25,7 @@ class LocalNormalization:
             kernel=cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.parameter, self.parameter))
         )
         img_norm = x_img - total_avg + avg
+        print(x_img.shape)
         return img_norm.astype(np.float64) / 255
 
 

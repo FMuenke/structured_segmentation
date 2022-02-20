@@ -1,5 +1,5 @@
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
-from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.pixel_layer import PixelLayer
 from structured_classifier.super_pixel_layer import SuperPixelLayer
 from structured_classifier.hyperparameter_optimizer import HyperParameterOptimizer
 from structured_classifier.input_layer import InputLayer

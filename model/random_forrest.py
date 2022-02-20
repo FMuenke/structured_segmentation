@@ -6,7 +6,7 @@ from structured_classifier.input_3d_layer import Input3DLayer
 from structured_classifier.voting_3d_layer import Voting3DLayer
 from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
 
-from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.pixel_layer import PixelLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.normalization_layer import NormalizationLayer
@@ -151,5 +151,5 @@ class RandomStructuredRandomForrest:
             return VotingLayer(INPUTS=trees, name="voting")
         elif output_option == "boosting":
             b = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
-            return GraphLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
+            return PixelLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
         return trees

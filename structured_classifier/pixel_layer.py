@@ -10,7 +10,7 @@ from structured_classifier.layer_operations import resize
 from utils.utils import check_n_make_dir, save_dict
 
 
-class GraphLayer:
+class PixelLayer:
     layer_type = "GRAPH_LAYER"
 
     def __init__(self,

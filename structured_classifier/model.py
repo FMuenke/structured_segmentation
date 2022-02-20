@@ -1,7 +1,7 @@
 import os
 from utils.utils import check_n_make_dir, load_dict
 
-from structured_classifier.graph_layer import GraphLayer
+from structured_classifier.pixel_layer import PixelLayer
 from structured_classifier.graph_3d_layer import Graph3DLayer
 from structured_classifier.input_layer import InputLayer
 from structured_classifier.input_3d_layer import Input3DLayer
@@ -39,6 +39,7 @@ class Model:
         print("Model was saved to: {}".format(model_path))
 
     def load(self, model_path):
+        print("Loading Model from: {}".format(model_path))
         if os.path.isdir(model_path):
             if os.path.isdir(os.path.join(model_path, "graph")):
                 graph_start = os.listdir(os.path.join(model_path, "graph"))[0]
@@ -59,7 +60,7 @@ class Model:
 
         if opt["layer_type"] == "GRAPH_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = GraphLayer(
+            layer = PixelLayer(
                 prev_layer,
                 opt["name"],
                 opt["kernel"],
@@ -154,7 +155,9 @@ class Model:
 
         if opt["layer_type"] == "SIMPLE_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = SimpleLayer(prev_layer, opt["name"], None)
+            if "selected_layer" not in opt:
+                opt["selected_layer"] = -1
+            layer = SimpleLayer(prev_layer, opt["name"], None, selected_layer=opt["selected_layer"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer
