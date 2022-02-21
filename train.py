@@ -36,7 +36,10 @@ def main(args_):
     mf = args_.model_folder
 
     x = InputLayer("IN", features_to_use="gray-color", initial_down_scale=1)
-    x = SimpleLayer(x, "SIMPLE", operations=["opening", "invert", "edge", "blurring", "threshold_percentile"], selected_layer=[0])
+    x = SimpleLayer(x, "SIMPLE",
+                    operations=["blurring", "edge", "threshold_percentile", "remove_small_objects"],
+                    selected_layer=[0], use_multiprocessing=True)
+    # x = PixelLayer(x, "px", (3, 3), (3, 3))
     # x = SuperPixelLayer(x, "SP", down_scale=2, feature_aggregation="hist16", clf="rf")
     # x = ObjectSelectionLayer(x, "SELECT")
     model = Model(graph=x)

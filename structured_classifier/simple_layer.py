@@ -28,9 +28,17 @@ LIST_OF_OPERATIONS = [
 
 
 def eval_pipeline(args):
-    pl, x_img, y_img = args
-    pl.eval(x_img, y_img)
-    return pl
+    evaluated_pipelines = []
+    for bundle in args:
+        pl, x_img, y_img = bundle
+        pl.eval(x_img, y_img)
+        evaluated_pipelines.append(pl)
+    return evaluated_pipelines
+
+
+def flatten_list(t):
+    flat_list = [item for sublist in t for item in sublist]
+    return flat_list
 
 
 class Pipeline:
@@ -195,8 +203,12 @@ class SimpleLayer:
 
             if self.use_multi_processing:
                 tasks = [[pl, x_img, y_img] for pl in pipelines]
+                n = 500
+                tasks_bundled = [tasks[i:i + n] for i in range(0, len(tasks), n)]
                 with Pool() as p:
-                    pipelines = p.map(eval_pipeline, tasks)
+                    bundled_pipelines = p.map(eval_pipeline, tasks_bundled)
+                pipelines = flatten_list(bundled_pipelines)
+
             else:
                 for pl in pipelines:
                     pl.eval(x_img, y_img)
