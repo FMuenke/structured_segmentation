@@ -1,10 +1,28 @@
 import numpy as np
 import cv2
-from skimage.filters import frangi, hessian, sato
-import time
-from skimage.morphology import remove_small_objects
+from skimage.filters import frangi, threshold_otsu, threshold_local
+from skimage.morphology import remove_small_objects, remove_small_holes
+from skimage.feature import canny
 
 from structured_classifier.layer_operations import normalize, resize
+
+
+class FillContours:
+    list_of_parameters = [None, 1]
+    key = "fill_contours"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img[x_img < 0.5] = 0
+        x_img[x_img >= 0.5] = 1
+        x_img = 255 * x_img
+        cnt, _ = cv2.findContours(x_img.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        x_img = cv2.fillPoly(x_img, pts=cnt, color=255)
+        return x_img.astype(np.float64) / 255
 
 
 class LocalNormalization:
@@ -17,7 +35,6 @@ class LocalNormalization:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
-        print(x_img.shape)
         x_img = 255 * x_img
         total_avg = np.mean(x_img)
         avg = cv2.filter2D(
@@ -25,7 +42,6 @@ class LocalNormalization:
             kernel=cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.parameter, self.parameter))
         )
         img_norm = x_img - total_avg + avg
-        print(x_img.shape)
         return img_norm.astype(np.float64) / 255
 
 
@@ -47,8 +63,26 @@ class RemoveSmallObjects:
         return x_img.astype(np.float64)
 
 
+class RemoveSmallHoles:
+    list_of_parameters = [None, 2, 4, 8, 16, 32, 64, 128, 256]
+    key = "remove_small_holes"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = x_img.astype(np.int)
+        if len(np.unique(x_img)) == 1:
+            return x_img
+        x_img = x_img.astype(np.int)
+        x_img = remove_small_holes(x_img.astype(np.bool), area_threshold=self.parameter)
+        return x_img.astype(np.float64)
+
+
 class CannyEdgeDetector:
-    list_of_parameters = [None, [25, 50], [50, 100], [100, 150], [150, 200]]
+    list_of_parameters = [None, 1, 3, 5, 9, 17, 33]
     key = "canny_edge"
 
     def __init__(self, parameter):
@@ -58,7 +92,7 @@ class CannyEdgeDetector:
         if self.parameter is None:
             return x_img
         x_img = 255 * x_img
-        x_img = cv2.Canny(x_img.astype(np.uint8), self.parameter[0], self.parameter[1])
+        x_img = canny(x_img.astype(np.uint8), sigma=self.parameter)
         return x_img.astype(np.float64) / 255
 
 
@@ -148,6 +182,39 @@ class ThresholdPercentile:
         if self.parameter is None:
             return x_img
         threshold = np.percentile(x_img, self.parameter)
+        x_img[x_img < threshold] = 0
+        x_img[x_img >= threshold] = 1
+        return x_img
+
+
+class ThresholdOtsu:
+    list_of_parameters = [None, 1]
+    key = "threshold_otsu"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        threshold = threshold_otsu(x_img)
+        x_img[x_img < threshold] = 0
+        x_img[x_img >= threshold] = 1
+        return x_img
+
+
+class LocalThreshold:
+    list_of_parameters = [None, 8+1, 16+1, 32+1, 64+1, 128+1, 256+1]
+    key = "local_threshold"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = 255 * x_img
+        threshold = threshold_local(x_img, block_size=self.parameter)
         x_img[x_img < threshold] = 0
         x_img[x_img >= threshold] = 1
         return x_img

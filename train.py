@@ -27,6 +27,8 @@ def main(args_):
     color_coding = {
         "crack": [[255, 255, 255], [255, 0, 0]],
         # "shadow": [[1, 1, 1], [0, 100, 255]]
+        # "heart": [[4, 4, 4], [0, 100, 255]]
+        # "nuceli": [[255, 255, 255], [100, 100, 255]],
     }
 
     randomized_split = True
@@ -35,13 +37,18 @@ def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    x = InputLayer("IN", features_to_use="gray-color", initial_down_scale=1)
+    x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=0)
+    # x = NormalizationLayer(x, "NORM")
     x = SimpleLayer(x, "SIMPLE",
-                    operations=["blurring", "edge", "threshold_percentile", "remove_small_objects"],
-                    selected_layer=[0], use_multiprocessing=True)
-    # x = PixelLayer(x, "px", (3, 3), (3, 3))
-    # x = SuperPixelLayer(x, "SP", down_scale=2, feature_aggregation="hist16", clf="rf")
-    # x = ObjectSelectionLayer(x, "SELECT")
+                    operations=[
+                        "blurring",
+                        "invert",
+                        "edge",
+                        # "threshold",
+                        "closing",
+                        "erode"
+                    ],
+                    selected_layer=[0, 1, 2], use_multiprocessing=True)
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)

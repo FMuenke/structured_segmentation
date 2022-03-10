@@ -15,7 +15,7 @@ def get_file_name(base_path, data_id, extensions):
 
 class LabeledImage:
 
-    image_extensions = [".jpg", ".JPG", ".png", "PNG", ".jpeg", ".ppm"]
+    image_extensions = [".jpg", ".JPG", ".png", "PNG", ".jpeg", ".ppm", ".tif"]
     label_extensions = [".png", ".tif", "_label.tif", "_label.tiff", ".tiff", ".ppm"]
 
     def __init__(self, base_path, data_id, color_coding):

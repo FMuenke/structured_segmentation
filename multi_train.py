@@ -28,16 +28,23 @@ from utils.utils import save_dict
 
 def run_training(df, mf, number_of_tags):
     color_coding = {
-        "crack": [[255, 255, 255], [255, 0, 0]],
+        "ellipse": [[255, 255, 255], [255, 0, 0]],
     }
 
     randomized_split = True
     train_test_ratio = 0.20
 
-    # x = InputLayer("input", features_to_use="gray-color", initial_down_scale=1)
-    # x = SimpleLayer(x, "SIMPLE", operations=["blurring", "edge", "threshold_percentile", "remove_small_objects"])
-    ed = EncoderDecoder(depth=2, clf="rf", data_reduction=0)
-    x = ed.build(initial_down_scale=1)
+    x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=0)
+    x = SimpleLayer(x, "SIMPLE",
+                    operations=[
+                        # "erode", "dilate",
+                        "blurring",
+                        "invert",
+                        "edge",
+                        "closing",
+                        "erode"
+                    ],
+                    selected_layer=[0, 1, 2], use_multiprocessing=True)
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
@@ -63,7 +70,7 @@ def main(args_):
     if not os.path.isdir(mf):
         os.mkdir(mf)
 
-    number_of_images = [1, 2, 5, 10, 25, 50, 100, 0]
+    number_of_images = [1, 2, 5, 10, 25]
     iterations = 20
 
     for n in number_of_images:

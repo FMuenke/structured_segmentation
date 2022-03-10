@@ -8,7 +8,6 @@ from utils.utils import check_n_make_dir, save_dict, load_dict
 from utils.image_processing_operations import *
 
 LIST_OF_OPERATIONS = [
-    Resize,
     Invert,
     MorphologicalClosing,
     EdgeDetector,
@@ -24,6 +23,10 @@ LIST_OF_OPERATIONS = [
     CannyEdgeDetector,
     LocalNormalization,
     RemoveSmallObjects,
+    RemoveSmallHoles,
+    ThresholdOtsu,
+    LocalThreshold,
+    FillContours,
 ]
 
 
@@ -66,6 +69,8 @@ class Pipeline:
             pass
         else:
             x_img = x_img / 255
+        h, w = x_img.shape[:2]
+        x_img = np.reshape(x_img, (h, w))
         for op in self.operations:
             x_img = op.inference(x_img)
         return x_img
@@ -115,6 +120,10 @@ class SimpleLayer:
 
         self.config = None
         self.pipeline = None
+        if operations is not None:
+            if "fill_contours" in operations:
+                print("ALERT: Option: fill_contour does not support multiprocessing during Training")
+                use_multiprocessing = False
         self.use_multi_processing = use_multiprocessing
 
         self.opt = {
@@ -172,7 +181,7 @@ class SimpleLayer:
         for op in self.operations:
             if op not in possible_configs:
                 pos_ops = [op for op in possible_configs]
-                raise Exception("INVALID OPERATION OPTION. CHOSE: {}".format(pos_ops))
+                raise Exception("INVALID OPERATION OPTION {}. CHOSE: {}".format(op, pos_ops))
         selected_configs = {op: possible_configs[op] for op in possible_configs if op in self.operations}
         for parameters in list(ParameterGrid(selected_configs)):
             cfg = [[op, parameters[op]] for op in self.operations]
@@ -221,7 +230,8 @@ class SimpleLayer:
                 best_score = score
                 best_pipeline = pl
 
-        print("BestScore: {} with config {}".format(best_score, best_pipeline.config))
+        print("BestScore: {} with config {} for channel: {}".format(
+            best_score, best_pipeline.config, best_pipeline.selected_layer))
         self.config = best_pipeline.config
         self.opt["selected_layer"] = best_pipeline.selected_layer
         self.pipeline = Pipeline(self.config, self.opt["selected_layer"])
