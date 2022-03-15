@@ -82,9 +82,10 @@ class RandomStructuredRandomForrest3D:
 
 class RandomStructuredRandomForrest:
     def __init__(self,
-                 n_estimators=20,
+                 n_estimators=10,
                  max_depth=1,
-                 max_kernel_sum=25,
+                 max_kernel_sum=10,
+                 max_stride_sum=5,
                  max_down_scale=6,
                  features_to_use="gray-color",
                  tree_type="kernel",
@@ -97,6 +98,7 @@ class RandomStructuredRandomForrest:
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.max_kernel_sum = max_kernel_sum
+        self.max_stride_sum = max_stride_sum
         self.max_down_scale = max_down_scale
         self.features_to_use = features_to_use
         self.norm_input = norm_input
@@ -129,6 +131,11 @@ class RandomStructuredRandomForrest:
                 k_y = max(np.random.randint(self.max_kernel_sum), 1)
                 k_x = int(self.max_kernel_sum - k_y)
                 k = (k_y, k_x)
+
+                s_y = max(np.random.randint(self.max_kernel_sum), 1)
+                s_x = max(np.random.randint(self.max_kernel_sum), 1)
+                s = (s_y, s_x)
+
                 if type(self.clf) is list:
                     clf = np.random.choice(self.clf)
                 else:
@@ -140,7 +147,7 @@ class RandomStructuredRandomForrest:
                     INPUTS=tree,
                     name="tree_{}_{}".format(i, ii),
                     decision_type=self.tree_type,
-                    kernel=k, kernel_shape=self.kernel_shape,
+                    kernel=k, strides=s, kernel_shape=self.kernel_shape,
                     feature_aggregation=self.feature_aggregation,
                     down_scale=d, data_reduction=self.data_reduction,
                     clf=clf, clf_options=self.clf_options

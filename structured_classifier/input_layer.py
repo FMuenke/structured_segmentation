@@ -6,6 +6,8 @@ from features.local_binary_pattern import LocalBinaryPattern
 from features.leung_malik import LeungMalik
 from features.filter_operators import FilterOperator
 from features.gradients import Gradients
+from features.laplacian import Laplacian
+from features.gaussian import Gaussian
 
 from utils.utils import check_n_make_dir, save_dict
 
@@ -108,8 +110,18 @@ class InputLayer:
                 tensors.append(f)
             if "gradient" in f_type:
                 color_space, descriptor_type = f_type.split("-")
-                fo = Gradients(color_space=color_space)
-                f = fo.compute(image)
+                gr = Gradients(color_space=color_space)
+                f = gr.compute(image)
+                tensors.append(f)
+            if "laplacian" in f_type:
+                color_space, descriptor_type = f_type.split("-")
+                gr = Laplacian(color_space=color_space)
+                f = gr.compute(image)
+                tensors.append(f)
+            if "gaussian" in f_type:
+                color_space, descriptor_type = f_type.split("-")
+                gr = Gaussian(color_space=color_space)
+                f = gr.compute(image)
                 tensors.append(f)
         data = np.concatenate(tensors, axis=2)
         return data

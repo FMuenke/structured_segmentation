@@ -3,8 +3,29 @@ import cv2
 from skimage.filters import frangi, threshold_otsu, threshold_local
 from skimage.morphology import remove_small_objects, remove_small_holes
 from skimage.feature import canny
-
+from skimage.segmentation import watershed, random_walker
 from structured_classifier.layer_operations import normalize, resize
+
+
+class Watershed:
+    list_of_parameters = [None, 1, 5, 10]
+    key = "watershed"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = 255 * x_img
+        markers = np.zeros(x_img.shape, dtype=np.uint)
+        markers[x_img <= np.percentile(x_img, self.parameter)] = 1
+        markers[x_img >= np.percentile(x_img, 100 - self.parameter)] = 2
+        if np.min(markers) == 1:
+            return markers - 1
+
+        labels = watershed(x_img, markers)
+        return labels.astype(np.float64) - 1
 
 
 class FillContours:
@@ -58,7 +79,6 @@ class RemoveSmallObjects:
         x_img = x_img.astype(np.int)
         if len(np.unique(x_img)) == 1:
             return x_img
-        x_img = x_img.astype(np.int)
         x_img = remove_small_objects(x_img.astype(np.bool), min_size=self.parameter)
         return x_img.astype(np.float64)
 
@@ -76,7 +96,6 @@ class RemoveSmallHoles:
         x_img = x_img.astype(np.int)
         if len(np.unique(x_img)) == 1:
             return x_img
-        x_img = x_img.astype(np.int)
         x_img = remove_small_holes(x_img.astype(np.bool), area_threshold=self.parameter)
         return x_img.astype(np.float64)
 
@@ -97,7 +116,7 @@ class CannyEdgeDetector:
 
 
 class TopClippingPercentile:
-    list_of_parameters = [None, 2, 4, 8, 16, 32, 64]
+    list_of_parameters = [None, 1, 5, 10, 25, 50]
     key = "top_clipping_percentile"
 
     def __init__(self, parameter):
@@ -107,6 +126,20 @@ class TopClippingPercentile:
         if self.parameter is None:
             return x_img
         x_img = np.clip(x_img, 0, np.percentile(x_img, 100 - self.parameter))
+        return x_img
+
+
+class BottomClippingPercentile:
+    list_of_parameters = [None, 1, 5, 10, 25, 50]
+    key = "bottom_clipping_percentile"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        x_img = np.clip(x_img, np.percentile(x_img, self.parameter), 1)
         return x_img
 
 
@@ -221,7 +254,7 @@ class LocalThreshold:
 
 
 class MorphologicalOpening:
-    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
     key = "opening"
 
     def __init__(self, parameter):
@@ -236,8 +269,23 @@ class MorphologicalOpening:
         return x_img.astype(np.float64) / 255
 
 
+class NegativeMorphologicalOpening:
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    key = "negative_opening"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        op = MorphologicalOpening(self.parameter)
+        x_img_morph = op.inference(x_img)
+        return np.abs(x_img - x_img_morph)
+
+
 class MorphologicalErosion:
-    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
     key = "erode"
 
     def __init__(self, parameter):
@@ -252,8 +300,23 @@ class MorphologicalErosion:
         return x_img.astype(np.float64) / 255
 
 
+class NegativeMorphologicalErosion:
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    key = "negative_erode"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        op = MorphologicalErosion(self.parameter)
+        x_img_morph = op.inference(x_img)
+        return np.abs(x_img - x_img_morph)
+
+
 class MorphologicalDilatation:
-    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
     key = "dilate"
 
     def __init__(self, parameter):
@@ -266,6 +329,21 @@ class MorphologicalDilatation:
         x_img = 255 * x_img
         x_img = cv2.morphologyEx(x_img.astype(np.uint8), cv2.MORPH_DILATE, kernel)
         return x_img.astype(np.float64) / 255
+
+
+class NegativeMorphologicalDilatation:
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    key = "negative_dilate"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        op = MorphologicalDilatation(self.parameter)
+        x_img_morph = op.inference(x_img)
+        return np.abs(x_img - x_img_morph)
 
 
 class MorphologicalClosing:
@@ -284,6 +362,21 @@ class MorphologicalClosing:
         return x_img.astype(np.float64) / 255
 
 
+class NegativeMorphologicalClosing:
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    key = "negative_closing"
+
+    def __init__(self, parameter):
+        self.parameter = parameter
+
+    def inference(self, x_img):
+        if self.parameter is None:
+            return x_img
+        op = MorphologicalClosing(self.parameter)
+        x_img_morph = op.inference(x_img)
+        return np.abs(x_img - x_img_morph)
+
+
 class Invert:
     list_of_parameters = [-1, 1]
     key = "invert"
@@ -300,7 +393,7 @@ class Invert:
 
 
 class Resize:
-    list_of_parameters = [None, 32, 64, 128, 256, 512]
+    list_of_parameters = [None, 2, 4, 8, 16, 32]
     key = "resize"
 
     def __init__(self, parameter):
@@ -309,4 +402,5 @@ class Resize:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
-        return resize(x_img, width=self.parameter, height=self.parameter)
+        height, width = x_img.shape[:2]
+        return resize(x_img, width=int(width / self.parameter), height=int(height / self.parameter))

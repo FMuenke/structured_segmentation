@@ -32,30 +32,29 @@ def main(args_):
     }
 
     randomized_split = True
-    train_test_ratio = 0.80
+    train_test_ratio = 0.90
 
     df = args_.dataset_folder
     mf = args_.model_folder
 
-    x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=0)
+    x = InputLayer("IN", features_to_use=["gray-color"], initial_down_scale=1)
     # x = NormalizationLayer(x, "NORM")
-    x = SimpleLayer(x, "SIMPLE",
-                    operations=[
-                        "blurring",
-                        "invert",
-                        "edge",
-                        # "threshold",
-                        "closing",
-                        "erode"
-                    ],
-                    selected_layer=[0, 1, 2], use_multiprocessing=True)
+    x = SimpleLayer(x, "SIMPLE", operations=[
+        "blurring",
+        "top_clipping_percentile",
+        "negative_closing",
+        # "frangi",
+        "threshold",
+        "remove_small_objects",
+    ], selected_layer=[0], use_multiprocessing=True)
+
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()
     train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
 
-    model.fit(train_set, validation_set)
+    model.fit(train_set[:10], validation_set)
     model.save(mf)
     save_dict(color_coding, os.path.join(mf, "color_coding.json"))
 

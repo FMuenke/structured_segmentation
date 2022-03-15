@@ -14,10 +14,14 @@ LIST_OF_OPERATIONS = [
     FrangiFilter,
     Threshold,
     MorphologicalOpening,
+    NegativeMorphologicalOpening,
     MorphologicalClosing,
+    NegativeMorphologicalClosing,
     ThresholdPercentile,
     MorphologicalDilatation,
+    NegativeMorphologicalDilatation,
     MorphologicalErosion,
+    NegativeMorphologicalErosion,
     Blurring,
     TopClippingPercentile,
     CannyEdgeDetector,
@@ -27,6 +31,7 @@ LIST_OF_OPERATIONS = [
     ThresholdOtsu,
     LocalThreshold,
     FillContours,
+    Watershed,
 ]
 
 
@@ -139,7 +144,6 @@ class SimpleLayer:
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
-        x_img = np.reshape(x_img, (x_height * x_width, -1))
         y_img = self.pipeline.inference(x_img)
         y_img = np.reshape(y_img, (x_height, x_width, 1))
 
