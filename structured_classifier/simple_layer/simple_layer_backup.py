@@ -5,7 +5,7 @@ from multiprocessing.pool import Pool
 from sklearn.model_selection import ParameterGrid
 from utils.utils import check_n_make_dir, save_dict, load_dict
 
-from utils.image_processing_operations import *
+from structured_classifier.simple_layer.image_processing_operations import *
 
 LIST_OF_OPERATIONS = [
     Invert,

@@ -1,5 +1,5 @@
 from structured_classifier.input_layer import InputLayer
-from structured_classifier.input_3d_layer import Input3DLayer
+from structured_classifier.experimental.input_3d_layer import Input3DLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 
 from model.base_structures import get_decision_layer, get_decision_layer_3d

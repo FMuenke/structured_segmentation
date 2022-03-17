@@ -1,10 +1,10 @@
 import numpy as np
 
 from structured_classifier.pixel_layer import PixelLayer
-from structured_classifier.graph_3d_layer import Graph3DLayer
+from structured_classifier.experimental.graph_3d_layer import Graph3DLayer
 
-from structured_classifier.super_pixel_layer import SuperPixelLayer
-from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
+from structured_classifier.super_pixel_layer.super_pixel_layer import SuperPixelLayer
+from structured_classifier.experimental.super_pixel_3d_layer import SuperPixel3DLayer
 
 
 def get_decision_layer(

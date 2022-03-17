@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from tqdm import tqdm
-from utils.super_pixel import get_features_for_segments, generate_segments, map_segments, get_y_for_segments
+from structured_classifier.super_pixel_layer.super_pixel import get_features_for_segments, generate_segments, map_segments, get_y_for_segments
 
 
 from learner.classifier_handler import ClassifierHandler

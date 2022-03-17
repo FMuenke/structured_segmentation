@@ -4,18 +4,8 @@ import os
 from data_structure.video_set import VideoSet
 from structured_classifier.model import Model
 
-from structured_classifier.graph_3d_layer import Graph3DLayer
-from structured_classifier.input_3d_layer import Input3DLayer
-from structured_classifier.voting_3d_layer import Voting3DLayer
-from structured_classifier.super_pixel_3d_layer import SuperPixel3DLayer
-from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
-from structured_classifier.shape_refinement_3d_layer import ShapeRefinement3DLayer
-
 from model.random_forrest import RandomStructuredRandomForrest3D
 from model.pyramid_boosting import PyramidBoosting3D
-from model.encoder_decoder import EncoderDecoder3D
-
-from utils import parameter_grid as pg
 
 from utils.utils import save_dict
 

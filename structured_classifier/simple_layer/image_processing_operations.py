@@ -404,3 +404,31 @@ class Resize:
             return x_img
         height, width = x_img.shape[:2]
         return resize(x_img, width=int(width / self.parameter), height=int(height / self.parameter))
+
+
+LIST_OF_OPERATIONS = [
+    Invert,
+    MorphologicalClosing,
+    EdgeDetector,
+    FrangiFilter,
+    Threshold,
+    MorphologicalOpening,
+    NegativeMorphologicalOpening,
+    MorphologicalClosing,
+    NegativeMorphologicalClosing,
+    ThresholdPercentile,
+    MorphologicalDilatation,
+    NegativeMorphologicalDilatation,
+    MorphologicalErosion,
+    NegativeMorphologicalErosion,
+    Blurring,
+    TopClippingPercentile,
+    CannyEdgeDetector,
+    LocalNormalization,
+    RemoveSmallObjects,
+    RemoveSmallHoles,
+    ThresholdOtsu,
+    LocalThreshold,
+    FillContours,
+    Watershed,
+]

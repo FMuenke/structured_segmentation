@@ -1,10 +1,10 @@
 import numpy as np
 
 
-from structured_classifier.graph_3d_layer import Graph3DLayer
-from structured_classifier.input_3d_layer import Input3DLayer
-from structured_classifier.voting_3d_layer import Voting3DLayer
-from structured_classifier.bottle_neck_3d_layer import BottleNeck3DLayer
+from structured_classifier.experimental.graph_3d_layer import Graph3DLayer
+from structured_classifier.experimental.input_3d_layer import Input3DLayer
+from structured_classifier.experimental.voting_3d_layer import Voting3DLayer
+from structured_classifier.experimental.bottle_neck_3d_layer import BottleNeck3DLayer
 
 from structured_classifier.pixel_layer import PixelLayer
 from structured_classifier.input_layer import InputLayer

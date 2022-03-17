@@ -5,23 +5,8 @@ import numpy as np
 from data_structure.segmentation_data_set import SegmentationDataSet
 from structured_classifier.model import Model
 
-from model.random_forrest import RandomStructuredRandomForrest
-from model.pyramid_boosting import PyramidBoosting
-from model.encoder_decoder import EncoderDecoder
-from model.patch_work import PatchWork
-
 from structured_classifier.input_layer import InputLayer
-from structured_classifier.object_selection_layer import ObjectSelectionLayer
-from structured_classifier.simple_layer import SimpleLayer
-from structured_classifier.super_pixel_layer import SuperPixelLayer
-from structured_classifier.pixel_layer import PixelLayer
-from structured_classifier.shape_refinement_layer import ShapeRefinementLayer
-from structured_classifier.bottle_neck_layer import BottleNeckLayer
-from structured_classifier.normalization_layer import NormalizationLayer
-from structured_classifier.feature_extraction_layer import FeatureExtractionLayer
-from structured_classifier.hyperparameter_optimizer import HyperParameterOptimizer
-
-from utils import parameter_grid as pg
+from structured_classifier.simple_layer.simple_layer import SimpleLayer
 
 from utils.utils import save_dict
 
@@ -34,17 +19,14 @@ def run_training(df, mf, number_of_tags):
     randomized_split = True
     train_test_ratio = 0.20
 
-    x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=0)
-    x = SimpleLayer(x, "SIMPLE",
-                    operations=[
-                        # "erode", "dilate",
-                        "blurring",
-                        "invert",
-                        "edge",
-                        "closing",
-                        "erode"
-                    ],
-                    selected_layer=[0, 1, 2], use_multiprocessing=True)
+    x = InputLayer("IN", features_to_use="gray-color", initial_down_scale=1)
+    x = SimpleLayer(x, "SIMPLE", operations=[
+        "blurring",
+        "top_clipping_percentile",
+        "negative_closing",
+        "threshold",
+        "remove_small_objects",
+    ], selected_layer=[0], use_multiprocessing=True)
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
