@@ -4,14 +4,15 @@ import numpy as np
 
 from utils.utils import check_n_make_dir, save_dict, load_dict
 from structured_classifier.layer_operations import resize
-from structured_classifier.simple_layer.grid_search import GridSearchOptimizer
-from structured_classifier.simple_layer.random_search import RandomSearchOptimizer
-from structured_classifier.simple_layer.genetic_algorithm import GeneticAlgorithmOptimizer
-from structured_classifier.simple_layer.pipeline import Pipeline
+from structured_classifier.conventional_image_processing_pipeline.grid_search import GridSearchOptimizer
+from structured_classifier.conventional_image_processing_pipeline.random_search import RandomSearchOptimizer
+from structured_classifier.conventional_image_processing_pipeline.genetic_algorithm import GeneticAlgorithmOptimizer
+from structured_classifier.conventional_image_processing_pipeline.pipeline import Pipeline
+from structured_classifier.conventional_image_processing_pipeline.image_processing_operations import LIST_OF_OPERATIONS
 
 
-class SimpleLayer:
-    layer_type = "SIMPLE_LAYER"
+class CIPPLayer:
+    layer_type = "CIPP_LAYER"
 
     def __init__(self, INPUTS, name, operations, selected_layer, optimizer="grid_search", use_multiprocessing=True):
         self.name = str(name)
@@ -34,6 +35,10 @@ class SimpleLayer:
             if "fill_contours" in operations:
                 print("ALERT: Option: fill_contour does not support multiprocessing during Training")
                 use_multiprocessing = False
+            possible_options = [op.key for op in LIST_OF_OPERATIONS]
+            for op in operations:
+                if op not in possible_options:
+                    raise Exception("UNKNOWN OPERATION! Try: {}".format(possible_options))
         self.use_multi_processing = use_multiprocessing
 
         self.opt = {

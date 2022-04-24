@@ -1,0 +1,1 @@
+from structured_classifier.conventional_image_processing_pipeline.cipp_layer import CIPPLayer

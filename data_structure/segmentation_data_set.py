@@ -1,9 +1,6 @@
 import os
 from tqdm import tqdm
 import numpy as np
-from data_structure.folder import Folder
-
-# from data_structure.lbm_tag import LbmTag
 from data_structure.labeled_image import LabeledImage
 
 

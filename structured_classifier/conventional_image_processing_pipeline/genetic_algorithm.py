@@ -4,8 +4,8 @@ from multiprocessing.pool import Pool
 
 from sklearn.model_selection import ParameterGrid
 
-from structured_classifier.simple_layer.pipeline import Pipeline
-from structured_classifier.simple_layer.image_processing_operations import LIST_OF_OPERATIONS
+from structured_classifier.conventional_image_processing_pipeline.pipeline import Pipeline
+from structured_classifier.conventional_image_processing_pipeline.image_processing_operations import LIST_OF_OPERATIONS
 
 
 def eval_pipeline(args):
@@ -23,10 +23,12 @@ def flatten_list(t):
 
 
 class MutationChamber:
-    def __init__(self, individuals, number_to_generate):
+    def __init__(self, individuals, number_to_generate, multi_draw=False):
         self.individuals = individuals
+        self.chosen_individuals = list(range(len(self.individuals)))
         self.number_to_generate = number_to_generate
         self.to_do = number_to_generate
+        self.multi_draw = multi_draw
 
     def __iter__(self):
         self.to_do = self.number_to_generate
@@ -39,8 +41,17 @@ class MutationChamber:
         if self.to_do <= 0:
             raise StopIteration
         self.to_do -= 1
+        if len(self.chosen_individuals) <= 1:
+            raise StopIteration
 
-        i1, i2 = np.random.choice(self.individuals, size=2)
+        if self.multi_draw:
+            i1, i2 = np.random.choice(self.individuals, size=2)
+        else:
+            i1 = self.chosen_individuals.pop(np.random.randint(len(self.chosen_individuals)))
+            i2 = self.chosen_individuals.pop(np.random.randint(len(self.chosen_individuals)))
+            i1 = self.individuals[i1]
+            i2 = self.individuals[i2]
+
         config = []
         for list_of_op in zip(i1.config, i2.config):
             sel = np.random.randint(len(list_of_op))
@@ -53,43 +64,56 @@ class Population:
         self.number_of_individuals = number_of_individuals
         self.individual_pool = individual_pool
         self.use_multi_processing = use_multi_processing
-        self.multiprocessing_chunk_size = 100
+        self.multiprocessing_chunk_size = 250
 
         self.keep_percentage = 0.3
-        self.new_percentage = 0.2
-        self.mut_percentage = 0.5
+        self.new_percentage = 0.5
+        self.mut_percentage = 0.2
 
         self.individuals = self.spawn_individuals(self.number_of_individuals)
+        self.initially_fitted = False
+
+        # self.top_individuals = None
+        # self.mut_individuals = None
+        # self.new_individuals = self.spawn_individuals(self.number_of_individuals)
 
     def spawn_individuals(self, n):
+        if n > len(self.individual_pool):
+            n = len(self.individual_pool)
+        if n == 0:
+            return []
         return [self.individual_pool.pop(random.randrange(len(self.individual_pool))) for _ in range(n)]
 
-    def score_individuals(self, x_img, y_img):
+    def score_individuals(self, x_img, y_img, individuals):
         if self.use_multi_processing:
-            tasks = [[pl, x_img, y_img] for pl in self.individuals]
+            tasks = [[pl, x_img, y_img] for pl in individuals]
             n = self.multiprocessing_chunk_size
             tasks_bundled = [tasks[i:i + n] for i in range(0, len(tasks), n)]
             with Pool() as p:
                 bundled_pipelines = p.map(eval_pipeline, tasks_bundled)
-            self.individuals = flatten_list(bundled_pipelines)
+            individuals = flatten_list(bundled_pipelines)
         else:
-            for pl in self.individuals:
+            for pl in individuals:
                 pl.eval(x_img, y_img)
+        return individuals
 
-    def evolve(self):
+    def evolve(self, x_img, y_img):
+        if not self.initially_fitted:
+            self.individuals = self.score_individuals(x_img, y_img, self.individuals)
+            self.initially_fitted = True
         top_k = int(self.number_of_individuals * self.keep_percentage)
         new_k = int(self.number_of_individuals * self.new_percentage)
         mut_k = int(self.number_of_individuals * self.mut_percentage)
 
         scored_individuals = [(pl, pl.summarize()) for pl in self.individuals]
         top_individuals_and_scores = sorted(scored_individuals, key=lambda x: x[1], reverse=True)[:top_k]
-        # print(top_individuals_and_scores[0])
         top_individuals = [pl for pl, score in top_individuals_and_scores]
         new_individuals = self.spawn_individuals(new_k)
+        new_individuals = self.score_individuals(x_img, y_img, new_individuals)
 
         mutation_chamber = MutationChamber(individuals=top_individuals, number_to_generate=mut_k)
         mut_individuals = [pl for pl in mutation_chamber]
-
+        mut_individuals = self.score_individuals(x_img, y_img, mut_individuals)
         self.individuals = top_individuals + new_individuals + mut_individuals
         return top_individuals_and_scores[0]
 
@@ -100,7 +124,7 @@ class GeneticAlgorithmOptimizer:
         self.selected_layer = selected_layer
         self.use_multi_processing = use_multi_processing
 
-        self.population_size = 1000
+        self.population_size = 2000
         self.iter_per_image = 4
 
         if type(self.selected_layer) is not list:
@@ -112,7 +136,7 @@ class GeneticAlgorithmOptimizer:
         print("Evaluating - {} - Configurations".format(len(self.pipelines)))
 
         self.population = Population(
-            self.population_size,
+            min(self.population_size, len(self.pipelines)),
             self.pipelines,
             use_multi_processing=self.use_multi_processing
         )
@@ -129,9 +153,9 @@ class GeneticAlgorithmOptimizer:
         return list_of_configs
 
     def step(self, x_img, y_img):
+        self.population.initially_fitted = False
         for i in range(self.iter_per_image):
-            self.population.score_individuals(x_img, y_img)
-            self.best_pipeline, self.best_score = self.population.evolve()
+            self.best_pipeline, self.best_score = self.population.evolve(x_img, y_img)
 
     def summarize(self):
         return self.best_pipeline, self.best_score

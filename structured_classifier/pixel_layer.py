@@ -11,7 +11,7 @@ from utils.utils import check_n_make_dir, save_dict
 
 
 class PixelLayer:
-    layer_type = "GRAPH_LAYER"
+    layer_type = "PIXEL_LAYER"
 
     def __init__(self,
                  INPUTS,

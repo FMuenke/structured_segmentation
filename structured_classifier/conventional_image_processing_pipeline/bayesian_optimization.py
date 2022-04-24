@@ -2,7 +2,7 @@ import bayes_opt
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessClassifier
 
-from structured_classifier.simple_layer.pipeline import Pipeline, LIST_OF_OPERATIONS
+from structured_classifier.conventional_image_processing_pipeline.pipeline import Pipeline, LIST_OF_OPERATIONS
 
 
 class BayesianOptimizer:

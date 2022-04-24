@@ -1,17 +1,112 @@
 import argparse
 import os
 import numpy as np
+from tqdm import tqdm
 
 from data_structure.segmentation_data_set import SegmentationDataSet
 from structured_classifier.model import Model
+from data_structure.stats_handler import StatsHandler
+from data_structure.folder import Folder
 
-from structured_classifier.input_layer import InputLayer
-from structured_classifier.simple_layer.simple_layer import SimpleLayer
+from structured_classifier import InputLayer
+from structured_classifier import CIPPLayer
+from structured_classifier import PixelLayer
 
-from utils.utils import save_dict
+from utils.utils import save_dict, load_dict
+
+
+def model_v1():
+    x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=1)
+    x = CIPPLayer(x, "SIMPLE", operations=[
+        "blurring",
+        "invert",
+        "edge",
+        "closing",
+        "erode",
+    ], selected_layer=[0, 1, 2], optimizer="grid_search", use_multiprocessing=True)
+    model = Model(graph=x)
+    return model
+
+
+def model_v1_1():
+    x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=1)
+    x = CIPPLayer(x, "SIMPLE", operations=[
+        # "blurring",
+        "invert",
+        "negative_closing",
+        "threshold",
+        "closing",
+        "erode",
+    ], selected_layer=[0, 1, 2], optimizer="grid_search", use_multiprocessing=True)
+    model = Model(graph=x)
+    return model
+
+
+def model_v2():
+    x = InputLayer("IN", features_to_use="gray-color", initial_down_scale=1)
+    x = CIPPLayer(x, "SIMPLE", operations=[
+        "blurring",
+        "top_clipping_percentile",
+        "negative_closing",
+        "threshold",
+        "remove_small_objects",
+    ], selected_layer=[0], optimizer="grid_search", use_multiprocessing=True)
+    model = Model(graph=x)
+    return model
+
+
+def model_v3():
+    x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=1)
+    x = CIPPLayer(x, "SIMPLE", operations=[
+        "blurring",
+        "invert",
+        "negative_erode",
+        "threshold",
+        "closing",
+        "erode",
+        # "remove_small_objects",
+    ], selected_layer=[0, 1, 2], optimizer="genetic_algorithm", use_multiprocessing=True)
+    model = Model(graph=x)
+    return model
+
+
+def model_v4():
+    x = InputLayer("IN", features_to_use=["RGB-color"], initial_down_scale=1)
+    x = CIPPLayer(x, "SIMPLE", operations=[
+        "watershed",
+        "remove_small_holes",
+        "remove_small_objects",
+    ], selected_layer=[1], optimizer="grid_search", use_multiprocessing=True)
+    model = Model(graph=x)
+    return model
+
+
+def model_px():
+    x = InputLayer("IN", features_to_use=["RGB-lm"], initial_down_scale=1)
+    x = PixelLayer(x, "PX", clf="rf")
+    model = Model(graph=x)
+    return model
+
+
+def convert_cls_to_color(cls_map, color_coding, unsupervised=False):
+    h, w = cls_map.shape[:2]
+    color_map = np.zeros((h, w, 3))
+    if unsupervised:
+        unique_y = np.unique(cls_map)
+        for u in unique_y:
+            if str(u) not in color_coding:
+                color_coding[str(u)] = [[0, 0, 0],
+                                        [np.random.randint(255), np.random.randint(255), np.random.randint(255)]]
+    for idx, cls in enumerate(color_coding):
+        iy, ix = np.where(cls_map == idx + 1)
+        color_map[iy, ix, :] = [color_coding[cls][1][2],
+                                color_coding[cls][1][1],
+                                color_coding[cls][1][0]]
+    return color_map
 
 
 def run_training(df, mf, number_of_tags):
+    print(mf)
     color_coding = {
         "ellipse": [[255, 255, 255], [255, 0, 0]],
     }
@@ -19,16 +114,7 @@ def run_training(df, mf, number_of_tags):
     randomized_split = True
     train_test_ratio = 0.20
 
-    x = InputLayer("IN", features_to_use="gray-color", initial_down_scale=1)
-    x = SimpleLayer(x, "SIMPLE", operations=[
-        "blurring",
-        "top_clipping_percentile",
-        "negative_closing",
-        "threshold",
-        "remove_small_objects",
-    ], selected_layer=[0], use_multiprocessing=True)
-    model = Model(graph=x)
-
+    model = model_v1()
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()
     train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
@@ -45,6 +131,36 @@ def run_training(df, mf, number_of_tags):
     save_dict(color_coding, os.path.join(mf, "color_coding.json"))
 
 
+def run_test(df, mf, us):
+    color_coding = load_dict(os.path.join(mf, "color_coding.json"))
+
+    model = Model(mf)
+    model.load(mf)
+
+    res_fol = Folder(os.path.join(mf, "segmentations"))
+    res_fol.check_n_make_dir(clean=True)
+
+    vis_fol = Folder(os.path.join(mf, "overlays"))
+    vis_fol.check_n_make_dir(clean=True)
+
+    d_set = SegmentationDataSet(df, color_coding)
+    t_set = d_set.load()
+
+    sh = StatsHandler(color_coding)
+    print("Processing Images...")
+    for tid in tqdm(t_set):
+        cls_map = model.predict(t_set[tid].load_x())
+        color_map = convert_cls_to_color(cls_map, color_coding, unsupervised=us)
+        t_set[tid].write_result(res_fol.path(), color_map)
+        if not us:
+            t_set[tid].eval(color_map, sh)
+        t_set[tid].visualize_result(vis_fol.path(), color_map)
+
+    sh.eval()
+    sh.show()
+    sh.write_report(os.path.join(mf, "report.txt"))
+
+
 def main(args_):
     df = args_.dataset_folder
     mf = args_.model_folder
@@ -52,14 +168,16 @@ def main(args_):
     if not os.path.isdir(mf):
         os.mkdir(mf)
 
-    number_of_images = [1, 2, 5, 10, 25]
+    number_of_images = [1, 2, 4, 8, 16, 32]
     iterations = 20
 
     for n in number_of_images:
         for i in range(iterations):
-            if os.path.isdir(os.path.join(mf, "-{}-RUN-{}".format(n, i))):
-                continue
-            run_training(df, os.path.join(mf, "-{}-RUN-{}".format(n, i)), n)
+            sub_mf = os.path.join(mf, "-{}-RUN-{}".format(n, i))
+            if not os.path.isdir(os.path.join(mf, "-{}-RUN-{}".format(n, i))):
+                run_training(os.path.join(df, "train"), sub_mf, n)
+                run_test(os.path.join(df, "test"), sub_mf, False)
+
 
 
 def parse_args():

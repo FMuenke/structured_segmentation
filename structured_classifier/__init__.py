@@ -6,4 +6,4 @@ from structured_classifier.input_layer import InputLayer
 from structured_classifier.normalization_layer import NormalizationLayer
 from structured_classifier.model import Model
 from structured_classifier.voting_layer import VotingLayer
-from structured_classifier.simple_layer.simple_layer import SimpleLayer
+from structured_classifier.conventional_image_processing_pipeline.cipp_layer import CIPPLayer

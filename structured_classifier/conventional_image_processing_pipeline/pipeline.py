@@ -1,5 +1,5 @@
 import numpy as np
-from structured_classifier.simple_layer.image_processing_operations import LIST_OF_OPERATIONS
+from structured_classifier.conventional_image_processing_pipeline.image_processing_operations import LIST_OF_OPERATIONS
 from structured_classifier.layer_operations import resize
 
 
@@ -19,6 +19,9 @@ class Pipeline:
                     break
             if not option_valid:
                 raise Exception("UNKNOWN OPTION: {}".format(layer))
+
+    def __str__(self):
+        return "{}-{}".format(self.selected_layer, self.config)
 
     def inference(self, x_img):
         if len(x_img.shape) == 3:

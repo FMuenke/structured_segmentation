@@ -18,16 +18,25 @@ class LabeledImage:
     image_extensions = [".jpg", ".JPG", ".png", "PNG", ".jpeg", ".ppm", ".tif"]
     label_extensions = [".png", ".tif", "_label.tif", "_label.tiff", ".tiff", ".ppm"]
 
-    def __init__(self, base_path, data_id, color_coding):
+    def __init__(self, base_path, data_id, color_coding, augmentations=None):
         self.id = data_id
         self.path = base_path
         self.color_coding = color_coding
+        self.augmentations = augmentations
 
         self.image_path = os.path.join(base_path, "images")
         self.label_path = os.path.join(base_path, "labels")
 
         self.image_file = get_file_name(self.image_path, self.id, self.image_extensions)
         self.label_file = get_file_name(self.label_path, self.id, self.label_extensions)
+
+    def create_augmented_tag(self, augmentations):
+        return LabeledImage(
+            base_path=self.path,
+            data_id=self.id,
+            color_coding=self.color_coding,
+            augmentations=augmentations,
+        )
 
     def summary(self):
         y = self.load_y([100, 100])
@@ -45,6 +54,8 @@ class LabeledImage:
         img = cv2.imread(self.image_file)
         if img is None:
             print(self.image_file)
+        if self.augmentations is not None:
+            img = self.augmentations.apply(img)
         return img
 
     def load_y_as_color_map(self, label_size):

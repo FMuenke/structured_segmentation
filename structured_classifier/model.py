@@ -16,7 +16,7 @@ from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.super_pixel_layer.super_pixel_layer import SuperPixelLayer
 from structured_classifier.experimental.super_pixel_3d_layer import SuperPixel3DLayer
 from structured_classifier.experimental.feature_extraction_layer import FeatureExtractionLayer
-from structured_classifier.simple_layer.simple_layer import SimpleLayer
+from structured_classifier.conventional_image_processing_pipeline.cipp_layer import CIPPLayer
 from structured_classifier.object_selection_layer import ObjectSelectionLayer
 
 
@@ -58,7 +58,7 @@ class Model:
         if "layer_type" not in opt:
             raise ValueError("No LayerType Option is defined!")
 
-        if opt["layer_type"] == "GRAPH_LAYER":
+        if opt["layer_type"] == "PIXEL_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = PixelLayer(
                 prev_layer,
@@ -153,11 +153,11 @@ class Model:
             layer.load(model_folder)
             return layer
 
-        if opt["layer_type"] == "SIMPLE_LAYER":
+        if opt["layer_type"] == "CIPP_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             if "selected_layer" not in opt:
                 opt["selected_layer"] = -1
-            layer = SimpleLayer(prev_layer, opt["name"], None, selected_layer=opt["selected_layer"])
+            layer = CIPPLayer(prev_layer, opt["name"], None, selected_layer=opt["selected_layer"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer
