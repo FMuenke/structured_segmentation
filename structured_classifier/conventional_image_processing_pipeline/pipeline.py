@@ -1,6 +1,67 @@
 import numpy as np
+import copy
 from structured_classifier.conventional_image_processing_pipeline.image_processing_operations import LIST_OF_OPERATIONS
 from structured_classifier.layer_operations import resize
+
+from sklearn.model_selection import ParameterGrid
+
+
+class ConfigLine:
+    def __init__(self):
+        self.operations = []
+
+    def __str__(self):
+        return "-".join(self.operations)
+
+    def clone(self):
+        new_config_line = ConfigLine()
+        new_config_line.operations = copy.deepcopy(self.operations)
+        return new_config_line
+
+    def split(self, operations):
+        split = []
+        for op in operations:
+            new_line = self.clone()
+            new_line.add(op)
+            split.append(new_line)
+        return split
+
+    def add(self, op):
+        self.operations.append(op)
+
+    def build(self):
+        list_of_configs = []
+        possible_configs = {Op.key: Op.list_of_parameters for Op in LIST_OF_OPERATIONS}
+        selected_configs = {op: possible_configs[op] for op in possible_configs if op in self.operations}
+        for parameters in list(ParameterGrid(selected_configs)):
+            cfg = [[op, parameters[op]] for op in self.operations]
+            list_of_configs.append(cfg)
+        return list_of_configs
+
+
+def split_config_lines(operations):
+    config_lines = [ConfigLine()]
+    num_lines = 1
+    for op in operations:
+        if type(op) == list:
+            num_lines += 1
+            new_config_lines = []
+            for line in config_lines:
+                split_lines = line.split(op)
+                new_config_lines += split_lines
+            config_lines = new_config_lines
+        else:
+            for line in config_lines:
+                line.add(op)
+    return config_lines
+
+
+def build_configs(operations):
+    config_lines = split_config_lines(operations)
+    list_of_configs = []
+    for line in config_lines:
+        list_of_configs += line.build()
+    return list_of_configs
 
 
 class Pipeline:

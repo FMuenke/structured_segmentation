@@ -11,6 +11,15 @@ from structured_classifier.conventional_image_processing_pipeline.pipeline impor
 from structured_classifier.conventional_image_processing_pipeline.image_processing_operations import LIST_OF_OPERATIONS
 
 
+def check_if_operations_are_known(operations):
+    possible_options = [op.key for op in LIST_OF_OPERATIONS]
+    for op in operations:
+        if type(op) is list:
+            check_if_operations_are_known(op)
+        elif op not in possible_options:
+            raise Exception("UNKNOWN OPERATION! Try: {}".format(possible_options))
+
+
 class CIPPLayer:
     layer_type = "CIPP_LAYER"
 
@@ -35,10 +44,7 @@ class CIPPLayer:
             if "fill_contours" in operations:
                 print("ALERT: Option: fill_contour does not support multiprocessing during Training")
                 use_multiprocessing = False
-            possible_options = [op.key for op in LIST_OF_OPERATIONS]
-            for op in operations:
-                if op not in possible_options:
-                    raise Exception("UNKNOWN OPERATION! Try: {}".format(possible_options))
+            check_if_operations_are_known(operations)
         self.use_multi_processing = use_multiprocessing
 
         self.opt = {
@@ -109,6 +115,7 @@ class CIPPLayer:
                 use_multi_processing=self.use_multi_processing
             )
         elif self.optimizer == "genetic_algorithm":
+            train_tags += train_tags
             optimizer = GeneticAlgorithmOptimizer(
                 operations=self.operations,
                 selected_layer=self.opt["selected_layer"],

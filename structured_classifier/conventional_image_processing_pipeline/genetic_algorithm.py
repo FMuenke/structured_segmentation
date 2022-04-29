@@ -2,10 +2,7 @@ import numpy as np
 import random
 from multiprocessing.pool import Pool
 
-from sklearn.model_selection import ParameterGrid
-
-from structured_classifier.conventional_image_processing_pipeline.pipeline import Pipeline
-from structured_classifier.conventional_image_processing_pipeline.image_processing_operations import LIST_OF_OPERATIONS
+from structured_classifier.conventional_image_processing_pipeline.pipeline import Pipeline, build_configs
 
 
 def eval_pipeline(args):
@@ -128,11 +125,11 @@ class GeneticAlgorithmOptimizer:
         self.iter_per_image = 4
 
         if type(self.selected_layer) is not list:
-            self.pipelines = [Pipeline(config, self.selected_layer) for config in self.build_configs()]
+            self.pipelines = [Pipeline(config, self.selected_layer) for config in build_configs(operations)]
         else:
             self.pipelines = []
             for selected_index in self.selected_layer:
-                self.pipelines += [Pipeline(config, selected_index) for config in self.build_configs()]
+                self.pipelines += [Pipeline(config, selected_index) for config in build_configs(operations)]
         print("Evaluating - {} - Configurations".format(len(self.pipelines)))
 
         self.population = Population(
@@ -142,15 +139,6 @@ class GeneticAlgorithmOptimizer:
         )
         self.best_pipeline = None
         self.best_score = None
-
-    def build_configs(self):
-        list_of_configs = []
-        possible_configs = {Op.key: Op.list_of_parameters for Op in LIST_OF_OPERATIONS}
-        selected_configs = {op: possible_configs[op] for op in possible_configs if op in self.operations}
-        for parameters in list(ParameterGrid(selected_configs)):
-            cfg = [[op, parameters[op]] for op in self.operations]
-            list_of_configs.append(cfg)
-        return list_of_configs
 
     def step(self, x_img, y_img):
         self.population.initially_fitted = False

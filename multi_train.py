@@ -28,16 +28,15 @@ def model_v1():
     return model
 
 
-def model_v1_1():
+def model_cipp():
     x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=1)
-    x = CIPPLayer(x, "SIMPLE", operations=[
-        # "blurring",
+    x = CIPPLayer(x, "CIPP", operations=[
+        "blurring",
         "invert",
-        "negative_closing",
-        "threshold",
+        ["watershed", "threshold", "threshold_percentile", "edge"],
         "closing",
         "erode",
-    ], selected_layer=[0, 1, 2], optimizer="grid_search", use_multiprocessing=True)
+    ], selected_layer=[1], optimizer="grid_search", use_multiprocessing=True)
     model = Model(graph=x)
     return model
 
@@ -55,17 +54,15 @@ def model_v2():
     return model
 
 
-def model_v3():
+def model_cipp_watershed():
     x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=1)
     x = CIPPLayer(x, "SIMPLE", operations=[
-        "blurring",
+        # "blurring",
         "invert",
-        "negative_erode",
-        "threshold",
+        "watershed",
         "closing",
         "erode",
-        # "remove_small_objects",
-    ], selected_layer=[0, 1, 2], optimizer="genetic_algorithm", use_multiprocessing=True)
+    ], selected_layer=[0, 1, 2], optimizer="grid_search", use_multiprocessing=True)
     model = Model(graph=x)
     return model
 
@@ -114,7 +111,10 @@ def run_training(df, mf, number_of_tags):
     randomized_split = True
     train_test_ratio = 0.20
 
-    model = model_v1()
+    # DEFINE MODEL ###############
+    model = model_cipp()
+    ##############################
+
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()
     train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
@@ -177,7 +177,6 @@ def main(args_):
             if not os.path.isdir(os.path.join(mf, "-{}-RUN-{}".format(n, i))):
                 run_training(os.path.join(df, "train"), sub_mf, n)
                 run_test(os.path.join(df, "test"), sub_mf, False)
-
 
 
 def parse_args():

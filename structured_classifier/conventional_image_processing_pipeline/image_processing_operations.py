@@ -8,7 +8,7 @@ from structured_classifier.layer_operations import normalize, resize
 
 
 class Watershed:
-    list_of_parameters = [None, 1, 5, 10]
+    list_of_parameters = [None, 1, 5]
     key = "watershed"
 
     def __init__(self, parameter):
@@ -47,7 +47,7 @@ class FillContours:
 
 
 class LocalNormalization:
-    list_of_parameters = [None, 4+1, 8+1, 16+1, 32+1, 64+1, 128+1]
+    list_of_parameters = [None, 4+1, 8+1, 16+1, 32+1]
     key = "local_normalization"
 
     def __init__(self, parameter):
@@ -67,7 +67,7 @@ class LocalNormalization:
 
 
 class RemoveSmallObjects:
-    list_of_parameters = [None, 2, 4, 8, 16, 32, 64, 128, 256]
+    list_of_parameters = [None, 8, 32, 128, 256, 512]
     key = "remove_small_objects"
 
     def __init__(self, parameter):
@@ -84,7 +84,7 @@ class RemoveSmallObjects:
 
 
 class RemoveSmallHoles:
-    list_of_parameters = [None, 2, 4, 8, 16, 32, 64, 128, 256]
+    list_of_parameters = [None, 8, 32, 128, 256, 512]
     key = "remove_small_holes"
 
     def __init__(self, parameter):
@@ -101,7 +101,7 @@ class RemoveSmallHoles:
 
 
 class CannyEdgeDetector:
-    list_of_parameters = [None, 1, 3, 5, 9, 17, 33]
+    list_of_parameters = [None, 3, 5, 9, 17]
     key = "canny_edge"
 
     def __init__(self, parameter):
@@ -175,7 +175,7 @@ class EdgeDetector:
 
 
 class Blurring:
-    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1, 64+1]
+    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1]
     key = "blurring"
 
     def __init__(self, parameter):
@@ -205,7 +205,7 @@ class Threshold:
 
 
 class ThresholdPercentile:
-    list_of_parameters = [1, 2, 5, 10, 25, 50, 75, 90, 95, 98, 99]
+    list_of_parameters = [70, 80, 90, 95, 99]
     key = "threshold_percentile"
 
     def __init__(self, parameter):
@@ -237,7 +237,7 @@ class ThresholdOtsu:
 
 
 class LocalThreshold:
-    list_of_parameters = [None, 8+1, 16+1, 32+1, 64+1, 128+1, 256+1]
+    list_of_parameters = [None, 8+1, 16+1, 32+1, 64+1]
     key = "local_threshold"
 
     def __init__(self, parameter):
@@ -254,7 +254,7 @@ class LocalThreshold:
 
 
 class MorphologicalOpening:
-    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "opening"
 
     def __init__(self, parameter):
@@ -270,7 +270,7 @@ class MorphologicalOpening:
 
 
 class NegativeMorphologicalOpening:
-    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "negative_opening"
 
     def __init__(self, parameter):
@@ -285,7 +285,7 @@ class NegativeMorphologicalOpening:
 
 
 class MorphologicalErosion:
-    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "erode"
 
     def __init__(self, parameter):
@@ -301,7 +301,7 @@ class MorphologicalErosion:
 
 
 class NegativeMorphologicalErosion:
-    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "negative_erode"
 
     def __init__(self, parameter):
@@ -316,7 +316,7 @@ class NegativeMorphologicalErosion:
 
 
 class MorphologicalDilatation:
-    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "dilate"
 
     def __init__(self, parameter):
@@ -332,7 +332,7 @@ class MorphologicalDilatation:
 
 
 class NegativeMorphologicalDilatation:
-    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "negative_dilate"
 
     def __init__(self, parameter):
@@ -347,7 +347,7 @@ class NegativeMorphologicalDilatation:
 
 
 class MorphologicalClosing:
-    list_of_parameters = [None, 2+1, 4+1, 8+1, 16+1, 32+1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "closing"
 
     def __init__(self, parameter):
@@ -363,7 +363,7 @@ class MorphologicalClosing:
 
 
 class NegativeMorphologicalClosing:
-    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1, 32 + 1]
+    list_of_parameters = [None, 2 + 1, 4 + 1, 8 + 1, 16 + 1]
     key = "negative_closing"
 
     def __init__(self, parameter):
@@ -393,7 +393,7 @@ class Invert:
 
 
 class Resize:
-    list_of_parameters = [None, 2, 4, 8, 16, 32]
+    list_of_parameters = [None, 2, 4, 8]
     key = "resize"
 
     def __init__(self, parameter):

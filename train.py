@@ -49,7 +49,13 @@ def main(args_):
     mf = args_.model_folder
 
     x = InputLayer("IN", features_to_use="RGB-color", initial_down_scale=1)
-    x = PixelLayer(x, "px", kernel=(5, 5), strides=(2, 2), clf="rf")
+    x = CIPPLayer(x, "SIMPLE", operations=[
+        "blurring",
+        "invert",
+        ["watershed", "threshold", "threshold_percentile", "edge"],
+        "closing",
+        "erode",
+    ], selected_layer=[0, 1, 2], optimizer="grid_search", use_multiprocessing=True)
     model = Model(graph=x)
 
     d_set = SegmentationDataSet(df, color_coding)
@@ -59,7 +65,7 @@ def main(args_):
     # augmentations = Augmentations(True, True, True)
     # train_set = augment_data_set(train_set, augmentations, multiplier=3)
 
-    model.fit(train_set, validation_set)
+    model.fit(train_set[:16], validation_set)
     model.save(mf)
     save_dict(color_coding, os.path.join(mf, "color_coding.json"))
 
