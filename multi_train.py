@@ -168,7 +168,7 @@ def main(args_):
     if not os.path.isdir(mf):
         os.mkdir(mf)
 
-    number_of_images = [1, 2, 4, 8, 16, 32]
+    number_of_images = [1, 2, 4, 8, 16, 32, 64, 128]
     iterations = 20
 
     for n in number_of_images:

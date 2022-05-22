@@ -66,6 +66,7 @@ class Population:
         self.keep_percentage = 0.3
         self.new_percentage = 0.5
         self.mut_percentage = 0.2
+        self.keep_at_challenge_percentage = 0.7
 
         self.individuals = self.spawn_individuals(self.number_of_individuals)
         self.initially_fitted = False
@@ -114,6 +115,15 @@ class Population:
         self.individuals = top_individuals + new_individuals + mut_individuals
         return top_individuals_and_scores[0]
 
+    def challenge(self, x_img, y_img):
+        self.individuals = self.score_individuals(x_img, y_img, self.individuals)
+        scored_individuals = [(pl, pl.summarize()) for pl in self.individuals]
+        top_k = int(self.number_of_individuals * self.keep_at_challenge_percentage)
+        top_individuals_and_scores = sorted(scored_individuals, key=lambda x: x[1], reverse=True)[:top_k]
+        top_individuals = [pl for pl, score in top_individuals_and_scores]
+        self.individuals = top_individuals
+        return top_individuals_and_scores[0]
+
 
 class GeneticAlgorithmOptimizer:
     def __init__(self, operations, selected_layer, use_multi_processing):
@@ -144,6 +154,9 @@ class GeneticAlgorithmOptimizer:
         self.population.initially_fitted = False
         for i in range(self.iter_per_image):
             self.best_pipeline, self.best_score = self.population.evolve(x_img, y_img)
+
+    def step_validation(self, x_img, y_img):
+        self.best_pipeline, self.best_score = self.population.challenge(x_img, y_img)
 
     def summarize(self):
         return self.best_pipeline, self.best_score

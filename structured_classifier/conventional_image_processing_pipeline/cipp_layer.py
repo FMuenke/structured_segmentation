@@ -115,7 +115,6 @@ class CIPPLayer:
                 use_multi_processing=self.use_multi_processing
             )
         elif self.optimizer == "genetic_algorithm":
-            train_tags += train_tags
             optimizer = GeneticAlgorithmOptimizer(
                 operations=self.operations,
                 selected_layer=self.opt["selected_layer"],
@@ -131,6 +130,13 @@ class CIPPLayer:
             y_img = t.load_y([h_img, w_img])
             optimizer.step(x_img, y_img)
 
+        # for t in validation_tags:
+        #     x_img = t.load_x()
+        #     x_img, _ = self.get_features(x_img)
+        #     h_img, w_img = x_img.shape[:2]
+        #     y_img = t.load_y([h_img, w_img])
+        #     optimizer.step_validation(x_img, y_img)
+
         best_pipeline, best_score = optimizer.summarize()
 
         print("BestScore: {} with config {} for channel: {}".format(
@@ -138,15 +144,6 @@ class CIPPLayer:
         self.config = best_pipeline.config
         self.opt["selected_layer"] = int(best_pipeline.selected_layer)
         self.pipeline = Pipeline(self.config, self.opt["selected_layer"])
-
-        for t in validation_tags:
-            x_img = t.load_x()
-            x_img, _ = self.get_features(x_img)
-            h_img, w_img = x_img.shape[:2]
-            y_img = t.load_y([h_img, w_img])
-            self.pipeline.eval(x_img, y_img)
-
-        print("Validation: {}".format(self.pipeline.summarize()))
 
     def save(self, model_path):
         model_path = os.path.join(model_path, self.layer_type + "-" + self.name)

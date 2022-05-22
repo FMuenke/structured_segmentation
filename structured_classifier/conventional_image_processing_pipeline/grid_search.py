@@ -44,6 +44,9 @@ class GridSearchOptimizer:
             for pl in self.pipelines:
                 pl.eval(x_img, y_img)
 
+    def step_validation(self, x_img, y_img):
+        self.step(x_img, y_img)
+
     def summarize(self):
         best_score = 0
         best_pipeline = None
