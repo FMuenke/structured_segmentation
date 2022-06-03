@@ -33,7 +33,7 @@ def model_cipp():
     x = CIPPLayer(x, "CIPP", operations=[
         "blurring",
         "invert",
-        ["watershed", "threshold", "threshold_percentile", "edge"],
+        ["threshold", "threshold_otsu", "edge"],
         "closing",
         "erode",
     ], selected_layer=[1], optimizer="grid_search", use_multiprocessing=True)
@@ -109,7 +109,7 @@ def run_training(df, mf, number_of_tags):
     }
 
     randomized_split = True
-    train_test_ratio = 0.20
+    train_test_ratio = 0.5
 
     # DEFINE MODEL ###############
     model = model_cipp()
@@ -117,17 +117,27 @@ def run_training(df, mf, number_of_tags):
 
     d_set = SegmentationDataSet(df, color_coding)
     tag_set = d_set.load()
-    train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
+    # train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
 
     if number_of_tags != 0:
-        print("Number of training and validation samples - {}/{}".format(len(train_set), len(validation_set)))
-        train_set = np.random.choice(train_set, number_of_tags, replace=False)
-        number_of_tags = np.min([number_of_tags, len(validation_set)-1])
-        validation_set = np.random.choice(validation_set, number_of_tags, replace=False)
+        tags = [tag_set[t] for t in tag_set]
+        half = len(tags) // 2
+        train_tags = tags[:half]
+        test_tags = tags[half:]
+        print("Number of training and validation samples - {}/{}".format(len(tags), len(tags)))
+        seed_id = int(mf.split("-RUN-")[-1])
+        rng = np.random.default_rng(seed_id)
+        train_set = rng.choice(train_tags, number_of_tags, replace=False)
+        # number_of_tags = np.min([number_of_tags, len(tags)-1])
+        validation_set = rng.choice(test_tags, number_of_tags, replace=False)
         print("Number of training images reduced! - {}/{} -".format(len(train_set), len(validation_set)))
+        model.fit(train_set, validation_set)
+        model.save(mf)
+    else:
+        train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
+        model.fit(train_set, validation_set)
+        model.save(mf)
 
-    model.fit(train_set, validation_set)
-    model.save(mf)
     save_dict(color_coding, os.path.join(mf, "color_coding.json"))
 
 

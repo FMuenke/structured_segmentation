@@ -54,7 +54,7 @@ class SegmentationDataSet:
         else:
             dist = range(len(tag_set))
         for d in dist:
-            if len(validation_set) > percentage * len(tag_set):
+            if len(validation_set) >= percentage * len(tag_set):
                 train_set.append(tag_set[d])
             else:
                 validation_set.append(tag_set[d])
