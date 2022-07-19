@@ -230,6 +230,8 @@ class ThresholdOtsu:
     def inference(self, x_img):
         if self.parameter is None:
             return x_img
+        if len(np.unique(x_img)) == 1:
+            return np.zeros(x_img.shape)
         threshold = threshold_otsu(x_img)
         x_img[x_img < threshold] = 0
         x_img[x_img >= threshold] = 1

@@ -186,6 +186,7 @@ def main(args_):
             sub_mf = os.path.join(mf, "-{}-RUN-{}".format(n, i))
             if not os.path.isdir(os.path.join(mf, "-{}-RUN-{}".format(n, i))):
                 run_training(os.path.join(df, "train"), sub_mf, n)
+            if not os.path.isfile(os.path.join(sub_mf, "report.txt")):
                 run_test(os.path.join(df, "test"), sub_mf, False)
 
 
