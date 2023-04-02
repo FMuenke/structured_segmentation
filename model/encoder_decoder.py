@@ -1,169 +1,85 @@
 from structured_classifier.input_layer import InputLayer
-from structured_classifier.experimental.input_3d_layer import Input3DLayer
 from structured_classifier.normalization_layer import NormalizationLayer
+from structured_classifier.pixel_layer import PixelLayer
+from model.base_structures import get_decision_layer
+from model.model_blue_print import ModelBluePrint
 
-from model.base_structures import get_decision_layer, get_decision_layer_3d
+from structured_classifier.model import Model
 
 
-class EncoderDecoder:
+class EncoderDecoder(ModelBluePrint):
     def __init__(self,
+                 image_width=None,
+                 image_height=None,
+                 initial_image_down_scale=None,
                  depth=3,
-                 repeat=1,
-                 max_kernel_sum=5,
-                 max_stride_sum=2,
+                 kernel_size=5,
+                 stride_size=2,
                  features_to_use="gray-color",
                  norm_input=None,
                  coder_type="kernel",
-                 kernel_shape="square",
-                 feature_aggregation="hist32",
-                 clf="b_rf",
+                 kernel_shape="ellipse",
+                 clf="extra_tree",
                  clf_options=None,
-                 data_reduction=3):
-        self.repeat = repeat
+                 data_reduction=0.66):
         self.depth = depth
-        self.max_kernel_sum = max_kernel_sum
-        self.max_stride_sum = max_stride_sum
+        self.kernel_size = kernel_size
+        self.stride_size = stride_size
         self.features_to_use = features_to_use
         self.norm_input = norm_input
         self.coder_type = coder_type
         self.kernel_shape = kernel_shape
-        self.feature_aggregation = feature_aggregation
 
         self.clf = clf
         self.clf_options = clf_options
         self.data_reduction = data_reduction
+        super(EncoderDecoder, self).__init__()
+        self.model = self.build(
+            width=image_width,
+            height=image_height,
+            initial_down_scale=initial_image_down_scale
+        )
 
-    def build(self, xx=None, width=None, height=None, initial_down_scale=None):
-        if xx is None:
-            xx = InputLayer(name="in",
-                            features_to_use=self.features_to_use,
-                            initial_down_scale=initial_down_scale,
-                            width=width,
-                            height=height)
+    def build(self, width=None, height=None, initial_down_scale=None):
+        x_layer = InputLayer(
+            name="in",
+            features_to_use=self.features_to_use,
+            initial_down_scale=initial_down_scale,
+            width=width,
+            height=height
+        )
 
-        kernel = (self.max_kernel_sum, self.max_kernel_sum)
-        strides = (self.max_stride_sum, self.max_stride_sum)
-
-        if self.norm_input is not None:
-            xx = NormalizationLayer(INPUTS=xx,
-                                    name="norm_in",
-                                    norm_option=self.norm_input)
-
-        for d in range(self.depth):
-            for r in range(self.repeat):
-                xx = get_decision_layer(INPUTS=xx,
-                                        name="enc_{}_{}".format(d, r),
-                                        decision_type=self.coder_type,
-                                        kernel=kernel,
-                                        strides=strides,
-                                        kernel_shape=self.kernel_shape,
-                                        feature_aggregation=self.feature_aggregation,
-                                        down_scale=d,
-                                        clf=self.clf, clf_options=self.clf_options,
-                                        data_reduction=self.data_reduction)
-
-        for r in range(self.repeat):
-            xx = get_decision_layer(INPUTS=xx,
-                                    name="lat_{}".format(r),
-                                    decision_type=self.coder_type,
-                                    kernel=kernel,
-                                    strides=strides,
-                                    kernel_shape=self.kernel_shape,
-                                    feature_aggregation=self.feature_aggregation,
-                                    down_scale=self.depth,
-                                    clf=self.clf, clf_options=self.clf_options,
-                                    data_reduction=self.data_reduction)
-
-        for d in range(self.depth):
-            for r in range(self.repeat):
-                xx = get_decision_layer(INPUTS=xx,
-                                        name="dec_{}_{}".format(self.depth - d - 1, r),
-                                        decision_type=self.coder_type,
-                                        kernel=kernel,
-                                        strides=strides,
-                                        kernel_shape=self.kernel_shape,
-                                        feature_aggregation=self.feature_aggregation,
-                                        down_scale=self.depth - d - 1,
-                                        clf=self.clf, clf_options=self.clf_options,
-                                        data_reduction=self.data_reduction)
-        return xx
-
-
-class EncoderDecoder3D:
-    def __init__(self,
-                 depth=5,
-                 repeat=1,
-                 max_kernel_sum=5,
-                 features_to_use="gray-color",
-                 norm_input=None,
-                 coder_type="kernel",
-                 kernel_shape="square",
-                 feature_aggregation="hist32",
-                 clf="b_rf",
-                 clf_options=None,
-                 data_reduction=3):
-        self.repeat = repeat
-        self.depth = depth
-        self.max_kernel_sum = max_kernel_sum
-        self.features_to_use = features_to_use
-        self.norm_input = norm_input
-        self.coder_type = coder_type
-        self.kernel_shape = kernel_shape
-        self.feature_aggregation = feature_aggregation
-
-        self.clf = clf
-        self.clf_options = clf_options
-        self.data_reduction = data_reduction
-
-    def build(self, xx=None, width=None, height=None, initial_down_scale=None):
-        if xx is None:
-            xx = Input3DLayer(
-                name="in",
-                features_to_use=self.features_to_use,
-                initial_down_scale=initial_down_scale,
-                width=width,
-                height=height)
-
-        kernel = (self.max_kernel_sum, self.max_kernel_sum, self.max_kernel_sum)
+        kernel = (self.kernel_size, self.kernel_size)
+        strides = (self.stride_size, self.stride_size)
 
         if self.norm_input is not None:
-            pass
+            x_layer = NormalizationLayer(
+                INPUTS=x_layer,
+                name="norm_in",
+                norm_option=self.norm_input
+            )
 
         for d in range(self.depth):
-            for r in range(self.repeat):
-                xx = get_decision_layer_3d(
-                    INPUTS=xx,
-                    name="enc_{}_{}".format(d, r),
-                    decision_type=self.coder_type,
-                    kernel=kernel,
-                    kernel_shape=self.kernel_shape,
-                    feature_aggregation=self.feature_aggregation,
-                    down_scale=d,
-                    clf=self.clf, clf_options=self.clf_options,
-                    data_reduction=self.data_reduction)
-
-        for r in range(self.repeat):
-            xx = get_decision_layer_3d(
-                INPUTS=xx,
-                name="lat_{}".format(r),
-                decision_type=self.coder_type,
+            x_layer = PixelLayer(
+                INPUTS=x_layer,
+                name="enc_{}".format(d),
                 kernel=kernel,
+                strides=strides,
                 kernel_shape=self.kernel_shape,
-                feature_aggregation=self.feature_aggregation,
-                down_scale=self.depth,
+                down_scale=(d + 1),
                 clf=self.clf, clf_options=self.clf_options,
-                data_reduction=self.data_reduction)
+                data_reduction=self.data_reduction
+            )
 
         for d in range(self.depth):
-            for r in range(self.repeat):
-                xx = get_decision_layer_3d(
-                    INPUTS=xx,
-                    name="dec_{}_{}".format(self.depth - d - 1, r),
-                    decision_type=self.coder_type,
-                    kernel=kernel,
-                    kernel_shape=self.kernel_shape,
-                    feature_aggregation=self.feature_aggregation,
-                    down_scale=self.depth - d - 1,
-                    clf=self.clf, clf_options=self.clf_options,
-                    data_reduction=self.data_reduction)
-        return xx
+            x_layer = PixelLayer(
+                INPUTS=x_layer,
+                name="dec_{}".format(d),
+                kernel=kernel,
+                strides=strides,
+                kernel_shape=self.kernel_shape,
+                down_scale=(self.depth - d - 1),
+                clf=self.clf, clf_options=self.clf_options,
+                data_reduction=self.data_reduction
+            )
+        return Model(graph=x_layer)

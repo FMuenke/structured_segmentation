@@ -20,7 +20,7 @@ class PixelLayer:
                  strides=(1, 1),
                  kernel_shape="square",
                  down_scale=0,
-                 clf="b_rf",
+                 clf="rf",
                  clf_options=None,
                  param_grid=None,
                  data_reduction=0):
@@ -29,6 +29,8 @@ class PixelLayer:
         if type(INPUTS) is not list:
             INPUTS = [INPUTS]
         self.previous = INPUTS
+
+        assert 0 <= data_reduction < 1, "DataReduction should be inbetween [0, 1)"
 
         self.index = 0
 
@@ -158,12 +160,7 @@ class PixelLayer:
         y = None
         n = 0
         for t in tqdm(tag_set):
-            use_sample = True
-            if reduction_factor > 1:
-                if not np.random.randint(0, reduction_factor):
-                    use_sample = False
-
-            if use_sample:
+            if np.random.randint(100) > 100 * reduction_factor:
                 x_img = t.load_x()
                 x_img, _ = self.get_features(x_img)
                 h_img, w_img = x_img.shape[:2]
@@ -202,22 +199,19 @@ class PixelLayer:
         if self.clf.is_fitted():
             return None
 
-        print("Collecting Features for Stage: {}".format(self))
-        print("Training: {}, Validation: {}. Data is reduced by factor: {}".format(
-            len(train_tags), len(validation_tags), self.data_reduction))
+        print("[INFO] Collecting Features for Stage: {}. {} Training Samples (DataReduction {})".format(
+            self, len(train_tags), self.data_reduction))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
-        x_val, y_val = self.get_x_y(validation_tags)
 
-        n_samples_train, n_features = x_train.shape
-        n_samples_val = x_val.shape[0]
-        print("DataSet has {} Samples (Train: {} / Validation: {}) with {} features.".format(
-            n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
-        ))
         if self.param_grid is not None:
             self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50, n_jobs=2)
         else:
             self.clf.fit(x_train, y_train)
-        return self.clf.evaluate(x_val, y_val)
+        if validation_tags is None:
+            return 0
+        else:
+            x_val, y_val = self.get_x_y(validation_tags)
+            return self.clf.evaluate(x_val, y_val)
 
     def save(self, model_path):
         model_path = os.path.join(model_path, self.layer_type + "-" + self.name)

@@ -28,9 +28,7 @@ class RegressorHandler:
         self.best_score = None
 
     def __str__(self):
-        s = ""
-        s += "Regressor: {}".format(self.opt["type"])
-        return s
+        return "Regressor: {}".format(self.opt["type"])
 
     def fit(self, x_train, y_train):
         print("Fitting the {} to the training set".format(self.opt["type"]))

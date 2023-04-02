@@ -2,21 +2,12 @@ import os
 from utils.utils import check_n_make_dir, load_dict
 
 from structured_classifier.pixel_layer import PixelLayer
-from structured_classifier.experimental.graph_3d_layer import Graph3DLayer
 from structured_classifier.input_layer import InputLayer
-from structured_classifier.experimental.input_3d_layer import Input3DLayer
-from structured_classifier.experimental.global_context_layer import GlobalContextLayer
 from structured_classifier.normalization_layer import NormalizationLayer
-from structured_classifier.experimental.shape_refinement_layer import ShapeRefinementLayer
-from structured_classifier.experimental.shape_refinement_3d_layer import ShapeRefinement3DLayer
 from structured_classifier.bottle_neck_layer import BottleNeckLayer
-from structured_classifier.experimental.bottle_neck_3d_layer import BottleNeck3DLayer
-from structured_classifier.experimental.voting_3d_layer import Voting3DLayer
 from structured_classifier.voting_layer import VotingLayer
 from structured_classifier.super_pixel_layer.super_pixel_layer import SuperPixelLayer
-from structured_classifier.experimental.super_pixel_3d_layer import SuperPixel3DLayer
 from structured_classifier.experimental.feature_extraction_layer import FeatureExtractionLayer
-from structured_classifier.conventional_image_processing_pipeline.cipp_layer import CIPPLayer
 from structured_classifier.object_selection_layer import ObjectSelectionLayer
 
 
@@ -72,31 +63,11 @@ class Model:
             layer.load(model_folder)
             return layer
 
-        if opt["layer_type"] == "GRAPH3D_LAYER":
-            prev_layer = self.load_previous_layers(model_folder)
-            layer = Graph3DLayer(prev_layer, opt["name"], opt["kernel"], opt["kernel_shape"], opt["down_scale"])
-            layer.set_index(int(opt["index"]))
-            layer.load(model_folder)
-            return layer
-
         if opt["layer_type"] == "INPUT_LAYER":
             layer = InputLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"],
                                initial_down_scale=opt["down_scale"])
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
-            return layer
-
-        if opt["layer_type"] == "INPUT3D_LAYER":
-            layer = Input3DLayer(opt["name"], opt["features_to_use"], height=opt["height"], width=opt["width"],
-                                 initial_down_scale=opt["down_scale"])
-            layer.set_index(int(opt["index"]))
-            layer.load(model_folder)
-            return layer
-
-        if opt["layer_type"] == "GLOBAL_CONTEXT_LAYER":
-            prev_layer = self.load_previous_layers(model_folder)
-            layer = GlobalContextLayer(prev_layer, opt["name"], opt["down_scale"])
-            layer.set_index(int(opt["index"]))
             return layer
 
         if opt["layer_type"] == "NORMALIZATION_LAYER":
@@ -105,35 +76,9 @@ class Model:
             layer.set_index(int(opt["index"]))
             return layer
 
-        if opt["layer_type"] == "SHAPE_REFINEMENT_LAYER":
-            prev_layer = self.load_previous_layers(model_folder)
-            layer = ShapeRefinementLayer(prev_layer, opt["name"], shape=opt["shape"], global_kernel=opt["global_kernel"])
-            layer.load(model_folder)
-            layer.set_index(int(opt["index"]))
-            return layer
-
-        if opt["layer_type"] == "SHAPE_REFINEMENT_3D_LAYER":
-            prev_layer = self.load_previous_layers(model_folder)
-            layer = ShapeRefinement3DLayer(prev_layer, opt["name"], shape=opt["shape"], global_kernel=opt["global_kernel"])
-            layer.load(model_folder)
-            layer.set_index(int(opt["index"]))
-            return layer
-
         if opt["layer_type"] == "BOTTLE_NECK_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = BottleNeckLayer(prev_layer, opt["name"])
-            layer.set_index(int(opt["index"]))
-            return layer
-
-        if opt["layer_type"] == "BOTTLE_NECK3D_LAYER":
-            prev_layer = self.load_previous_layers(model_folder)
-            layer = BottleNeck3DLayer(prev_layer, opt["name"])
-            layer.set_index(int(opt["index"]))
-            return layer
-
-        if opt["layer_type"] == "VOTING3D_Layer":
-            prev_layer = self.load_previous_layers(model_folder)
-            layer = Voting3DLayer(prev_layer, opt["name"])
             layer.set_index(int(opt["index"]))
             return layer
 
@@ -149,27 +94,6 @@ class Model:
                                     super_pixel_method=opt["super_pixel_method"],
                                     down_scale=opt["down_scale"],
                                     feature_aggregation=opt["feature_aggregation"])
-            layer.set_index(int(opt["index"]))
-            layer.load(model_folder)
-            return layer
-
-        if opt["layer_type"] == "CIPP_LAYER":
-            prev_layer = self.load_previous_layers(model_folder)
-            if "selected_layer" not in opt:
-                opt["selected_layer"] = -1
-            layer = CIPPLayer(prev_layer, opt["name"], None, selected_layer=opt["selected_layer"])
-            layer.set_index(int(opt["index"]))
-            layer.load(model_folder)
-            return layer
-
-        if opt["layer_type"] == "SUPER_PIXEL_3D_LAYER":
-            prev_layer = self.load_previous_layers(model_folder)
-            layer = SuperPixel3DLayer(prev_layer, opt["name"],
-                                      time_range=opt["time_range"],
-                                      super_pixel_method=opt["super_pixel_method"],
-                                      down_scale=opt["down_scale"],
-                                      feature_aggregation=opt["feature_aggregation"],
-                                      )
             layer.set_index(int(opt["index"]))
             layer.load(model_folder)
             return layer

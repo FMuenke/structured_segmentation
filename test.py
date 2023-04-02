@@ -1,5 +1,6 @@
 import argparse
 import os
+import cv2
 import numpy as np
 from tqdm import tqdm
 
@@ -27,11 +28,13 @@ def convert_cls_to_color(cls_map, color_coding, unsupervised=False):
     return color_map
 
 
-def main(args_):
-    df = args_.dataset_folder
-    mf = args_.model_folder
-    us = args_.unsupervised
+def side_by_side(img, color_map):
+    color_map = cv2.resize(color_map, (img.shape[1], img.shape[0]))
+    border = np.ones((img.shape[0], 10, 3)) * 255
+    return np.concatenate([img, border, color_map], axis=1)
 
+
+def run_test(mf, df, us=False):
     color_coding = load_dict(os.path.join(mf, "color_coding.json"))
 
     model = Model(mf)
@@ -42,6 +45,9 @@ def main(args_):
 
     vis_fol = Folder(os.path.join(mf, "overlays"))
     vis_fol.check_n_make_dir(clean=True)
+
+    sbs_fol = Folder(os.path.join(mf, "side_by_side"))
+    sbs_fol.check_n_make_dir(clean=True)
 
     d_set = SegmentationDataSet(df, color_coding)
     t_set = d_set.load()
@@ -55,10 +61,20 @@ def main(args_):
         if not us:
             t_set[tid].eval(color_map, sh)
         t_set[tid].visualize_result(vis_fol.path(), color_map)
+        cv2.imwrite(os.path.join(sbs_fol.path(), "{}.png".format(tid)), side_by_side(t_set[tid].load_x(), color_map))
 
     sh.eval()
     sh.show()
     sh.write_report(os.path.join(mf, "report.txt"))
+
+
+def main(args_):
+    df = args_.dataset_folder
+    mf = args_.model_folder
+    us = args_.unsupervised
+    run_test(mf, df, us)
+
+
 
 
 def parse_args():

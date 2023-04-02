@@ -18,7 +18,7 @@ class SuperPixelLayer:
                  super_pixel_method="slic",
                  down_scale=0,
                  feature_aggregation="gauss",
-                 clf="b_rf",
+                 clf="rf",
                  clf_options=None,
                  param_grid=None,
                  data_reduction=0):
@@ -27,6 +27,8 @@ class SuperPixelLayer:
         if type(INPUTS) is not list:
             INPUTS = [INPUTS]
         self.previous = INPUTS
+
+        assert 0 <= data_reduction < 1, "DataReduction should be inbetween [0, 1)"
 
         self.index = 0
 
@@ -106,12 +108,7 @@ class SuperPixelLayer:
         x = None
         y = None
         for t in tqdm(tag_set):
-            use_sample = True
-            if reduction_factor > 1:
-                if not np.random.randint(0, reduction_factor):
-                    use_sample = False
-
-            if use_sample:
+            if np.random.randint(100) > 100 * reduction_factor:
                 x_img = t.load_x()
                 segments = generate_segments(x_img, self.opt)
                 x_img, _ = self.get_features(x_img)
@@ -137,22 +134,15 @@ class SuperPixelLayer:
         if self.clf.is_fitted():
             return None
 
-        print("Collecting Features for Stage: {}".format(self))
-        print("Data is reduced by factor: {}".format(self.data_reduction))
+        print("[INFO] Collecting Features for Stage: {}. {} Training Samples (DataReduction {})".format(
+            self, len(train_tags), self.data_reduction))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
-        x_val, y_val = self.get_x_y(validation_tags)
-
-        n_samples_train, n_features = x_train.shape
-        n_samples_val = x_val.shape[0]
-
-        print("DataSet has {} Samples (Train: {} / Validation: {}) with {} features.".format(
-            n_samples_train + n_samples_val, n_samples_train, n_samples_val, n_features
-        ))
         if self.param_grid is not None:
             self.clf.fit_inc_hyper_parameter(x_train, y_train, self.param_grid, n_iter=50, n_jobs=2)
         else:
             self.clf.fit(x_train, y_train)
-        if x_val is not None:
+        if validation_tags is not None:
+            x_val, y_val = self.get_x_y(validation_tags)
             return self.clf.evaluate(x_val, y_val)
         else:
             return None
