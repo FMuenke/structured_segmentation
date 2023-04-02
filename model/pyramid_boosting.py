@@ -1,27 +1,28 @@
-from structured_classifier.input_layer import InputLayer
-from structured_classifier.pixel_layer import PixelLayer
-from structured_classifier.normalization_layer import NormalizationLayer
+from layers import InputLayer
+from layers import PixelLayer
+from layers import NormalizationLayer
 
-from model.model_blue_print import ModelBluePrint
-from model.base_structures import get_decision_layer
-from structured_classifier.model import Model
+from model.base_model import BaseModel
+from layers.model import Model
 
 
-class PyramidBoosting(ModelBluePrint):
+class PyramidBoosting(BaseModel):
     def __init__(self,
                  image_width=None,
                  image_height=None,
                  initial_image_down_scale=None,
                  max_depth=3,
-                 max_kernel_sum=5,
+                 kernel=5,
+                 stride=1,
                  features_to_use="gray-lm",
                  kernel_shape="ellipse",
                  norm_input=None,
-                 clf="mlp_x",
+                 clf="extra_tree",
                  clf_options=None,
-                 data_reduction=3):
+                 data_reduction=0.33):
         self.max_depth = max_depth
-        self.max_kernel_sum = max_kernel_sum
+        self.kernel = kernel
+        self.stride = stride
         self.features_to_use = features_to_use
         self.norm_input = norm_input
         self.kernel_shape = kernel_shape
@@ -53,10 +54,10 @@ class PyramidBoosting(ModelBluePrint):
         for d in range(self.max_depth):
             xx = PixelLayer(
                 INPUTS=xx,
-                name="estimator_stage_{}".format(self.max_depth - d - 1),
-                kernel=(self.max_kernel_sum, self.max_kernel_sum),
+                name="stage_{}".format(self.max_depth - d - 1),
+                kernel=(self.kernel, self.kernel),
                 kernel_shape=self.kernel_shape,
-                strides=(1, 1),
+                strides=(self.stride, self.stride),
                 down_scale=self.max_depth - d - 1,
                 clf=self.clf,
                 clf_options=self.clf_options,

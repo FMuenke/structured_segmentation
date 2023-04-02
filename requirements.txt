@@ -2,5 +2,7 @@ scikit-learn
 numpy
 scikit-image
 opencv-python
+scipy
+joblib
 tqdm
 umap-learn

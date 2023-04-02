@@ -1,17 +1,15 @@
-import numpy as np
+from layers import PixelLayer
+from layers import InputLayer
+from layers import VotingLayer
+from layers import NormalizationLayer
+from layers import BottleNeckLayer
 
-from structured_classifier.pixel_layer import PixelLayer
-from structured_classifier.input_layer import InputLayer
-from structured_classifier.voting_layer import VotingLayer
-from structured_classifier.normalization_layer import NormalizationLayer
-from structured_classifier.bottle_neck_layer import BottleNeckLayer
+from model.base_model import BaseModel
 
-from model.model_blue_print import ModelBluePrint
-
-from structured_classifier.model import Model
+from layers.model import Model
 
 
-class Ensemble(ModelBluePrint):
+class Ensemble(BaseModel):
     def __init__(self,
                  image_width=None,
                  image_height=None,
@@ -19,7 +17,7 @@ class Ensemble(ModelBluePrint):
                  output_aggregation_options="boosting",
                  kernel=5,
                  strides=1,
-                 max_down_scale=2,
+                 max_down_scale=3,
                  features_to_use="gray-color",
                  tree_type="kernel",
                  norm_input=None,

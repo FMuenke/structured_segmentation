@@ -1,13 +1,12 @@
-from structured_classifier.input_layer import InputLayer
-from structured_classifier.normalization_layer import NormalizationLayer
-from structured_classifier.pixel_layer import PixelLayer
-from model.base_structures import get_decision_layer
-from model.model_blue_print import ModelBluePrint
+from layers import InputLayer
+from layers import NormalizationLayer
+from layers import PixelLayer
+from model.base_model import BaseModel
 
-from structured_classifier.model import Model
+from layers.model import Model
 
 
-class EncoderDecoder(ModelBluePrint):
+class EncoderDecoder(BaseModel):
     def __init__(self,
                  image_width=None,
                  image_height=None,
@@ -49,9 +48,6 @@ class EncoderDecoder(ModelBluePrint):
             height=height
         )
 
-        kernel = (self.kernel_size, self.kernel_size)
-        strides = (self.stride_size, self.stride_size)
-
         if self.norm_input is not None:
             x_layer = NormalizationLayer(
                 INPUTS=x_layer,
@@ -63,8 +59,8 @@ class EncoderDecoder(ModelBluePrint):
             x_layer = PixelLayer(
                 INPUTS=x_layer,
                 name="enc_{}".format(d),
-                kernel=kernel,
-                strides=strides,
+                kernel=(self.kernel_size, self.kernel_size),
+                strides=(self.stride_size, self.stride_size),
                 kernel_shape=self.kernel_shape,
                 down_scale=(d + 1),
                 clf=self.clf, clf_options=self.clf_options,
@@ -75,8 +71,8 @@ class EncoderDecoder(ModelBluePrint):
             x_layer = PixelLayer(
                 INPUTS=x_layer,
                 name="dec_{}".format(d),
-                kernel=kernel,
-                strides=strides,
+                kernel=(self.kernel_size, self.kernel_size),
+                strides=(self.stride_size, self.stride_size),
                 kernel_shape=self.kernel_shape,
                 down_scale=(self.depth - d - 1),
                 clf=self.clf, clf_options=self.clf_options,

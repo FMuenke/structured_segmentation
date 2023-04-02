@@ -29,17 +29,16 @@ def main(args_):
     df_test = os.path.join(df, "test")
     mf = args_.model_folder
 
-    downscale = 1
+    downscale = 4
     sp_feature = "hsv-lm"
     ed_feature = "gray-color"
     models_to_train = {
         # "sp-1": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
         # "sp-2": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
         # "sp-3": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
-        "ens-1": Ensemble(features_to_use=ed_feature, initial_image_down_scale=downscale),
-        "ed-1": EncoderDecoder(features_to_use=ed_feature, initial_image_down_scale=downscale),
-        # "eds-rf-2": EncoderDecoder(features_to_use=ed_feature, clf="rf", initial_image_down_scale=downscale, depth=2),
-        # "eds-rf-3": EncoderDecoder(features_to_use=ed_feature, clf="rf", initial_image_down_scale=downscale, depth=2),
+        # "ens-1": Ensemble(features_to_use=ed_feature, initial_image_down_scale=downscale),
+        # "ed-1": EncoderDecoder(features_to_use=ed_feature, initial_image_down_scale=downscale),
+        "px-1": PixelSegmentor(feature_to_use=ed_feature, initial_image_down_scale=downscale, kernel=5, stride=2)
     }
 
     d_set = SegmentationDataSet(df_train, color_coding)

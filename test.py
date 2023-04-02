@@ -1,12 +1,13 @@
 import argparse
 import os
+from time import time
 import cv2
 import numpy as np
 from tqdm import tqdm
 
 from data_structure.segmentation_data_set import SegmentationDataSet
 from data_structure.folder import Folder
-from structured_classifier.model import Model
+from layers.model import Model
 from utils.utils import load_dict
 from data_structure.stats_handler import StatsHandler
 
@@ -51,7 +52,7 @@ def run_test(mf, df, us=False):
 
     d_set = SegmentationDataSet(df, color_coding)
     t_set = d_set.load()
-
+    t0 = time()
     sh = StatsHandler(color_coding)
     print("Processing Images...")
     for tid in tqdm(t_set):
@@ -63,6 +64,8 @@ def run_test(mf, df, us=False):
         t_set[tid].visualize_result(vis_fol.path(), color_map)
         cv2.imwrite(os.path.join(sbs_fol.path(), "{}.png".format(tid)), side_by_side(t_set[tid].load_x(), color_map))
 
+    with open(os.path.join(mf, "time_prediction.txt"), "w") as f:
+        f.write("[INFO] done in %0.3fs" % (time() - t0))
     sh.eval()
     sh.show()
     sh.write_report(os.path.join(mf, "report.txt"))

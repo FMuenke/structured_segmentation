@@ -1,9 +1,9 @@
-from structured_classifier.model import Model
-from structured_classifier import InputLayer, SuperPixelLayer
-from model.model_blue_print import ModelBluePrint
+from layers.model import Model
+from layers import InputLayer, SuperPixelLayer
+from model.base_model import BaseModel
 
 
-class SuperPixelSegmentor(ModelBluePrint):
+class SuperPixelSegmentor(BaseModel):
     def __init__(self,
                  image_width=None,
                  image_height=None,
