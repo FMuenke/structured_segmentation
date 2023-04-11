@@ -1,12 +1,12 @@
 from layers import InputLayer
 from layers import NormalizationLayer
 from layers import PixelLayer
-from model.base_model import BaseModel
+from model.model import Model
 
-from layers.model import Model
+from model.graph import Graph
 
 
-class EncoderDecoder(BaseModel):
+class EncoderDecoder(Model):
     def __init__(self,
                  image_width=None,
                  image_height=None,
@@ -78,4 +78,4 @@ class EncoderDecoder(BaseModel):
                 clf=self.clf, clf_options=self.clf_options,
                 data_reduction=self.data_reduction
             )
-        return Model(graph=x_layer)
+        return Graph(layer_stack=x_layer)

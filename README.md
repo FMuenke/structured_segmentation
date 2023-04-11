@@ -1,4 +1,14 @@
 # Structured Segmentation
+## Introduction
+
+This repository provides a lightweight framework, 
+that can be used to build semantic segmentation models based on structured classifiers.
+The frameworks implements structured classifiers as independent layers, which can be easily combined with another to 
+create powerful end-to-end trainable semantic segmentation models.
+
+This framework enables the user to create models themselves but already provides pre-configured models.
+- Structured Classifier: A single Structured Segmentation Algorithm.
+- Encoder Decoder: An ensemble of multiple Structured Segmentation Algorithms
 
 ## Setup
 Installation is done by cloning the repository
@@ -22,37 +32,42 @@ Input Image:
 Ground-Truth (left) / Result (right):
 
 ![](examples/example_0_result.png)
-## Documentation
 
-For example code to train a model yourself checkout the train.py file.
+## Tutorial
+In the following we explain briefly how to train and evaluate a model yourself.
+````python
+import os
+from data_structure.segmentation_data_set import SegmentationDataSet
+from model import EncoderDecoder
+from utils.utils import save_dict, check_n_make_dir
 
-In this repository there are multiple layer implemented.
-The Layer can be stacked and used as one end-to-end trainable model.
+color_coding = {
+    "class_1": [
+      [255, 255, 255], #  Color Code of Class 1 on segmentation mask
+      [255, 0, 0]      #  Color Code used for displaying results
+    ],
+    "class_2": [
+      [4, 4, 4],       #  Color Code of Class 2 on segmentation mask
+      [255, 0, 0]      #  Color Code used for displaying results
+    ],
+}
 
-Learning Layer:
-* GraphLayer
-* SuperPixelLayer
-    + INPUTS : previous layers as list or as layer object
-    + name : Identifying Name
-    + super_pixel_method="slic" : Method used to create SuperPixels [slic, patches, felzenszwalb, quickshift, watershed]
-    + down_scale=0 : Octave used to downscale relative to the initial input
-    + feature_aggregation="quantiles",
-    + clf="b_rf",
-    + clf_options=None,
-    + param_grid=None,
-    + data_reduction=0
-* ShapeRefinementLayer
+data_folder_train = "PATH_TO_TRAIN_DATA"
+data_folder_test = "PATH_TO_TEST_DATA"
+model_folder = "PATH_TO_STORE_MODEL"
 
-Helper Layer:
-* VotingLayer
-* BottleNeckLayer
-* NormalizationLayer
-* InputLayer
+model = EncoderDecoder()
 
-In addition this repository provides three pre configured layer configurations (models)
+data_set = SegmentationDataSet(data_folder_train, color_coding)
+train_set = data_set.get_data()
 
-Models:
-* EncoderDecoder
-* PyramidBoosting
-* RandomStructuredRandomForrest
-* PatchWork
+check_n_make_dir(model_folder)
+model.fit(train_set)
+model.save(model_folder)
+save_dict(color_coding, os.path.join(model_folder, "color_coding.json"))
+
+data_set = SegmentationDataSet(data_folder_test, color_coding)
+test_set = data_set.get_data()
+model.evaluate(test_set, color_coding, results_folder=model_folder)
+
+````

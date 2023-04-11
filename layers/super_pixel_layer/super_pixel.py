@@ -162,7 +162,7 @@ def get_features_for_segments(tensor, segments, feature_aggregation):
 def generate_segments(x_input, opt):
     img = img_as_float(x_input[::2, ::2])
     height, width = img.shape[:2]
-    patch_size = 8 * 2 ** (opt["down_scale"])
+    patch_size = 8 * 2 ** 0
     n_segments = int(height / patch_size) * int(width / patch_size)
     if "felzenszwalb" in opt["super_pixel_method"]:
         scale = 2 ** opt["down_scale"]

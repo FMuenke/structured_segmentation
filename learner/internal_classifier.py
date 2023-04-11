@@ -91,6 +91,9 @@ class InternalClassifier:
     def predict_proba(self, x):
         if hasattr(self.classifier, "predict_proba"):
             prob_pos = self.classifier.predict_proba(x)
+        elif hasattr(self.classifier, "transform"):
+            x = x.astype(np.float32)
+            prob_pos = self.classifier.transform(x)
         else:  # use decision function
             prob_pos = self.classifier.predict(x)
             prob_pos = np.expand_dims(prob_pos, axis=1)

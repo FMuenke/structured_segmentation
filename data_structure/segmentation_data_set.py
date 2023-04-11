@@ -1,3 +1,8 @@
+"""
+This modul handles the segmentation dataset
+as a sum of all images available for training
+"""
+
 import os
 from tqdm import tqdm
 import numpy as np
@@ -7,8 +12,8 @@ from data_structure.labeled_image import LabeledImage
 class SegmentationDataSet:
     def __init__(self, path_to_data_set, color_coding):
         self.path_to_data_set = path_to_data_set
-
         self.color_coding = color_coding
+        self.tag_set = self.load()
 
     def _load(self, tag_set, summary, path):
         print("[INFO] Try Loading Data from: {}".format(path))
@@ -48,7 +53,8 @@ class SegmentationDataSet:
         assert len(tag_set) > 0, "[ERROR] No Data was found.."
         return tag_set
 
-    def split(self, tag_set, percentage=0.2, random=True):
+    def get_data(self, percentage=0.0, random=True):
+        tag_set = self.tag_set
         train_set = []
         validation_set = []
         if random:
@@ -60,5 +66,8 @@ class SegmentationDataSet:
                 train_set.append(tag_set[d])
             else:
                 validation_set.append(tag_set[d])
-        print("[INFO] Training Samples: {} / Validation Samples: {}".format(len(train_set), len(validation_set)))
-        return np.array(train_set), np.array(validation_set)
+        if percentage > 0:
+            print("[INFO] Training Samples: {} / Validation Samples: {}".format(len(train_set), len(validation_set)))
+            return np.array(train_set), np.array(validation_set)
+        else:
+            return np.array(train_set)

@@ -1,5 +1,10 @@
 import os
+import cv2
+from tqdm import tqdm
+from time import time
+from data_structure.model_statistics import ModelStatistics
 from utils.utils import check_n_make_dir, load_dict
+from utils.segmention_mask import convert_cls_to_color, side_by_side
 
 from layers import PixelLayer
 from layers import InputLayer
@@ -11,17 +16,46 @@ from layers.experimental.feature_extraction_layer import FeatureExtractionLayer
 from layers import ObjectSelectionLayer
 
 
-class Model:
-    def __init__(self, graph):
-        self.graph = graph
-
+class Graph:
+    def __init__(self, layer_stack):
+        self.graph = layer_stack
         self.description = dict()
 
-    def fit(self, train_tags, validation_tags):
+    def fit(self, train_tags, validation_tags=None):
         print("===============================")
         print("=====Begin Model Training======")
         print("===============================")
         self.graph.fit(train_tags, validation_tags)
+
+    def evaluate(self, tags, color_coding, results_folder, is_unsupervised=False):
+        print("[INFO] Begin Model Evaluation")
+        res_folder = os.path.join(results_folder, "segmentations")
+        check_n_make_dir(res_folder, clean=True)
+        vis_folder = os.path.join(results_folder, "overlays")
+        check_n_make_dir(vis_folder, clean=True)
+        sbs_folder = os.path.join(results_folder, "side_by_side")
+        check_n_make_dir(sbs_folder, clean=True)
+
+        t0 = time()
+        sh = ModelStatistics(color_coding)
+        for tag in tqdm(tags):
+            image = tag.load_x()
+            cls_map = self.predict(image)
+            color_map = convert_cls_to_color(cls_map, color_coding, unsupervised=is_unsupervised)
+            tag.write_result(res_folder, color_map)
+            if not is_unsupervised:
+                tag.eval(color_map, sh)
+            tag.visualize_result(vis_folder, color_map)
+            cv2.imwrite(
+                os.path.join(sbs_folder, "{}.png".format(tag.id)),
+                side_by_side(image, color_map)
+            )
+
+        with open(os.path.join(results_folder, "time_prediction.txt"), "w") as f:
+            f.write("[INFO] done in %0.3fs" % (time() - t0))
+        sh.eval()
+        sh.show()
+        sh.write_report(os.path.join(results_folder, "report.txt"))
 
     def save(self, model_path):
         check_n_make_dir(model_path)

@@ -12,6 +12,32 @@ from layers.input_layer.features.gaussian import Gaussian
 from utils.utils import check_n_make_dir, save_dict
 
 
+def resize_image(image, height, width, down_scale):
+    if height is not None and width is not None:
+        image = cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
+
+    if width is not None and height is None:
+        h, w = image.shape[:2]
+        s = width / w
+        h_new = int(h * s)
+        image = cv2.resize(image, (width, h_new), interpolation=cv2.INTER_CUBIC)
+
+    if height is not None and width is None:
+        h, w = image.shape[:2]
+        s = height / h
+        w_new = int(w * s)
+        image = cv2.resize(image, (w_new, height), interpolation=cv2.INTER_CUBIC)
+
+    if down_scale is not None:
+        height, width = image.shape[:2]
+        new_height = int(height / 2 ** down_scale)
+        new_width = int(width / 2 ** down_scale)
+        assert new_height > 2 or new_width > 2, "ERROR: Image was scaled too small Height, Width: {}, {}".format(
+            new_height, new_width)
+        image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
+    return image
+
+
 class InputLayer:
     layer_type = "INPUT_LAYER"
 
@@ -51,28 +77,7 @@ class InputLayer:
         pass
 
     def inference(self, image, interpolation="nearest"):
-        if self.height is not None and self.width is not None:
-            image = cv2.resize(image, (self.width, self.height), interpolation=cv2.INTER_CUBIC)
-
-        if self.width is not None and self.height is None:
-            h, w = image.shape[:2]
-            s = self.width / w
-            h_new = int(h * s)
-            image = cv2.resize(image, (self.width, h_new), interpolation=cv2.INTER_CUBIC)
-
-        if self.height is not None and self.width is None:
-            h, w = image.shape[:2]
-            s = self.height / h
-            w_new = int(w * s)
-            image = cv2.resize(image, (w_new, self.height), interpolation=cv2.INTER_CUBIC)
-
-        if self.down_scale is not None:
-            height, width = image.shape[:2]
-            new_height = int(height / 2**self.down_scale)
-            new_width = int(width / 2**self.down_scale)
-            assert new_height > 2 or new_width > 2, "ERROR: Image was scaled too small Height, Width: {}, {}".format(
-                new_height, new_width)
-            image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
+        image = resize_image(image, self.height, self.width, self.down_scale)
 
         tensors = []
         for f_type in self.features_to_use:

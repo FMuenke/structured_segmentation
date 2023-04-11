@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 from layers.super_pixel_layer.super_pixel import get_features_for_segments, generate_segments, map_segments, get_y_for_segments
+from layers.input_layer.input_layer import resize_image
 
 from learner.internal_classifier import InternalClassifier
 from layers.layer_operations import resize
@@ -16,7 +17,9 @@ class SuperPixelLayer:
                  INPUTS,
                  name,
                  super_pixel_method="slic",
-                 down_scale=0,
+                 image_height=None,
+                 image_width=None,
+                 down_scale=None,
                  feature_aggregation="gauss",
                  clf="rf",
                  clf_options=None,
@@ -38,6 +41,8 @@ class SuperPixelLayer:
             "name": self.name,
             "layer_type": self.layer_type,
             "super_pixel_method": super_pixel_method,
+            "height": image_height,
+            "width": image_width,
             "down_scale": down_scale,
             "feature_aggregation": feature_aggregation,
         }
@@ -60,7 +65,13 @@ class SuperPixelLayer:
         )
 
     def inference(self, x_input, interpolation="nearest"):
-        segments = generate_segments(x_input, self.opt)
+        sp_image = resize_image(
+            x_input,
+            height=self.opt["height"],
+            width=self.opt["width"],
+            down_scale=self.opt["down_scale"]
+        )
+        segments = generate_segments(sp_image, self.opt)
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
@@ -79,7 +90,13 @@ class SuperPixelLayer:
         return y_img
 
     def predict(self, x_input):
-        segments = generate_segments(x_input, self.opt)
+        sp_image = resize_image(
+            x_input,
+            height=self.opt["height"],
+            width=self.opt["width"],
+            down_scale=self.opt["down_scale"]
+        )
+        segments = generate_segments(sp_image, self.opt)
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]

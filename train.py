@@ -3,11 +3,9 @@ import os
 from time import time
 
 from data_structure.segmentation_data_set import SegmentationDataSet
-from model import RandomEnsemble, PixelSegmentor, SuperPixelSegmentor, EncoderDecoder, PyramidBoosting, Ensemble
+from model import EncoderDecoder
 
 from utils.utils import save_dict, check_n_make_dir
-
-from test import run_test
 
 
 def main(args_):
@@ -20,16 +18,13 @@ def main(args_):
         # "nuceli": [[255, 255, 255], [100, 100, 255]],
     }
 
-    randomized_split = True
-    train_test_ratio = 0.0
-
     df = args_.dataset_folder
 
     df_train = os.path.join(df, "train")
     df_test = os.path.join(df, "test")
     mf = args_.model_folder
 
-    downscale = 4
+    downscale = 1
     sp_feature = "hsv-lm"
     ed_feature = "gray-color"
     models_to_train = {
@@ -37,13 +32,19 @@ def main(args_):
         # "sp-2": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
         # "sp-3": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
         # "ens-1": Ensemble(features_to_use=ed_feature, initial_image_down_scale=downscale),
-        # "ed-1": EncoderDecoder(features_to_use=ed_feature, initial_image_down_scale=downscale),
-        "px-1": PixelSegmentor(feature_to_use=ed_feature, initial_image_down_scale=downscale, kernel=5, stride=2)
+        "ed-us-4-1": EncoderDecoder(
+            clf="kmeans",
+            features_to_use=ed_feature,
+            image_height=256, image_width=256,
+            depth=4, data_reduction=0.66),
+        # "px-1": PixelSegmentor(feature_to_use=ed_feature, initial_image_down_scale=downscale, kernel=5, stride=2)
     }
 
-    d_set = SegmentationDataSet(df_train, color_coding)
-    tag_set = d_set.load()
-    train_set, validation_set = d_set.split(tag_set, percentage=train_test_ratio, random=randomized_split)
+    train_set = SegmentationDataSet(df_train, color_coding)
+    train_set = train_set.get_data()
+
+    test_set = SegmentationDataSet(df_test, color_coding)
+    test_tags = test_set.get_data()
 
     # train_set = train_set[::10]
 
@@ -57,7 +58,8 @@ def main(args_):
             f.write("[INFO] done in %0.3fs" % (time() - t0))
         model.save(sub_mf)
         save_dict(color_coding, os.path.join(sub_mf, "color_coding.json"))
-        run_test(sub_mf, df_test)
+        model.evaluate(test_tags, color_coding, sub_mf, is_unsupervised=True)
+
 
 
 def parse_args():

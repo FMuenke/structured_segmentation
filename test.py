@@ -1,74 +1,18 @@
 import argparse
 import os
-from time import time
-import cv2
-import numpy as np
-from tqdm import tqdm
 
 from data_structure.segmentation_data_set import SegmentationDataSet
-from data_structure.folder import Folder
-from layers.model import Model
+from model import Model
 from utils.utils import load_dict
-from data_structure.stats_handler import StatsHandler
-
-
-def convert_cls_to_color(cls_map, color_coding, unsupervised=False):
-    h, w = cls_map.shape[:2]
-    color_map = np.zeros((h, w, 3))
-    if unsupervised:
-        unique_y = np.unique(cls_map)
-        for u in unique_y:
-            if str(u) not in color_coding:
-                color_coding[str(u)] = [[0, 0, 0],
-                                        [np.random.randint(255), np.random.randint(255), np.random.randint(255)]]
-    for idx, cls in enumerate(color_coding):
-        iy, ix = np.where(cls_map == idx + 1)
-        color_map[iy, ix, :] = [color_coding[cls][1][2],
-                                color_coding[cls][1][1],
-                                color_coding[cls][1][0]]
-    return color_map
-
-
-def side_by_side(img, color_map):
-    color_map = cv2.resize(color_map, (img.shape[1], img.shape[0]))
-    border = np.ones((img.shape[0], 10, 3)) * 255
-    return np.concatenate([img, border, color_map], axis=1)
 
 
 def run_test(mf, df, us=False):
     color_coding = load_dict(os.path.join(mf, "color_coding.json"))
-
-    model = Model(mf)
+    model = Graph(mf)
     model.load(mf)
-
-    res_fol = Folder(os.path.join(mf, "segmentations"))
-    res_fol.check_n_make_dir(clean=True)
-
-    vis_fol = Folder(os.path.join(mf, "overlays"))
-    vis_fol.check_n_make_dir(clean=True)
-
-    sbs_fol = Folder(os.path.join(mf, "side_by_side"))
-    sbs_fol.check_n_make_dir(clean=True)
-
     d_set = SegmentationDataSet(df, color_coding)
-    t_set = d_set.load()
-    t0 = time()
-    sh = StatsHandler(color_coding)
-    print("Processing Images...")
-    for tid in tqdm(t_set):
-        cls_map = model.predict(t_set[tid].load_x())
-        color_map = convert_cls_to_color(cls_map, color_coding, unsupervised=us)
-        t_set[tid].write_result(res_fol.path(), color_map)
-        if not us:
-            t_set[tid].eval(color_map, sh)
-        t_set[tid].visualize_result(vis_fol.path(), color_map)
-        cv2.imwrite(os.path.join(sbs_fol.path(), "{}.png".format(tid)), side_by_side(t_set[tid].load_x(), color_map))
-
-    with open(os.path.join(mf, "time_prediction.txt"), "w") as f:
-        f.write("[INFO] done in %0.3fs" % (time() - t0))
-    sh.eval()
-    sh.show()
-    sh.write_report(os.path.join(mf, "report.txt"))
+    test_set = d_set.get_data()
+    model.evaluate(test_set, color_coding, mf, is_unsupervised=us)
 
 
 def main(args_):
@@ -76,8 +20,6 @@ def main(args_):
     mf = args_.model_folder
     us = args_.unsupervised
     run_test(mf, df, us)
-
-
 
 
 def parse_args():

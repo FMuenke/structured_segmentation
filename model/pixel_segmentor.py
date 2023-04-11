@@ -1,9 +1,9 @@
-from layers.model import Model
+from model.graph import Graph
 from layers import InputLayer, PixelLayer
-from model.base_model import BaseModel
+from model.model import Model
 
 
-class PixelSegmentor(BaseModel):
+class PixelSegmentor(Model):
     def __init__(self,
                  image_width=None,
                  image_height=None,
@@ -45,4 +45,4 @@ class PixelSegmentor(BaseModel):
             clf=self.clf,
             data_reduction=self.data_reduction,
         )
-        return Model(graph=x)
+        return Graph(layer_stack=x)

@@ -6,9 +6,8 @@ from layers import VotingLayer
 from layers import NormalizationLayer
 from layers import BottleNeckLayer
 
-from model.base_model import BaseModel
-
-from layers.model import Model
+from model.model import Model
+from model.graph import Graph
 
 
 def randomize_options(max_val):
@@ -17,7 +16,7 @@ def randomize_options(max_val):
     return k_y, k_x
 
 
-class RandomEnsemble(BaseModel):
+class RandomEnsemble(Model):
     def __init__(self,
                  image_width=None,
                  image_height=None,
@@ -92,4 +91,4 @@ class RandomEnsemble(BaseModel):
         elif output_option == "boosting":
             b = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
             trees = PixelLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
-        return Model(graph=trees)
+        return Graph(layer_stack=trees)

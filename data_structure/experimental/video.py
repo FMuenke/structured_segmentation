@@ -1,3 +1,5 @@
+# pylint ignore
+
 import cv2
 import os
 import csv
@@ -6,7 +8,7 @@ from skimage.measure import regionprops, label as sklabel
 import tifffile as tiff
 from tqdm import tqdm
 
-from data_structure.video_frame_tag import VideoFrameTag
+from data_structure.experimental.video_frame_tag import VideoFrameTag
 
 from utils.utils import check_n_make_dir
 

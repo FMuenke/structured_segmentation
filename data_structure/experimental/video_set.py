@@ -1,6 +1,8 @@
+# pylint ignore
+
 import os
 import numpy as np
-from data_structure.video import Video
+from data_structure.experimental.video import Video
 
 
 class VideoSet:

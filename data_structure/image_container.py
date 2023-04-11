@@ -1,3 +1,7 @@
+"""
+This modul handles the class image container used to easily handle images
+"""
+
 import numpy as np
 import cv2
 from skimage.transform import integral_image
@@ -6,124 +10,172 @@ from data_structure.matrix_container import MatrixContainer
 
 
 class ImageContainer:
+    """
+    The image container class implements many methods to apply to images
+    """
     def __init__(self, image):
+        """
+        Initialize the objet with the image numpy array
+        """
         self.image = image
 
     def prepare_image_for_processing(self, color_space):
+        """
+        This function is called before feature extraction and transforms the image
+        to the defined color-space. This already implements a part of the feature processing
+        """
         if color_space == "gray":
             return [self.gray()]
-        elif color_space == "hsv":
+        if color_space == "hsv":
             hsv = self.hsv()
             return [hsv[:, :, 0], hsv[:, :, 1], hsv[:, :, 2]]
-        elif color_space == "BGR":
-            BGR = self.BGR()
-            return [BGR[:, :, 0], BGR[:, :, 1], BGR[:, :, 2]]
-        elif color_space == "RGB":
-            RGB = self.RGB()
-            return [RGB[:, :, 0], RGB[:, :, 1], RGB[:, :, 2]]
-        elif color_space == "opponent":
+        if color_space == "RGB":
+            re_gr_bl = self.red_green_blue()
+            return [re_gr_bl[:, :, 0], re_gr_bl[:, :, 1], re_gr_bl[:, :, 2]]
+        if color_space == "opponent":
             opponent = self.opponent()
             return [opponent[:, :, 0], opponent[:, :, 1], opponent[:, :, 2]]
-        elif color_space == "rgb":
+        if color_space == "rgb":
             rgb = self.rgb()
             return [rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]]
-        elif color_space in ["log_geo_mean", "lgm"]:
+        if color_space in ["log_geo_mean", "lgm"]:
             lgm = self.log_geometric_mean_chromaticity()
             return [lgm[:, :, 0], lgm[:, :, 1], lgm[:, :, 2]]
-        else:
-            raise ValueError("Color Space {} unknown.".format_map(color_space))
+        raise ValueError("Color Space {} unknown.".format_map(color_space))
 
     def log_geometric_mean_chromaticity(self):
+        """
+        This function returns the log_geometric_mean_chromaticity colorspace
+        """
         image = self.image.astype(np.int)
-        B = np.add(image[:, :, 0], 1)
-        G = np.add(image[:, :, 1], 1)
-        R = np.add(image[:, :, 2], 1)
-        geometric_mean = np.cbrt(np.multiply(np.multiply(B, G), R))
-        bm = np.divide(B, geometric_mean)
-        gm = np.divide(G, geometric_mean)
-        rm = np.divide(R, geometric_mean)
+        blue = np.add(image[:, :, 0], 1)
+        green = np.add(image[:, :, 1], 1)
+        red = np.add(image[:, :, 2], 1)
+        geometric_mean = np.cbrt(np.multiply(np.multiply(blue, green), red))
+        blue_m = np.divide(blue, geometric_mean)
+        green_m = np.divide(green, geometric_mean)
+        red_m = np.divide(red, geometric_mean)
 
-        bm = np.log(bm)
-        gm = np.log(gm)
-        rm = np.log(rm)
+        blue_m = np.log(blue_m)
+        green_m = np.log(green_m)
+        red_m = np.log(red_m)
 
-        bm = np.expand_dims(bm, axis=2)
-        gm = np.expand_dims(gm, axis=2)
-        rm = np.expand_dims(rm, axis=2)
-        return np.concatenate([rm, gm, bm], axis=2)
+        blue_m = np.expand_dims(blue_m, axis=2)
+        green_m = np.expand_dims(green_m, axis=2)
+        red_m = np.expand_dims(red_m, axis=2)
+        return np.concatenate([red_m, green_m, blue_m], axis=2)
 
-    def BGR(self):
+    def blue_green_red(self):
+        """
+        This function returns the image in the regular cv2 BGR image format
+        """
         return self.image
 
-    def RGB(self):
-        B = self.image[:, :, 0]
-        G = self.image[:, :, 1]
-        R = self.image[:, :, 2]
-        R = np.expand_dims(R, axis=2)
-        B = np.expand_dims(B, axis=2)
-        G = np.expand_dims(G, axis=2)
-        return np.concatenate([R, G, B], axis=2)
+    def red_green_blue(self):
+        """
+        This function returns the image in the channel-swapped RGB image format
+        """
+        blue = self.image[:, :, 0]
+        green = self.image[:, :, 1]
+        red = self.image[:, :, 2]
+        red = np.expand_dims(red, axis=2)
+        blue = np.expand_dims(blue, axis=2)
+        green = np.expand_dims(green, axis=2)
+        return np.concatenate([red, green, blue], axis=2)
 
     def gray(self):
+        """
+        This function returns the image in a gray-scale image format
+        """
         image = np.copy(self.image)
         return cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2GRAY)
 
     def integral(self):
+        """
+        This function returns the integral of the image
+        """
         return integral_image(self.gray())
 
     def hsv(self):
+        """
+        This function returns the image transformed to the HSV color-space
+        H (Hue) S (Saturation) V (Value)
+        """
         image = np.copy(self.image)
         return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     def opponent(self):
-        B = self.image[:, :, 0]
-        G = self.image[:, :, 1]
-        R = self.image[:, :, 2]
-        O1 = np.divide((R - G), np.sqrt(2))
-        O2 = np.divide((R + G - np.multiply(B, 2)), np.sqrt(6))
-        O3 = np.divide((R + G + B), np.sqrt(3))
-        O1 = np.expand_dims(O1, axis=2)
-        O2 = np.expand_dims(O2, axis=2)
-        O3 = np.expand_dims(O3, axis=2)
-        return np.concatenate([O1, O2, O3], axis=2)
+        """
+        This function returns the image in the opponent color-space
+        """
+        blue = self.image[:, :, 0]
+        green = self.image[:, :, 1]
+        red = self.image[:, :, 2]
+        opp_1 = np.divide((red - green), np.sqrt(2))
+        opp_2 = np.divide((red + green - np.multiply(blue, 2)), np.sqrt(6))
+        opp_3 = np.divide((red + green + blue), np.sqrt(3))
+        opp_1 = np.expand_dims(opp_1, axis=2)
+        opp_2 = np.expand_dims(opp_2, axis=2)
+        opp_3 = np.expand_dims(opp_3, axis=2)
+        return np.concatenate([opp_1, opp_2, opp_3], axis=2)
 
     def rgb(self):
-        B = self.image[:, :, 0].astype(np.float)
-        G = self.image[:, :, 1].astype(np.float)
-        R = self.image[:, :, 2].astype(np.float)
-        r = 100 * np.divide(R, (R + G + B + 1e-5))
-        g = 100 * np.divide(G, (R + G + B + 1e-5))
-        b = 100 * np.divide(B, (R + G + B + 1e-5))
-        r = np.expand_dims(r, axis=2)
-        b = np.expand_dims(b, axis=2)
-        g = np.expand_dims(g, axis=2)
-        return np.concatenate([r, b, g], axis=2)
+        """
+        This function returns the image as NORMALIZED rgb image
+        """
+        blue = self.image[:, :, 0].astype(np.float)
+        green = self.image[:, :, 1].astype(np.float)
+        red = self.image[:, :, 2].astype(np.float)
+        red_norm = 100 * np.divide(red, (red + green + blue + 1e-5))
+        green_norm = 100 * np.divide(green, (red + green + blue + 1e-5))
+        blue_norm = 100 * np.divide(blue, (red + green + blue + 1e-5))
+        red_norm = np.expand_dims(red_norm, axis=2)
+        blue_norm = np.expand_dims(blue_norm, axis=2)
+        green_norm = np.expand_dims(green_norm, axis=2)
+        return np.concatenate([red_norm, blue_norm, green_norm], axis=2)
 
     def normalize(self):
+        """
+        This function returns the image normalized by mean and standard deviation
+        """
         image = np.copy(self.image)
         mat = MatrixContainer(image)
         img_norm = 255 * mat.normalize()
         return img_norm.astype(np.uint8)
 
     def resize(self, height, width):
-        return cv2.resize(self.image,
-                          (int(width), int(height)),
-                          interpolation=cv2.INTER_CUBIC)
+        """
+        This function returns the image resized by the given dimensions
+        height: new height of the image (int)
+        width: new width of the image (int)
+        """
+        return cv2.resize(
+            self.image,
+            (int(width), int(height)),
+            interpolation=cv2.INTER_CUBIC
+        )
 
     def _scale_image_to_octave(self, octave):
+        """
+        This function resizes the image with a given octave
+        Where the octave equals to the power of two (np.power(2, octave)
+        octave: Power of 2 to reduce the image size (int) [0, 1, 2, ...]
+        """
         image = np.copy(self.image)
         height, width = image.shape[:2]
         if height < 2 or width < 2:
             return image
-        elif octave == 0:
+        if octave == 0:
             return image
-        else:
-            oct_width = int(width / np.power(2, octave))
-            oct_height = int(height / np.power(2, octave))
-            return self.resize(height=oct_height, width=oct_width)
+        oct_width = int(width / np.power(2, octave))
+        oct_height = int(height / np.power(2, octave))
+        return self.resize(height=oct_height, width=oct_width)
 
     def overlay(self, mask):
+        """
+        This function returns the image ovelayed with the provided mask
+        mask: np.array to overlay
+        """
         height, width = self.image.shape[:2]
         mask = cv2.resize(mask, (int(width), int(height)), interpolation=cv2.INTER_NEAREST)
         return cv2.addWeighted(self.image.astype(np.uint8), 0.5, mask.astype(np.uint8), 0.5, 0)
-        # return mask

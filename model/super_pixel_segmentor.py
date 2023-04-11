@@ -1,14 +1,13 @@
-from layers.model import Model
+from model.graph import Graph
 from layers import InputLayer, SuperPixelLayer
-from model.base_model import BaseModel
+from model.model import Model
 
 
-class SuperPixelSegmentor(BaseModel):
+class SuperPixelSegmentor(Model):
     def __init__(self,
                  image_width=None,
                  image_height=None,
-                 initial_image_down_scale=0,
-                 super_pixel_down_scale=0,
+                 initial_image_down_scale=None,
                  feature_to_use="hsv-lm",
                  feature_aggregation="gauss",
                  super_pixel_method="slic",
@@ -27,10 +26,9 @@ class SuperPixelSegmentor(BaseModel):
             width=image_width,
             height=image_height,
             initial_down_scale=initial_image_down_scale,
-            super_pixel_down_scale=super_pixel_down_scale,
         )
 
-    def build(self, width, height, initial_down_scale, super_pixel_down_scale):
+    def build(self, width, height, initial_down_scale):
         x = InputLayer(
             name="INPUT",
             features_to_use=self.feature_to_use,
@@ -45,6 +43,8 @@ class SuperPixelSegmentor(BaseModel):
             clf=self.clf,
             clf_options=self.clf_options,
             data_reduction=self.data_reduction,
-            down_scale=super_pixel_down_scale,
+            image_width=width,
+            image_height=height,
+            down_scale=initial_down_scale,
         )
-        return Model(graph=x)
+        return Graph(layer_stack=x)

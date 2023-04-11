@@ -4,12 +4,12 @@ from layers import VotingLayer
 from layers import NormalizationLayer
 from layers import BottleNeckLayer
 
-from model.base_model import BaseModel
+from model.model import Model
 
-from layers.model import Model
+from model.graph import Graph
 
 
-class Ensemble(BaseModel):
+class Ensemble(Model):
     def __init__(self,
                  image_width=None,
                  image_height=None,
@@ -85,4 +85,4 @@ class Ensemble(BaseModel):
                 name="boosting",
                 clf=self.clf,
                 clf_options=self.clf_options)
-        return Model(graph=trees)
+        return Graph(layer_stack=trees)
