@@ -6,9 +6,35 @@ that can be used to build semantic segmentation models based on structured class
 The frameworks implements structured classifiers as independent layers, which can be easily combined with another to 
 create powerful end-to-end trainable semantic segmentation models.
 
+Structured Classification refers to an image segmentation technique, that aims to classify each individual pixel.
+Each pixel has an assigned class based on the provided segmentation mask, and features that are assigned to a pixel
+based on a previously defined neighborhood. The neighborhood works as depicted in the following figure:
+
+![Structured Classification](examples/kernel.png)
+
+For a given pixel the neighborhood is applied and all positions with a 1 are collected and added to the features,
+while zeros are ignored. This is applied for all pixels on an image. Afterwards a classifier is trained using the 
+described dataset and applied to all pixels during inference.
+
 This framework enables the user to create models themselves but already provides pre-configured models.
-- Structured Classifier: A single Structured Segmentation Algorithm.
-- Encoder Decoder: An ensemble of multiple Structured Segmentation Algorithms
+- Structured Classifier Model: A single Structured Segmentation Algorithm.
+- Encoder Decoder Model: An ensemble of multiple Structured Segmentation Algorithms
+
+
+### Structured Classifier Model (SC)
+The Structured Classifier Model (SC) is the simplest version of a structured classification model. We use on single
+structured classification unit to process the whole image. Due to the limited scale of the kernel the model is unable
+to understand a larger context of the image.
+
+
+### Encoder Decoder Model (ED)
+![The Decoder Encoder Model](examples/structured_classifier.png)
+
+The Encoder Decoder Model (ED) is an ensemble of six Structured-Classifier-Models (SC), where each provides its output 
+to the next SC. Each SC collects it features from a different scale of the image. The first three SC downscale
+the image each by half while the next three upscale back to its original resolution. We prevent overfitting 
+and reduce training time by randomly sampling only one-third of all available training images per SC.
+We can adjust the ED to add more down- and up-scaling stages.
 
 ## Setup
 Installation is done by cloning the repository

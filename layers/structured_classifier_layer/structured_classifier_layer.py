@@ -4,13 +4,13 @@ import numpy as np
 from tqdm import tqdm
 from scipy.ndimage import convolve
 
-from layers.pixel_layer.kernel import Kernel
+from layers.structured_classifier_layer.kernel import Kernel
 from learner.internal_classifier import InternalClassifier
 from layers.layer_operations import resize
 from utils.utils import check_n_make_dir, save_dict
 
 
-class PixelLayer:
+class StructuredClassifierLayer:
     layer_type = "PIXEL_LAYER"
 
     def __init__(self,

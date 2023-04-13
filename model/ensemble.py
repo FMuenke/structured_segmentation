@@ -1,4 +1,4 @@
-from layers import PixelLayer
+from layers import StructuredClassifierLayer
 from layers import InputLayer
 from layers import VotingLayer
 from layers import NormalizationLayer
@@ -62,7 +62,7 @@ class Ensemble(Model):
                     norm_option=self.norm_input
                 )
 
-            tree = PixelLayer(
+            tree = StructuredClassifierLayer(
                 INPUTS=tree,
                 name="tree_{}".format(scale),
                 kernel=(self.kernel, self.kernel),
@@ -79,7 +79,7 @@ class Ensemble(Model):
             trees = VotingLayer(INPUTS=trees, name="voting")
         elif output_option == "boosting":
             bottle_neck = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
-            trees = PixelLayer(
+            trees = StructuredClassifierLayer(
                 INPUTS=bottle_neck,
                 kernel=(self.kernel, self.kernel),
                 name="boosting",

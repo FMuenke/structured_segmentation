@@ -1,6 +1,6 @@
 from layers import InputLayer
 from layers import NormalizationLayer
-from layers import PixelLayer
+from layers import StructuredClassifierLayer
 from model.model import Model
 
 from model.graph import Graph
@@ -56,7 +56,7 @@ class EncoderDecoder(Model):
             )
 
         for d in range(self.depth):
-            x_layer = PixelLayer(
+            x_layer = StructuredClassifierLayer(
                 INPUTS=x_layer,
                 name="enc_{}".format(d),
                 kernel=(self.kernel_size, self.kernel_size),
@@ -68,7 +68,7 @@ class EncoderDecoder(Model):
             )
 
         for d in range(self.depth):
-            x_layer = PixelLayer(
+            x_layer = StructuredClassifierLayer(
                 INPUTS=x_layer,
                 name="dec_{}".format(d),
                 kernel=(self.kernel_size, self.kernel_size),

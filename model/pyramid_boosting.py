@@ -1,5 +1,5 @@
 from layers import InputLayer
-from layers import PixelLayer
+from layers import StructuredClassifierLayer
 from layers import NormalizationLayer
 
 from model.model import Model
@@ -52,7 +52,7 @@ class PyramidBoosting(Model):
             )
 
         for d in range(self.max_depth):
-            xx = PixelLayer(
+            xx = StructuredClassifierLayer(
                 INPUTS=xx,
                 name="stage_{}".format(self.max_depth - d - 1),
                 kernel=(self.kernel, self.kernel),

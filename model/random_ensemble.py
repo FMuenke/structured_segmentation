@@ -1,6 +1,6 @@
 import numpy as np
 
-from layers import PixelLayer
+from layers import StructuredClassifierLayer
 from layers import InputLayer
 from layers import VotingLayer
 from layers import NormalizationLayer
@@ -73,7 +73,7 @@ class RandomEnsemble(Model):
                     norm_option=self.norm_input
                 )
 
-            tree = PixelLayer(
+            tree = StructuredClassifierLayer(
                 INPUTS=tree,
                 name="tree_{}".format(i),
                 kernel=randomize_options(self.max_kernel_sum),
@@ -90,5 +90,5 @@ class RandomEnsemble(Model):
             trees = VotingLayer(INPUTS=trees, name="voting")
         elif output_option == "boosting":
             b = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
-            trees = PixelLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
+            trees = StructuredClassifierLayer(INPUTS=b, name="boosting", clf=self.clf, clf_options=self.clf_options)
         return Graph(layer_stack=trees)

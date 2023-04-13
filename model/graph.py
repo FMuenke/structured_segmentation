@@ -6,7 +6,7 @@ from data_structure.model_statistics import ModelStatistics
 from utils.utils import check_n_make_dir, load_dict
 from utils.segmention_mask import convert_cls_to_color, side_by_side
 
-from layers import PixelLayer
+from layers import StructuredClassifierLayer
 from layers import InputLayer
 from layers import NormalizationLayer
 from layers import BottleNeckLayer
@@ -85,7 +85,7 @@ class Graph:
 
         if opt["layer_type"] == "PIXEL_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
-            layer = PixelLayer(
+            layer = StructuredClassifierLayer(
                 prev_layer,
                 opt["name"],
                 opt["kernel"],

@@ -1,5 +1,5 @@
 from model.graph import Graph
-from layers import InputLayer, PixelLayer
+from layers import InputLayer, StructuredClassifierLayer
 from model.model import Model
 
 
@@ -36,7 +36,7 @@ class PixelSegmentor(Model):
             height=height,
             initial_down_scale=initial_down_scale
         )
-        x = PixelLayer(
+        x = StructuredClassifierLayer(
             INPUTS=x,
             name="DecisionLayer",
             kernel=(self.kernel, self.kernel),
