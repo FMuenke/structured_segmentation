@@ -49,10 +49,13 @@ class ModelStatistics:
             pre = self.raw_statistics[cls]["tp"] / (
                     self.raw_statistics[cls]["tp"] + self.raw_statistics[cls]["fp"] + 1e-5)
             f_1 = 2 * (pre * rec) / (pre + rec + 1e-5)
+            iou = self.raw_statistics[cls]["tp"] / (
+                    self.raw_statistics[cls]["tp"] + self.raw_statistics[cls]["fn"] + self.raw_statistics[cls]["fp"])
             self.result[cls] = {
                 "rec": rec,
                 "pre": pre,
                 "f_1": f_1,
+                "iou": iou,
             }
 
     def generate_r_string(self):
@@ -64,10 +67,12 @@ class ModelStatistics:
             pre = self.result[cls]["pre"]
             rec = self.result[cls]["rec"]
             f_1 = self.result[cls]["f_1"]
+            iou = self.result[cls]["iou"]
             r_string += "------------------\n"
             r_string += f"{cls}-PRE: {pre}\n"
             r_string += f"{cls}-REC: {rec}\n"
             r_string += f"{cls}-F_1: {f_1}\n"
+            r_string += f"{cls}-JAC: {iou}\n"
             r_string += "------------------\n"
         return r_string
 

@@ -61,11 +61,6 @@ def parse_args():
         help="Path to directory with predictions",
     )
     parser.add_argument(
-        "--test_folder",
-        "-tf",
-        help="Path to directory with predictions",
-    )
-    parser.add_argument(
         "--model_folder",
         "-model",
         default="./test",
