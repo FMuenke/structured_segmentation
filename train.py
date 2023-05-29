@@ -3,7 +3,7 @@ import os
 from time import time
 
 from data_structure.segmentation_data_set import SegmentationDataSet
-from model import EncoderDecoder
+from model import EncoderDecoder, PyramidBoosting
 
 from utils.utils import save_dict, check_n_make_dir
 
@@ -24,19 +24,14 @@ def main(args_):
     df_test = os.path.join(df, "test")
     mf = args_.model_folder
 
-    downscale = 1
+    downscale = 0
     sp_feature = "hsv-lm"
     ed_feature = "gray-color"
     models_to_train = {
         # "sp-1": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
         # "sp-2": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
         # "sp-3": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
-        # "ens-1": Ensemble(features_to_use=ed_feature, initial_image_down_scale=downscale),
-        "ed-us-4-1": EncoderDecoder(
-            clf="kmeans",
-            features_to_use=ed_feature,
-            image_height=256, image_width=256,
-            depth=4, data_reduction=0.66),
+        "py-1": PyramidBoosting(features_to_use=ed_feature, initial_image_down_scale=downscale),
         # "px-1": PixelSegmentor(feature_to_use=ed_feature, initial_image_down_scale=downscale, kernel=5, stride=2)
     }
 
@@ -58,8 +53,7 @@ def main(args_):
             f.write("[INFO] done in %0.3fs" % (time() - t0))
         model.save(sub_mf)
         save_dict(color_coding, os.path.join(sub_mf, "color_coding.json"))
-        model.evaluate(test_tags, color_coding, sub_mf, is_unsupervised=True)
-
+        model.evaluate(test_tags, color_coding, sub_mf, is_unsupervised=False)
 
 
 def parse_args():

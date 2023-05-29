@@ -1,3 +1,7 @@
+"""
+This modul contains all code to build the encoder decoder model
+"""
+
 from layers import InputLayer
 from layers import NormalizationLayer
 from layers import StructuredClassifierLayer
@@ -7,6 +11,9 @@ from model.graph import Graph
 
 
 class EncoderDecoder(Model):
+    """
+    The Encoder Decoder Model uses by default 6 structured classifier
+    """
     def __init__(self,
                  image_width=None,
                  image_height=None,

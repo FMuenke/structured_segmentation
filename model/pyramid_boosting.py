@@ -13,13 +13,13 @@ class PyramidBoosting(Model):
                  initial_image_down_scale=None,
                  max_depth=3,
                  kernel=5,
-                 stride=1,
-                 features_to_use="gray-lm",
+                 stride=2,
+                 features_to_use="gray-color",
                  kernel_shape="ellipse",
                  norm_input=None,
                  clf="extra_tree",
                  clf_options=None,
-                 data_reduction=0.33):
+                 data_reduction=0.66):
         self.max_depth = max_depth
         self.kernel = kernel
         self.stride = stride
@@ -51,16 +51,27 @@ class PyramidBoosting(Model):
                 norm_option=self.norm_input
             )
 
-        for d in range(self.max_depth):
+        for d in range(self.max_depth - 1):
             xx = StructuredClassifierLayer(
                 INPUTS=xx,
                 name="stage_{}".format(self.max_depth - d - 1),
                 kernel=(self.kernel, self.kernel),
                 kernel_shape=self.kernel_shape,
                 strides=(self.stride, self.stride),
-                down_scale=self.max_depth - d - 1,
+                down_scale=d + 1,
                 clf=self.clf,
                 clf_options=self.clf_options,
                 data_reduction=self.data_reduction
+            )
+        xx = StructuredClassifierLayer(
+                INPUTS=xx,
+                name="stage_final",
+                kernel=(self.kernel, self.kernel),
+                kernel_shape=self.kernel_shape,
+                strides=(self.stride, self.stride),
+                down_scale=0,
+                clf=self.clf,
+                clf_options=self.clf_options,
+                data_reduction=0
             )
         return Graph(layer_stack=xx)
