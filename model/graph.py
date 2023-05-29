@@ -27,7 +27,7 @@ class Graph:
         print("===============================")
         self.graph.fit(train_tags, validation_tags)
 
-    def evaluate(self, tags, color_coding, results_folder, is_unsupervised=False):
+    def evaluate(self, tags, color_coding, results_folder, is_unsupervised=False, plot_results=True):
         print("[INFO] Begin Model Evaluation")
         res_folder = os.path.join(results_folder, "segmentations")
         check_n_make_dir(res_folder, clean=True)
@@ -42,14 +42,17 @@ class Graph:
             image = tag.load_x()
             cls_map = self.predict(image)
             color_map = convert_cls_to_color(cls_map, color_coding, unsupervised=is_unsupervised)
-            tag.write_result(res_folder, color_map)
+
             if not is_unsupervised:
                 tag.eval(color_map, sh)
-            tag.visualize_result(vis_folder, color_map)
-            cv2.imwrite(
-                os.path.join(sbs_folder, "{}.png".format(tag.id)),
-                side_by_side(image, color_map)
-            )
+
+            if plot_results:
+                tag.write_result(res_folder, color_map)
+                tag.visualize_result(vis_folder, color_map)
+                cv2.imwrite(
+                    os.path.join(sbs_folder, "{}.png".format(tag.id)),
+                    side_by_side(image, color_map)
+                )
 
         with open(os.path.join(results_folder, "time_prediction.txt"), "w") as f:
             f.write("[INFO] done in %0.3fs" % (time() - t0))

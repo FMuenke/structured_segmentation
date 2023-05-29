@@ -24,15 +24,14 @@ def main(args_):
     df_test = os.path.join(df, "test")
     mf = args_.model_folder
 
-    downscale = 0
-    sp_feature = "hsv-lm"
-    ed_feature = "gray-color"
+    im_h, im_w, downscale = 256, 256, None
     models_to_train = {
-        # "sp-1": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
-        # "sp-2": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
-        # "sp-3": SuperPixelSegmentor(feature_to_use=sp_feature, initial_image_down_scale=downscale),
-        "py-1": PyramidBoosting(features_to_use=ed_feature, initial_image_down_scale=downscale),
-        # "px-1": PixelSegmentor(feature_to_use=ed_feature, initial_image_down_scale=downscale, kernel=5, stride=2)
+        # "ed-hsv-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="hsv-color"),
+        # "ed-rgb-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="rgb-color")
+        # "ed-opp-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="opponent-color"),
+        "ed-RGB-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="RGB-color"),
+        "ed-RGB-2": EncoderDecoder(im_h, im_w, downscale, features_to_use="RGB-color"),
+        "ed-RGB-3": EncoderDecoder(im_h, im_w, downscale, features_to_use="RGB-color"),
     }
 
     train_set = SegmentationDataSet(df_train, color_coding)
@@ -41,8 +40,6 @@ def main(args_):
     test_set = SegmentationDataSet(df_test, color_coding)
     test_tags = test_set.get_data()
 
-    # train_set = train_set[::10]
-
     for model_id in models_to_train:
         model = models_to_train[model_id]
         sub_mf = os.path.join(mf, model_id)
@@ -50,10 +47,10 @@ def main(args_):
         t0 = time()
         model.fit(train_set)
         with open(os.path.join(sub_mf, "time.txt"), "w") as f:
-            f.write("[INFO] done in %0.3fs" % (time() - t0))
+            f.write("[INFO] Training done in %0.3fs" % (time() - t0))
         model.save(sub_mf)
         save_dict(color_coding, os.path.join(sub_mf, "color_coding.json"))
-        model.evaluate(test_tags, color_coding, sub_mf, is_unsupervised=False)
+        model.evaluate(test_tags, color_coding, sub_mf, is_unsupervised=False, plot_results=False)
 
 
 def parse_args():
