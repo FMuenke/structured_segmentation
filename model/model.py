@@ -1,3 +1,4 @@
+from model.graph import Graph
 from utils.utils import check_n_make_dir
 
 
@@ -19,4 +20,5 @@ class Model:
         self.model.save(path)
 
     def load(self, path):
+        self.model = Graph(path)
         self.model.load(path)

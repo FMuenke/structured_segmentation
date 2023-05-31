@@ -8,14 +8,14 @@ class PixelSegmentor(Model):
                  image_width=None,
                  image_height=None,
                  initial_image_down_scale=None,
-                 feature_to_use="gray-color",
+                 features_to_use="gray-color",
                  clf="extra_tree",
                  kernel=5,
                  stride=2,
                  kernel_shape="ellipse",
                  data_reduction=0,
                  ):
-        self.feature_to_use = feature_to_use
+        self.features_to_use = features_to_use
         self.kernel = kernel
         self.stride = stride
         self.kernel_shape = kernel_shape
@@ -31,7 +31,7 @@ class PixelSegmentor(Model):
     def build(self, width, height, initial_down_scale):
         x = InputLayer(
             name="INPUT",
-            features_to_use=self.feature_to_use,
+            features_to_use=self.features_to_use,
             width=width,
             height=height,
             initial_down_scale=initial_down_scale

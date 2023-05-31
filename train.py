@@ -29,9 +29,7 @@ def main(args_):
         # "ed-hsv-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="hsv-color"),
         # "ed-rgb-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="rgb-color")
         # "ed-opp-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="opponent-color"),
-        "ed-RGB-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="RGB-color"),
-        "ed-RGB-2": EncoderDecoder(im_h, im_w, downscale, features_to_use="RGB-color"),
-        "ed-RGB-3": EncoderDecoder(im_h, im_w, downscale, features_to_use="RGB-color"),
+        "ed-1": EncoderDecoder(im_h, im_w, downscale, features_to_use="gray-color", clf="rf"),
     }
 
     train_set = SegmentationDataSet(df_train, color_coding)

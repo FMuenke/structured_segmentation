@@ -2,7 +2,7 @@ import argparse
 import os
 
 from data_structure.segmentation_data_set import SegmentationDataSet
-from model import Model
+from model import Graph
 from utils.utils import load_dict
 
 

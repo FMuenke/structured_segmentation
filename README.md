@@ -36,6 +36,35 @@ the image each by half while the next three upscale back to its original resolut
 and reduce training time by randomly sampling only one-third of all available training images per SC.
 We can adjust the ED to add more down- and up-scaling stages.
 
+
+## Performance Evaluation
+![Visual Comparison of the Model Performance](examples/bmt_viz.png)
+
+<a id="1">[1]</a> 
+A. Mahbod et al. (2021). 
+CryoNuSeg: A Dataset for Nuclei Instance Segmentation of Cryosectioned H&E-Stained Histological Images
+Computers in Biology and Medicine , Vol. 132 p. 104349.
+
+<a id="1">[2]</a>
+C. Edlund et al. (2021)
+LIVECell—A large-scale dataset for label-free live cell segmentation
+Nature Methods , Vol. 18, No. 9
+
+<a id="1">[3]</a> 
+N. Codella et al. (2018). 
+Skin Lesion Analysis Toward Melanoma Detection: A Challenge at the 2017 International Symposium on Biomedical Imaging (ISBI), Hosted by the International Skin Imaging Collaboration (ISIC)
+arXiv1710.05006.
+
+<a id="1">[4]</a> 
+O. Ulucan et al. (2020)
+A Large-Scale Dataset for Fish Segmentation and Classification
+2020 Innovations in Intelligent Systems and Applications Conference (ASYU)
+
+<a id="1">[5]</a>
+A. Popova et al. (2019)
+Facile One Step Formation and Screening of Tumor Spheroids Using Droplet-Microarray Platform 
+Small , Vol. 15, No. 25
+
 ## Setup
 Installation is done by cloning the repository
 ```bash
