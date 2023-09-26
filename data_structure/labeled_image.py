@@ -32,7 +32,9 @@ class LabeledImage:
 
     image_extensions = [".jpg", ".JPG", ".png", "PNG", ".jpeg", ".ppm", ".tif"]
     label_extensions = [".png", ".tif", "_label.tif",
-                        "_label.tiff", ".tiff", ".ppm", "_label.png", "_segmentation.png"]
+                        "_label.tiff", ".tiff", ".ppm", "_label.png", "_segmentation.png",
+                        "_label_ground-truth.png"
+                        ]
 
     def __init__(self, base_path, data_id, color_coding, augmentations=None):
         """
@@ -124,20 +126,23 @@ class LabeledImage:
         This function returns the ground truth label_map/segmentation mask
         with the class id on each pixel position
         """
-        y_img = np.zeros((label_size[0], label_size[1]))
-        if self.label_file is not None:
-            lbm = cv2.imread(self.label_file)
-            lbm = cv2.resize(lbm, (label_size[1], label_size[0]), interpolation=cv2.INTER_NEAREST)
-            for idx, cls in enumerate(self.color_coding):
-                col_0 = np.zeros((label_size[0], label_size[1]))
-                col_1 = np.zeros((label_size[0], label_size[1]))
-                col_2 = np.zeros((label_size[0], label_size[1]))
+        if self.label_file is None:
+            print("WARNING: Label File Does not Exists...")
+            return np.zeros((label_size[0], label_size[1]))
 
-                col_0[lbm[:, :, 0] == self.color_coding[cls][0][2]] = 1
-                col_1[lbm[:, :, 1] == self.color_coding[cls][0][1]] = 1
-                col_2[lbm[:, :, 2] == self.color_coding[cls][0][0]] = 1
-                col = col_0 + col_1 + col_2
-                y_img[col == 3] = idx + 1
+        y_img = np.zeros((label_size[0], label_size[1]))
+        lbm = cv2.imread(self.label_file)
+        lbm = cv2.resize(lbm, (label_size[1], label_size[0]), interpolation=cv2.INTER_NEAREST)
+        for idx, cls in enumerate(self.color_coding):
+            col_0 = np.zeros((label_size[0], label_size[1]))
+            col_1 = np.zeros((label_size[0], label_size[1]))
+            col_2 = np.zeros((label_size[0], label_size[1]))
+
+            col_0[lbm[:, :, 0] == self.color_coding[cls][0][2]] = 1
+            col_1[lbm[:, :, 1] == self.color_coding[cls][0][1]] = 1
+            col_2[lbm[:, :, 2] == self.color_coding[cls][0][0]] = 1
+            col = col_0 + col_1 + col_2
+            y_img[col == 3] = idx + 1
 
         return y_img
 

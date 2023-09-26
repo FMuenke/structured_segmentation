@@ -8,7 +8,7 @@ class SuperPixelSegmentor(Model):
                  image_width=None,
                  image_height=None,
                  initial_image_down_scale=None,
-                 feature_to_use="hsv-lm",
+                 features_to_use="hsv-lm",
                  feature_aggregation="gauss",
                  super_pixel_method="slic",
                  clf="extra_tree",

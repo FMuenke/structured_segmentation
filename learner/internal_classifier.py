@@ -20,47 +20,54 @@ from sklearn.metrics import f1_score
 from utils.utils import check_n_make_dir, save_dict, load_dict
 
 
-def set_default_options(opt):
-    default_options = {
-        "n_estimators": 100,
-        "max_iter": 100000,
-        "layer_structure": (100, ),
-        "n_clusters": 8
-    }
-    for def_opt in default_options:
-        if def_opt not in opt:
-            opt[def_opt] = default_options[def_opt]
-    return opt
+def init_mlp(clf):
+    if clf == "mlp":
+        return MLPClassifier(hidden_layer_sizes=(64, ), max_iter=100000)
+    elif clf == "mlp_x":
+        return MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=100000)
+    elif clf == "mlp_xx":
+        return MLPClassifier(hidden_layer_sizes=(256, 128, 64), max_iter=100000)
+    raise Exception("Unknown specifications for classifier: {}".format(clf))
+
+
+def init_rf(clf):
+    if clf == "rf":
+        return RandomForestClassifier(n_estimators=100, class_weight="balanced", n_jobs=-1)
+    elif clf == "rf_10":
+        return RandomForestClassifier(n_estimators=10, class_weight="balanced", n_jobs=-1)
+    elif clf == "rf_200":
+        return RandomForestClassifier(n_estimators=200, class_weight="balanced", n_jobs=-1)
+    elif clf == "rf_500":
+        return RandomForestClassifier(n_estimators=500, class_weight="balanced", n_jobs=-1)
+    raise Exception("Unknown specifications for classifier: {}".format(clf))
+
+
+def init_lr(clf):
+    if clf == "lr":
+        return LogisticRegression(class_weight='balanced', max_iter=100000)
+    elif clf == "lr_cv":
+        return LogisticRegressionCV(max_iter=100000, class_weight="balanced")
+    raise Exception("Unknown specifications for classifier: {}".format(clf))
+
+
+def init_kmeans(clf):
+    name, n_clusters = clf.split("_")
+    return MiniBatchKMeans(n_clusters=n_clusters)
 
 
 def classifier_initialize(opt):
-    opt = set_default_options(opt)
-    if opt["type"] in ["random_forrest", "rf"]:
-        return RandomForestClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
-    elif opt["type"] == "ada_boost":
-        return AdaBoostClassifier(n_estimators=opt["n_estimators"])
-    elif opt["type"] in ["logistic_regression", "lr"]:
-        return LogisticRegression(class_weight='balanced', max_iter=opt["max_iter"])
-    elif opt["type"] == "sgd":
-        return SGDClassifier(class_weight='balanced', max_iter=opt["max_iter"])
-    elif opt["type"] in ["support_vector_machine", "svm"]:
-        return SVC(kernel='rbf', class_weight='balanced', gamma="scale")
-    elif opt["type"] in ["multilayer_perceptron", "mlp"]:
-        return MLPClassifier(hidden_layer_sizes=opt["layer_structure"], max_iter=opt["max_iter"])
-    elif opt["type"] in ["mlp_x"]:
-        return MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=opt["max_iter"])
-    elif opt["type"] in ["decision_tree", "dt", "tree"]:
-        return DecisionTreeClassifier()
-    elif opt["type"] in ["b_decision_tree", "b_dt", "b_tree"]:
-        return DecisionTreeClassifier(class_weight="balanced")
+    if "rf" in opt["type"]:
+        return init_rf(opt["type"])
+    elif "lr" in opt["type"]:
+        return init_lr(opt["type"])
+    elif "mlp" in opt["type"]:
+        return init_mlp(opt["type"])
     elif opt["type"] in ["neighbours", "knn"]:
         return KNeighborsClassifier(n_neighbors=opt["n_neighbours"])
     elif opt["type"] == "extra_tree":
-        return ExtraTreesClassifier(n_estimators=opt["n_estimators"], class_weight="balanced", n_jobs=-1)
-    elif opt["type"] == "kmeans":
-        return MiniBatchKMeans(n_clusters=opt["n_clusters"])
-    elif opt["type"] == "lr_cv":
-        return LogisticRegressionCV(max_iter=opt["max_iter"], class_weight="balanced")
+        return ExtraTreesClassifier(n_estimators=100, class_weight="balanced", n_jobs=-1)
+    elif "kmeans" in opt["type"]:
+        return init_kmeans(opt["type"])
     else:
         raise ValueError("type: {} not recognised".format(opt["type"]))
 

@@ -1,4 +1,7 @@
 # Structured Segmentation
+
+[[paper]](https://www.degruyter.com/document/doi/10.1515/cdbme-2023-1048/html)
+
 ## Introduction
 
 This repository provides a lightweight framework, 
@@ -125,4 +128,24 @@ data_set = SegmentationDataSet(data_folder_test, color_coding)
 test_set = data_set.get_data()
 model.evaluate(test_set, color_coding, results_folder=model_folder)
 
+````
+
+## Citation
+
+If you want to use this repository for your own research, please cite the following paper:
+
+````
+@article{muenke2023,
+    url = {https://doi.org/10.1515/cdbme-2023-1048},
+    title = {A Lightweight Framework for Semantic Segmentation of Biomedical Images},
+    title = {},
+    author = {Friedrich Rieken Münke and Luca Rettenberger and Anna Popova and Markus Reischl},
+    pages = {190--193},
+    volume = {9},
+    number = {1},
+    journal = {Current Directions in Biomedical Engineering},
+    doi = {doi:10.1515/cdbme-2023-1048},
+    year = {2023},
+    lastchecked = {2023-09-26}
+}
 ````
