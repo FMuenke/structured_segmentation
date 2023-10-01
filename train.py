@@ -2,15 +2,18 @@ import argparse
 import os
 from time import time
 
-from data_structure.segmentation_data_set import SegmentationDataSet
-from model import EncoderDecoder
+from structured_segmentation.data_structure import SegmentationDataSet
+from structured_segmentation.model import EncoderDecoder
 
-from utils.utils import save_dict, check_n_make_dir
+from structured_segmentation.utils.utils import save_dict, check_n_make_dir
 
 
 def main(args_):
     color_coding = {
         "class_1": [[255, 255, 255], [255, 0, 0]],
+        "class_2": [[255, 0, 0], [0, 0, 255]],
+        "unlabeled": [[100, 100, 100], [0, 0, 0]]
+        # We can define a class explicitly as unlabeled, its pixels will not be used
     }
 
     df = args_.dataset_folder
@@ -25,7 +28,7 @@ def main(args_):
     test_set = SegmentationDataSet(df_test, color_coding)
     test_tags = test_set.get_data()
 
-    model = EncoderDecoder(256, 256)
+    model = EncoderDecoder(image_width=256, image_height=256)
     check_n_make_dir(mf)
     t0 = time()
     model.fit(train_set)

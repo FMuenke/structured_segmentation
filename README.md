@@ -93,21 +93,28 @@ Ground-Truth (left) / Result (right):
 
 ## Tutorial
 In the following we explain briefly how to train and evaluate a model yourself.
+
 ````python
 import os
-from data_structure.segmentation_data_set import SegmentationDataSet
-from model import EncoderDecoder
-from utils.utils import save_dict, check_n_make_dir
+from structured_segmentation.data_structure import SegmentationDataSet
+from structured_segmentation.model import EncoderDecoder
+from structured_segmentation.utils.utils import save_dict, check_n_make_dir
 
 color_coding = {
     "class_1": [
-      [255, 255, 255], #  Color Code of Class 1 on segmentation mask
-      [255, 0, 0]      #  Color Code used for displaying results
+        [255, 255, 255],  # Color Code of Class 1 on segmentation mask
+        [255, 0, 0]  # Color Code used for displaying results
     ],
     "class_2": [
-      [4, 4, 4],       #  Color Code of Class 2 on segmentation mask
-      [255, 0, 0]      #  Color Code used for displaying results
+        [4, 4, 4],  # Color Code of Class 2 on segmentation mask
+        [255, 0, 0]  # Color Code used for displaying results
     ],
+    #  We can define a class explicitly as unlabeled, 
+    #  its pixels will not be used to train the classifier
+    "unlabeled": [  # optional
+        [100, 100, 100],  # Color Code of the unlabeled class on segmentation mask
+        [0, 0, 0]  # Color Code used for displaying results
+    ]
 }
 
 data_folder_train = "PATH_TO_TRAIN_DATA"

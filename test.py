@@ -1,9 +1,9 @@
 import argparse
 import os
 
-from data_structure.segmentation_data_set import SegmentationDataSet
-from model import Graph
-from utils.utils import load_dict
+from structured_segmentation.data_structure import SegmentationDataSet
+from structured_segmentation.model import Graph
+from structured_segmentation.utils.utils import load_dict
 
 
 def run_test(mf, df, us=False):
