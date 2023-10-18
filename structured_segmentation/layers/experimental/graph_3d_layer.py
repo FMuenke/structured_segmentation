@@ -80,7 +80,8 @@ class Graph3DLayer:
         raise ValueError("Kernel-Shape option: {} not known".format(kernel_shape))
 
     def __str__(self):
-        return "{} - {} - {} - DownScale: {} - K: {}".format(self.layer_type, self.name, self.clf, self.down_scale, self.opt["kernel"])
+        return "{} - {} - {} - DownScale: {} - K: {}".format(
+            self.layer_type, self.name, self.clf, self.down_scale, self.opt["kernel"])
 
     def get_kernel(self, tensor):
         if len(tensor.shape) < 3:

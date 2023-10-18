@@ -15,7 +15,7 @@ class SuperPixelSegmentor(Model):
                  clf_options=None,
                  data_reduction=0,
                  ):
-        self.feature_to_use = feature_to_use
+        self.features_to_use = features_to_use
         self.feature_aggregation = feature_aggregation
         self.super_pixel_method = super_pixel_method
         self.clf = clf
@@ -31,7 +31,7 @@ class SuperPixelSegmentor(Model):
     def build(self, width, height, initial_down_scale):
         x = InputLayer(
             name="INPUT",
-            features_to_use=self.feature_to_use,
+            features_to_use=self.features_to_use,
             width=width, height=height,
             initial_down_scale=initial_down_scale
         )

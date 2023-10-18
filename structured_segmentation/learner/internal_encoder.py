@@ -68,4 +68,3 @@ class EncoderHandler:
             return check_is_fitted(self.encoder)
         else:
             return False
-

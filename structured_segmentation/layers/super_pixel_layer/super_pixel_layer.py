@@ -2,7 +2,6 @@ import os
 import numpy as np
 from tqdm import tqdm
 
-# from structured_segmentation.layers.super_pixel_layer.super_pixel import get_features_for_segments, generate_segments, map_segments, get_y_for_segments
 from structured_segmentation.layers.super_pixel_layer import super_pixel
 from structured_segmentation.learner.internal_classifier import InternalClassifier
 from structured_segmentation.layers.layer_operations import resize

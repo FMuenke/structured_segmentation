@@ -1,3 +1,4 @@
+import logging
 import os
 import joblib
 import numpy as np
@@ -7,11 +8,8 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
-
 from sklearn.cluster import MiniBatchKMeans
-
 from sklearn.utils.validation import check_is_fitted
-
 from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
 
@@ -149,5 +147,5 @@ class InternalClassifier:
             else:
                 return False
         except Exception as e:
+            logging.info(e)
             return False
-

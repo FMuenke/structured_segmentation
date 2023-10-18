@@ -1,5 +1,3 @@
-# pylint ignore
-
 import cv2
 import os
 import csv
@@ -11,8 +9,6 @@ from tqdm import tqdm
 from structured_segmentation.data_structure.experimental.video_frame_tag import VideoFrameTag
 
 from structured_segmentation.utils.utils import check_n_make_dir
-
-# from warnings import warn as warn
 
 
 class Video:
@@ -36,11 +32,13 @@ class Video:
         return self.num_of_frames
 
     def __str__(self):
-        return "Video: {} with {} Frames, {} Labels, {} RoI, {} Segmentation".format(self.id,
-                                                                                     self.num_of_frames,
-                                                                                     len(self.label_maps),
-                                                                                     len(self.regions_of_interest),
-                                                                                     len(self.segmentation))
+        return "Video: {} with {} Frames, {} Labels, {} RoI, {} Segmentation".format(
+            self.id,
+            self.num_of_frames,
+            len(self.label_maps),
+            len(self.regions_of_interest),
+            len(self.segmentation)
+        )
 
     def _count_frames(self):
         cap = cv2.VideoCapture(self.data_path)
@@ -127,7 +125,11 @@ class Video:
                     frame_h = frame.shape[0]
                     frame_w = frame.shape[1]
                     if frame_h > max_size[0] or frame_w > max_size[1]:
-                        frame = cv2.resize(frame, (int(frame_w*scale_factor), int(frame_h*scale_factor)), interpolation=cv2.INTER_AREA)
+                        frame = cv2.resize(
+                            frame,
+                            (int(frame_w*scale_factor), int(frame_h*scale_factor)),
+                            interpolation=cv2.INTER_AREA
+                        )
                     else:
                         break
             frames.append(frame)
@@ -163,12 +165,10 @@ class Video:
             return empty_frame
 
     def get_label_map_of_index(self, idx, obj_type="4", roi_only=False):
-        empty_label_map = np.zeros((self.frame_height, self.frame_width, 3))
         if 0 < idx < self.num_of_frames:
             label_map_path = self.get_label_files_of_index(idx)
             if label_map_path is not None:
                 if obj_type not in label_map_path.keys():
-                    # raise KeyError("Label map with key {} for frame {} of video {} not existing".format(obj_type, idx, self.id))
                     return None
                 lbm = cv2.imread(label_map_path[obj_type])
                 if not roi_only:

@@ -67,7 +67,3 @@ class Voting3DLayer:
             for j in range(h):
                 y_img[j, i] = np.bincount(x_img[j, i, :]).argmax()
         return y_img
-
-
-
-

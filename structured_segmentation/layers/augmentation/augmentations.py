@@ -1,7 +1,8 @@
 import numpy as np
 import random
-import cv2
-from structured_segmentation.layers.augmentation import *
+from structured_segmentation.layers.augmentation.aug_methods import apply_noise
+from structured_segmentation.layers.augmentation.aug_methods import apply_channel_shift
+from structured_segmentation.layers.augmentation.aug_methods import apply_blur
 
 
 class Augmentations:

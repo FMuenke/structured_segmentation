@@ -167,5 +167,3 @@ class Graph:
         for layer in p_layer:
             p_layer_sorted[int(layer.index)] = layer
         return p_layer
-
-
