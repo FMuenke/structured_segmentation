@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 /test/
+test_model
 .idea
 .DS_store
 

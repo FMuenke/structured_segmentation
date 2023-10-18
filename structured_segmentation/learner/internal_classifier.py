@@ -139,13 +139,3 @@ class InternalClassifier:
         if self.report is not None:
             with open(os.path.join(model_path, "classification_report.txt"), "w") as f:
                 f.write(self.report)
-
-    def is_fitted(self):
-        try:
-            if self.classifier is not None:
-                return check_is_fitted(self.classifier)
-            else:
-                return False
-        except Exception as e:
-            logging.info(e)
-            return False
