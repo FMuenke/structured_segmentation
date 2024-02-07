@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+custom_*
 
 /test/
 test_model

@@ -132,7 +132,7 @@ class StructuredClassifierLayer:
 
                 # Remove unlabeled samples
                 x_img = x_img[y_img != -1, :]
-                y_img = x_img[y_img != -1]
+                y_img = y_img[y_img != -1]
 
                 n_samples_train, n_features = x_img.shape
                 num_allowed_data = self.max_num_samples / len(tag_set)
@@ -159,8 +159,8 @@ class StructuredClassifierLayer:
         for p in self.previous:
             p.fit(train_tags, validation_tags)
 
-        if self.clf.is_fitted():
-            return None
+        # if self.clf.is_fitted():
+        #     return None
 
         print("[INFO] Collecting Features for Stage: {}".format(self))
         print("[INFO] {} Training Samples (DataReduction {})".format(
