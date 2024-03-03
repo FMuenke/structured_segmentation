@@ -33,7 +33,7 @@ class LabeledImage:
     image_extensions = [".jpg", ".JPG", ".png", "PNG", ".jpeg", ".ppm", ".tif"]
     label_extensions = [".png", ".tif", "_label.tif",
                         "_label.tiff", ".tiff", ".ppm", "_label.png", "_segmentation.png",
-                        "_label_ground-truth.png"
+                        "_label_ground-truth.png", "GT.png"
                         ]
 
     def __init__(self, base_path, data_id, color_coding, augmentations=None):
@@ -155,8 +155,24 @@ class LabeledImage:
         ground truth segmentation mask
         """
         im_id = os.path.basename(self.image_file)
+        color_map = np.copy(color_map)
         height, width = color_map.shape[:2]
         label = self.load_y_as_color_map((height, width))
+        if "unlabeled" in self.color_coding:
+            col_0 = np.zeros((height, width))
+            col_1 = np.zeros((height, width))
+            col_2 = np.zeros((height, width))
+
+            col_0[label[:, :, 0] == self.color_coding["unlabeled"][1][2]] = 1
+            col_1[label[:, :, 1] == self.color_coding["unlabeled"][1][1]] = 1
+            col_2[label[:, :, 2] == self.color_coding["unlabeled"][1][0]] = 1
+            col = col_0 + col_1 + col_2
+            index_y, index_x = np.where(col == 3)
+            color_map[index_y, index_x, :] = [
+                self.color_coding["unlabeled"][1][2],
+                self.color_coding["unlabeled"][1][1],
+                self.color_coding["unlabeled"][1][0]
+            ]
         border = 255 * np.ones((height, 10, 3))
         result = np.concatenate([label, border, color_map], axis=1)
         res_file = os.path.join(res_path, im_id[:-4] + ".png")
@@ -167,10 +183,29 @@ class LabeledImage:
         This function compares the ground truth segmentation mask
         with the prediction and stored it in the statistics modul
         """
+        color_map = np.copy(color_map)
         height, width = color_map.shape[:2]
         if self.label_file is not None:
             lbm = self.load_y_as_color_map((height, width))
+            if "unlabeled" in self.color_coding:
+                col_0 = np.zeros((height, width))
+                col_1 = np.zeros((height, width))
+                col_2 = np.zeros((height, width))
+
+                col_0[lbm[:, :, 0] == self.color_coding["unlabeled"][1][2]] = 1
+                col_1[lbm[:, :, 1] == self.color_coding["unlabeled"][1][1]] = 1
+                col_2[lbm[:, :, 2] == self.color_coding["unlabeled"][1][0]] = 1
+                col = col_0 + col_1 + col_2
+                index_y, index_x = np.where(col == 3)
+                color_map[index_y, index_x, :] = [
+                    self.color_coding["unlabeled"][1][2],
+                    self.color_coding["unlabeled"][1][1],
+                    self.color_coding["unlabeled"][1][0]
+                ]
+
             for _, cls in enumerate(self.color_coding):
+                if cls == "unlabeled":
+                    continue
                 cls_key = self.color_coding[cls][1]
                 col_00 = np.zeros((height, width))
                 col_01 = np.zeros((height, width))

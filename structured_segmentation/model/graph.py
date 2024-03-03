@@ -28,12 +28,13 @@ class Graph:
 
     def evaluate(self, tags, color_coding, results_folder, is_unsupervised=False, plot_results=True):
         print("[INFO] Begin Model Evaluation")
-        res_folder = os.path.join(results_folder, "segmentations")
-        check_n_make_dir(res_folder, clean=True)
-        vis_folder = os.path.join(results_folder, "overlays")
-        check_n_make_dir(vis_folder, clean=True)
-        sbs_folder = os.path.join(results_folder, "side_by_side")
-        check_n_make_dir(sbs_folder, clean=True)
+        if plot_results:
+            res_folder = os.path.join(results_folder, "segmentations")
+            check_n_make_dir(res_folder, clean=True)
+            vis_folder = os.path.join(results_folder, "overlays")
+            check_n_make_dir(vis_folder, clean=True)
+            sbs_folder = os.path.join(results_folder, "side_by_side")
+            check_n_make_dir(sbs_folder, clean=True)
 
         t0 = time()
         sh = ModelStatistics(color_coding)

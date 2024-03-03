@@ -1,7 +1,10 @@
 import cv2
 import os
+import logging
 import numpy as np
 from tqdm import tqdm
+
+from sklearn.model_selection import train_test_split
 
 from structured_segmentation.layers.structured.kernel import Kernel
 from structured_segmentation.learner.internal_classifier import InternalClassifier
@@ -34,7 +37,9 @@ class StructuredClassifierLayer:
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
-        self.max_num_samples = 500000
+        self.imbalance_threshold = 0.01
+        self.imbalance_downsample = 0.9
+        self.downsample_threshold = 0.4
 
         self.opt = {
             "name": self.name,
@@ -44,6 +49,7 @@ class StructuredClassifierLayer:
             "down_scale": down_scale,
             "strides": strides,
         }
+        self.is_fitted = False
 
         self.down_scale = down_scale
         if clf_options is None:
@@ -121,35 +127,59 @@ class StructuredClassifierLayer:
         x = None
         y = None
         for t in tqdm(tag_set):
-            if np.random.randint(100) > 100 * reduction_factor:
-                x_img = t.load_x()
-                x_img, _ = self.get_features(x_img)
-                h_img, w_img = x_img.shape[:2]
-                y_img = t.load_y([h_img, w_img])
+            if np.random.randint(100) < 100 * reduction_factor:
+                continue
+            x_img = t.load_x()
+            x_img, _ = self.get_features(x_img)
+            h_img, w_img = x_img.shape[:2]
+            y_img = t.load_y([h_img, w_img])
 
-                x_img = np.reshape(x_img, (h_img * w_img, -1))
-                y_img = np.reshape(y_img, h_img * w_img)
+            x_img = np.reshape(x_img, (h_img * w_img, -1))
+            y_img = np.reshape(y_img, h_img * w_img)
 
-                # Remove unlabeled samples
-                x_img = x_img[y_img != -1, :]
-                y_img = y_img[y_img != -1]
+            # Remove unlabeled samples
+            x_img = x_img[y_img != -1, :]
+            y_img = y_img[y_img != -1]
 
-                n_samples_train, n_features = x_img.shape
-                num_allowed_data = self.max_num_samples / len(tag_set)
-                if n_samples_train > num_allowed_data:
-                    data_reduction_factor = int(n_samples_train / num_allowed_data)
-                else:
-                    data_reduction_factor = None
+            if len(y_img) == 0:
+                continue
 
-                if data_reduction_factor is not None:
-                    x_img, y_img = x_img[::data_reduction_factor, :], y_img[::data_reduction_factor]
+            n_samples_in_sample = x_img.shape[0]
 
-                if x is None:
-                    x = x_img
-                    y = y_img
-                else:
-                    x = np.append(x, x_img, axis=0)
-                    y = np.append(y, y_img, axis=0)
+            u, c = np.unique(y_img, return_counts=True)
+            p = c / n_samples_in_sample
+            if len(u) == 1:
+                if reduction_factor > 0 and np.min(c) > 16:
+                    x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor)
+            elif np.min(p) < self.imbalance_threshold:
+                logging.info("Strong Imbalance is detected. DownSample Large Classes...")
+                x_img_select, y_img_select = [], []
+                for cls_id, num_cls, percentage_cls in zip(u, c, p):
+                    x_img_c, y_img_c = x_img[y_img == cls_id, :], y_img[y_img == cls_id]
+                    if percentage_cls > self.downsample_threshold and num_cls > 16:
+                        x_img_c, _, y_img_c, _ = train_test_split(x_img_c, y_img_c, test_size=self.imbalance_downsample)
+                    x_img_select.append(x_img_c)
+                    y_img_select.append(y_img_c)
+
+                x_img, y_img = np.concatenate(x_img_select, axis=0), np.concatenate(y_img_select, axis=0)
+            elif reduction_factor > 0 and np.min(c) > 16:
+                x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor, stratify=y_img)
+
+            # num_allowed_data = self.max_num_samples / len(tag_set)
+            # if n_samples_train > num_allowed_data:
+            #     data_reduction_factor = int(n_samples_train / num_allowed_data)
+            # else:
+            #     data_reduction_factor = None
+
+            # if data_reduction_factor is not None:
+            #     x_img, y_img = x_img[::data_reduction_factor, :], y_img[::data_reduction_factor]
+
+            if x is None:
+                x = x_img
+                y = y_img
+            else:
+                x = np.append(x, x_img, axis=0)
+                y = np.append(y, y_img, axis=0)
         x = x.astype(np.float32)
         x[np.isnan(x)] = 0
         x[np.isinf(x)] = 0
@@ -159,16 +189,17 @@ class StructuredClassifierLayer:
         for p in self.previous:
             p.fit(train_tags, validation_tags)
 
-        # if self.clf.is_fitted():
-        #     return None
+        if self.is_fitted:
+            return None
 
-        print("[INFO] Collecting Features for Stage: {}".format(self))
+        print("[INFO] Computing Features: {}".format(self))
         print("[INFO] {} Training Samples (DataReduction {})".format(
             len(train_tags),
             self.data_reduction
         ))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
         self.clf.fit(x_train, y_train)
+        self.is_fitted = True
         if validation_tags is None:
             return 0
         else:

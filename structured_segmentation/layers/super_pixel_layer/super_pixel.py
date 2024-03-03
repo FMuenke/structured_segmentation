@@ -197,6 +197,7 @@ def map_segments(segments, y_pred):
 
 def get_y_for_segments(y_img, segments):
     y = []
+    # assert -1 not in y_img, "Does not support unlabeled data"
     segments = resize(segments, width=y_img.shape[1], height=y_img.shape[0])
     for u in np.unique(segments):
         counts = np.bincount(y_img[segments == u].astype(np.int))

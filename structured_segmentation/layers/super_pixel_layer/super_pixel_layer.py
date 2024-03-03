@@ -6,7 +6,7 @@ from structured_segmentation.layers.super_pixel_layer import super_pixel
 from structured_segmentation.learner.internal_classifier import InternalClassifier
 from structured_segmentation.layers.layer_operations import resize
 from structured_segmentation.layers.input_layer.input_layer import resize_image
-from structured_segmentation.utils.utils import check_n_make_dir, save_dict
+from structured_segmentation.utils.utils import check_n_make_dir, save_dict, load_dict
 
 
 class SuperPixelLayer:
@@ -32,6 +32,7 @@ class SuperPixelLayer:
         assert 0 <= data_reduction < 1, "DataReduction should be inbetween [0, 1)"
 
         self.index = 0
+        self.is_fitted = False
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
@@ -137,7 +138,7 @@ class SuperPixelLayer:
 
                 # Remove unlabeled samples
                 x_img = x_img[y_img != -1, :]
-                y_img = x_img[y_img != -1]
+                y_img = y_img[y_img != -1]
 
                 if x is None:
                     x = x_img
@@ -151,13 +152,14 @@ class SuperPixelLayer:
         for p in self.previous:
             p.fit(train_tags, validation_tags)
 
-        if self.clf.is_fitted():
+        if self.is_fitted:
             return None
 
         print("[INFO] Collecting Features for Stage: {}. {} Training Samples (DataReduction {})".format(
             self, len(train_tags), self.data_reduction))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
         self.clf.fit(x_train, y_train)
+        self.is_fitted = True
         if validation_tags is None:
             return 0
         else:
@@ -175,6 +177,7 @@ class SuperPixelLayer:
 
     def load(self, model_path):
         self.clf.load(model_path)
+        self.opt = load_dict(os.path.join(model_path, "opt.json"))
 
     def set_index(self, i):
         self.index = i

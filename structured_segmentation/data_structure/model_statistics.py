@@ -17,6 +17,8 @@ class ModelStatistics:
         self.color_coding = color_coding
 
         for cls in color_coding:
+            if cls == "unlabeled":
+                continue
             self.raw_statistics[cls] = {
                 "tp": 0,
                 "fn": 0,
@@ -50,7 +52,7 @@ class ModelStatistics:
                     self.raw_statistics[cls]["tp"] + self.raw_statistics[cls]["fp"] + 1e-5)
             f_1 = 2 * (pre * rec) / (pre + rec + 1e-5)
             iou = self.raw_statistics[cls]["tp"] / (
-                    self.raw_statistics[cls]["tp"] + self.raw_statistics[cls]["fn"] + self.raw_statistics[cls]["fp"])
+                    self.raw_statistics[cls]["tp"] + self.raw_statistics[cls]["fn"] + self.raw_statistics[cls]["fp"] + 1e-5)
             self.result[cls] = {
                 "rec": rec,
                 "pre": pre,

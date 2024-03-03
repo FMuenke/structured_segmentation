@@ -28,7 +28,6 @@ class RandomEnsemble(Model):
                  max_stride_sum=1,
                  max_down_scale=6,
                  features_to_use="gray-color",
-                 tree_type="kernel",
                  norm_input=None,
                  clf="mlp_x",
                  kernel_shape="ellipse",
@@ -43,7 +42,6 @@ class RandomEnsemble(Model):
         self.norm_input = norm_input
         self.kernel_shape = kernel_shape
         self.data_reduction = data_reduction
-        self.tree_type = tree_type
 
         self.clf = clf
         self.clf_options = clf_options

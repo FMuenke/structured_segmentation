@@ -4,7 +4,7 @@ import numpy as np
 from time import time
 
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, AdaBoostClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import MiniBatchKMeans
@@ -56,6 +56,8 @@ def classifier_initialize(opt):
         return init_lr(opt["type"])
     elif "mlp" in opt["type"]:
         return init_mlp(opt["type"])
+    elif "ada" == opt["type"]:
+        return AdaBoostClassifier()
     elif opt["type"] in ["neighbours", "knn"]:
         return KNeighborsClassifier(n_neighbors=opt["n_neighbours"])
     elif opt["type"] == "extra_tree":
@@ -78,8 +80,8 @@ class InternalClassifier:
         return "CLF: {}".format(self.opt["type"])
 
     def fit(self, x_train, y_train):
-        print("[INFO] Fitting the {} to the training set (N Features: {})".format(
-            self.opt["type"], x_train.shape[1]))
+        print("[INFO] Fitting - {} (Samples: {} / Features: {})".format(
+            self.opt["type"], x_train.shape[0], x_train.shape[1]))
         t0 = time()
         self.classifier.fit(x_train, y_train)
         print("[INFO] done in %0.3fs" % (time() - t0))
