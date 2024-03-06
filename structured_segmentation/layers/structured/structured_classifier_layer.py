@@ -107,7 +107,7 @@ class StructuredClassifierLayer:
     def get_features(self, x_input):
         x = []
         for p in self.previous:
-            x_p = p.inference(x_input, interpolation="linear")
+            x_p = p.inference(x_input)
             if len(x_p.shape) < 3:
                 x_p = np.expand_dims(x_p, axis=2)
             x.append(x_p)
@@ -164,15 +164,6 @@ class StructuredClassifierLayer:
                 x_img, y_img = np.concatenate(x_img_select, axis=0), np.concatenate(y_img_select, axis=0)
             elif reduction_factor > 0 and np.min(c) > 16:
                 x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor, stratify=y_img)
-
-            # num_allowed_data = self.max_num_samples / len(tag_set)
-            # if n_samples_train > num_allowed_data:
-            #     data_reduction_factor = int(n_samples_train / num_allowed_data)
-            # else:
-            #     data_reduction_factor = None
-
-            # if data_reduction_factor is not None:
-            #     x_img, y_img = x_img[::data_reduction_factor, :], y_img[::data_reduction_factor]
 
             if x is None:
                 x = x_img

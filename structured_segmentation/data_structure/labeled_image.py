@@ -8,6 +8,7 @@ import os
 import numpy as np
 from PIL import Image
 import cv2
+import logging
 from structured_segmentation.data_structure.image_container import ImageContainer
 
 
@@ -33,7 +34,7 @@ class LabeledImage:
     image_extensions = [".jpg", ".JPG", ".png", "PNG", ".jpeg", ".ppm", ".tif"]
     label_extensions = [".png", ".tif", "_label.tif",
                         "_label.tiff", ".tiff", ".ppm", "_label.png", "_segmentation.png",
-                        "_label_ground-truth.png", "GT.png"
+                        "_label_ground-truth.png", "GT.png", "_lab.png"
                         ]
 
     def __init__(self, base_path, data_id, color_coding, augmentations=None):
@@ -127,7 +128,7 @@ class LabeledImage:
         with the class id on each pixel position
         """
         if self.label_file is None:
-            print("WARNING: Label File Does not Exists...")
+            logging.warning("WARNING: Label File Does not Exists...")
             return np.zeros((label_size[0], label_size[1]))
 
         y_img = np.zeros((label_size[0], label_size[1]))

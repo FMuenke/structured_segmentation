@@ -16,14 +16,13 @@ class Ensemble(Model):
                  initial_image_down_scale=None,
                  output_aggregation_options="boosting",
                  kernel=5,
-                 strides=1,
+                 strides=2,
                  max_down_scale=3,
                  features_to_use="gray-color",
                  tree_type="kernel",
                  norm_input=None,
                  clf="extra_tree",
                  kernel_shape="ellipse",
-                 clf_options=None,
                  data_reduction=0.20):
         self.kernel = kernel
         self.strides = strides
@@ -35,7 +34,6 @@ class Ensemble(Model):
         self.tree_type = tree_type
 
         self.clf = clf
-        self.clf_options = clf_options
         super(Ensemble, self).__init__()
 
         self.model = self.build(
@@ -68,9 +66,8 @@ class Ensemble(Model):
                 kernel=(self.kernel, self.kernel),
                 strides=(self.strides, self.strides),
                 kernel_shape=self.kernel_shape,
-                down_scale=scale*2,
+                down_scale=scale,
                 clf=self.clf,
-                clf_options=self.clf_options,
                 data_reduction=self.data_reduction
             )
             trees.append(tree)
@@ -84,5 +81,8 @@ class Ensemble(Model):
                 kernel=(self.kernel, self.kernel),
                 name="boosting",
                 clf=self.clf,
-                clf_options=self.clf_options)
+                data_reduction=self.data_reduction,
+            )
+        else:
+            raise Exception("Unknown Option : {}".format(output_option))
         return Graph(layer_stack=trees)

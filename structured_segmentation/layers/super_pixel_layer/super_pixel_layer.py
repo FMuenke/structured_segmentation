@@ -1,6 +1,9 @@
 import os
 import numpy as np
 from tqdm import tqdm
+import logging
+
+from sklearn.model_selection import train_test_split
 
 from structured_segmentation.layers.super_pixel_layer import super_pixel
 from structured_segmentation.learner.internal_classifier import InternalClassifier
@@ -33,6 +36,9 @@ class SuperPixelLayer:
 
         self.index = 0
         self.is_fitted = False
+        self.imbalance_threshold = 0.01
+        self.imbalance_downsample = 0.9
+        self.downsample_threshold = 0.4
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
@@ -125,27 +131,52 @@ class SuperPixelLayer:
         x = None
         y = None
         for t in tqdm(tag_set):
-            if np.random.randint(100) > 100 * reduction_factor:
-                x_img = t.load_x()
-                segments = super_pixel.generate_segments(x_img, self.opt)
-                x_img, _ = self.get_features(x_img)
-                h_img, w_img = x_img.shape[:2]
-                x_img = super_pixel.get_features_for_segments(x_img, segments, self.opt["feature_aggregation"])
-                y_img = t.load_y([h_img, w_img])
-                y_img = super_pixel.get_y_for_segments(y_img, segments)
-                assert x_img.shape[0] == y_img.shape[0], "Not equal dimensions. [{} - {}]".format(
-                    x_img.shape, y_img.shape)
+            if np.random.randint(100) < 100 * reduction_factor:
+                continue
+            x_img = t.load_x()
+            segments = super_pixel.generate_segments(x_img, self.opt)
+            x_img, _ = self.get_features(x_img)
+            h_img, w_img = x_img.shape[:2]
+            x_img = super_pixel.get_features_for_segments(x_img, segments, self.opt["feature_aggregation"])
+            y_img = t.load_y([h_img, w_img])
+            y_img = super_pixel.get_y_for_segments(y_img, segments)
+            assert x_img.shape[0] == y_img.shape[0], "Not equal dimensions. [{} - {}]".format(
+                x_img.shape, y_img.shape)
 
-                # Remove unlabeled samples
-                x_img = x_img[y_img != -1, :]
-                y_img = y_img[y_img != -1]
+            # Remove unlabeled samples
+            x_img = x_img[y_img != -1, :]
+            y_img = y_img[y_img != -1]
 
-                if x is None:
-                    x = x_img
-                    y = y_img
-                else:
-                    x = np.append(x, x_img, axis=0)
-                    y = np.append(y, y_img, axis=0)
+            if len(y_img) == 0:
+                continue
+
+            n_samples_in_sample = x_img.shape[0]
+
+            u, c = np.unique(y_img, return_counts=True)
+            p = c / n_samples_in_sample
+            if len(u) == 1:
+                if reduction_factor > 0 and np.min(c) > 16:
+                    x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor)
+            elif np.min(p) < self.imbalance_threshold:
+                logging.info("Strong Imbalance is detected. DownSample Large Classes...")
+                x_img_select, y_img_select = [], []
+                for cls_id, num_cls, percentage_cls in zip(u, c, p):
+                    x_img_c, y_img_c = x_img[y_img == cls_id, :], y_img[y_img == cls_id]
+                    if percentage_cls > self.downsample_threshold and num_cls > 16:
+                        x_img_c, _, y_img_c, _ = train_test_split(x_img_c, y_img_c, test_size=self.imbalance_downsample)
+                    x_img_select.append(x_img_c)
+                    y_img_select.append(y_img_c)
+
+                x_img, y_img = np.concatenate(x_img_select, axis=0), np.concatenate(y_img_select, axis=0)
+            elif reduction_factor > 0 and np.min(c) > 16:
+                x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor, stratify=y_img)
+
+            if x is None:
+                x = x_img
+                y = y_img
+            else:
+                x = np.append(x, x_img, axis=0)
+                y = np.append(y, y_img, axis=0)
         return x, y
 
     def fit(self, train_tags, validation_tags):
