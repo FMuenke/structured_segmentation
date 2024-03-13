@@ -7,6 +7,7 @@ from structured_segmentation.utils.utils import check_n_make_dir, load_dict
 from structured_segmentation.utils.segmention_mask import convert_cls_to_color, side_by_side
 
 from structured_segmentation.layers import StructuredClassifierLayer
+from structured_segmentation.layers import StructuredEncoderLayer
 from structured_segmentation.layers import InputLayer
 from structured_segmentation.layers import NormalizationLayer
 from structured_segmentation.layers import BottleNeckLayer
@@ -49,9 +50,10 @@ class Graph:
             if plot_results:
                 tag.write_result(res_folder, color_map)
                 tag.visualize_result(vis_folder, color_map)
+                gtr_map = tag.load_y_as_color_map(color_map.shape)
                 cv2.imwrite(
                     os.path.join(sbs_folder, "{}.png".format(tag.id)),
-                    side_by_side(image, color_map)
+                    side_by_side(image, gtr_map, color_map)
                 )
 
         with open(os.path.join(results_folder, "time_prediction.txt"), "w") as f:
@@ -89,6 +91,20 @@ class Graph:
         if opt["layer_type"] == "PIXEL_LAYER":
             prev_layer = self.load_previous_layers(model_folder)
             layer = StructuredClassifierLayer(
+                prev_layer,
+                opt["name"],
+                opt["kernel"],
+                opt["strides"],
+                opt["kernel_shape"],
+                opt["down_scale"]
+            )
+            layer.set_index(int(opt["index"]))
+            layer.load(model_folder)
+            return layer
+        
+        if opt["layer_type"] == "ENCODER_LAYER":
+            prev_layer = self.load_previous_layers(model_folder)
+            layer = StructuredEncoderLayer(
                 prev_layer,
                 opt["name"],
                 opt["kernel"],

@@ -55,7 +55,7 @@ class Kernel:
     def build_look_ups_rot(self, base_kernel, num_orientations=8):
         kernels = []
         for angle in np.linspace(0, 180, num_orientations, endpoint=False):
-            rotated_kernel = rotate(base_kernel, angle, reshape=False)
+            rotated_kernel = rotate(base_kernel.astype(np.float32), angle, reshape=False)
             rotated_kernel = np.expand_dims(rotated_kernel, axis=2) / np.sum(rotated_kernel)
             kernels.append(rotated_kernel)
         return kernels

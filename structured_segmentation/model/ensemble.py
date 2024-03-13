@@ -1,4 +1,5 @@
 from structured_segmentation.layers import StructuredClassifierLayer
+from structured_segmentation.layers import StructuredEncoderLayer
 from structured_segmentation.layers import InputLayer
 from structured_segmentation.layers import VotingLayer
 from structured_segmentation.layers import NormalizationLayer
@@ -44,33 +45,33 @@ class Ensemble(Model):
         )
 
     def build(self, width=None, height=None, initial_down_scale=None, output_option="voting"):
-        trees = []
-        for scale in range(self.max_down_scale):
+
+        trees = []    
+        for scale in range(0, self.max_down_scale):
             tree = InputLayer(
-                name="input_tree_{}".format(scale),
+                name=f"INPUT_{scale}",
                 features_to_use=self.features_to_use,
                 width=width, height=height,
                 initial_down_scale=initial_down_scale
             )
-
             if self.norm_input is not None:
                 tree = NormalizationLayer(
                     INPUTS=tree,
-                    name="norm_tree_{}".format(scale),
+                    name=f"norm_tree_{scale}",
                     norm_option=self.norm_input
                 )
-
-            tree = StructuredClassifierLayer(
+            tree = StructuredEncoderLayer(
                 INPUTS=tree,
-                name="tree_{}".format(scale),
+                name=f"tree_{scale}",
                 kernel=(self.kernel, self.kernel),
                 strides=(self.strides, self.strides),
                 kernel_shape=self.kernel_shape,
                 down_scale=scale,
-                clf=self.clf,
+                enc=self.clf,
                 data_reduction=self.data_reduction
             )
             trees.append(tree)
+
 
         if output_option == "voting":
             trees = VotingLayer(INPUTS=trees, name="voting")
@@ -78,9 +79,9 @@ class Ensemble(Model):
             bottle_neck = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
             trees = StructuredClassifierLayer(
                 INPUTS=bottle_neck,
-                kernel=(self.kernel, self.kernel),
+                kernel=(1, 1),
                 name="boosting",
-                clf=self.clf,
+                clf="hgb",
                 data_reduction=self.data_reduction,
             )
         else:

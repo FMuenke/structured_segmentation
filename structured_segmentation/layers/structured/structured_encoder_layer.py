@@ -7,13 +7,13 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 from structured_segmentation.layers.structured.kernel import Kernel
-from structured_segmentation.learner.internal_classifier import InternalClassifier
+from structured_segmentation.learner.internal_encoder import InternalEncoder
 from structured_segmentation.layers.layer_operations import resize
 from structured_segmentation.utils.utils import check_n_make_dir, save_dict, load_dict
 
 
-class StructuredClassifierLayer:
-    layer_type = "PIXEL_LAYER"
+class StructuredEncoderLayer:
+    layer_type = "ENCODER_LAYER"
 
     def __init__(self,
                  INPUTS,
@@ -22,8 +22,7 @@ class StructuredClassifierLayer:
                  strides=(1, 1),
                  kernel_shape="square",
                  down_scale=0,
-                 clf="rf",
-                 clf_options=None,
+                 enc="pca",
                  data_reduction=0):
 
         self.name = str(name)
@@ -37,9 +36,7 @@ class StructuredClassifierLayer:
 
         for i, p in enumerate(self.previous):
             p.set_index(i)
-        self.imbalance_threshold = 0.01
-        self.resample_factor = 100
-
+        
         self.opt = {
             "name": self.name,
             "layer_type": self.layer_type,
@@ -51,12 +48,8 @@ class StructuredClassifierLayer:
         self.is_fitted = False
 
         self.down_scale = down_scale
-        if clf_options is None:
-            clf_options = {"type": clf}
-        else:
-            clf_options["type"] = clf
-        self.clf = InternalClassifier(opt=clf_options)
-        self.clf.new()
+        self.enc = InternalEncoder(opt={"type": enc})
+        self.enc.new()
         self.data_reduction = data_reduction
 
         self.kernel = Kernel(kernel, strides, kernel_shape)
@@ -65,7 +58,7 @@ class StructuredClassifierLayer:
         return "{} - {} - {} - DownScale: {} - K: {}".format(
             self.layer_type,
             self.name,
-            self.clf,
+            self.enc,
             self.down_scale,
             self.opt["kernel"]
         )
@@ -75,7 +68,7 @@ class StructuredClassifierLayer:
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
         x_img = np.reshape(x_img, (x_height * x_width, -1))
-        probs = self.clf.predict_proba(x_img)
+        probs = self.enc.predict_proba(x_img)
         n_classes = probs.shape[1]
         y_img = []
         for i in range(n_classes):
@@ -98,8 +91,8 @@ class StructuredClassifierLayer:
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
         x_img = np.reshape(x_img, (x_height * x_width, -1))
-        y_img = self.clf.predict(x_img)
-        y_img = np.reshape(y_img, (x_height, x_width))
+        y_img = self.enc.transform(x_img)
+        y_img = np.reshape(y_img, (x_height, x_width, -1))
         y_img = resize(y_img, width=o_width, height=o_height, interpolation="nearest")
         return y_img
 
@@ -136,35 +129,7 @@ class StructuredClassifierLayer:
             x_img = np.reshape(x_img, (h_img * w_img, -1))
             y_img = np.reshape(y_img, h_img * w_img)
 
-            # Remove unlabeled samples
-            x_img = x_img[y_img != -1, :]
-            y_img = y_img[y_img != -1]
-
-            if len(y_img) == 0:
-                continue
-
-            n_samples_in_sample = x_img.shape[0]
-
-            u, c = np.unique(y_img, return_counts=True)
-            p = c / n_samples_in_sample
-            minority_amount = np.min(c)
-            if len(u) == 1:
-                if reduction_factor > 0 and minority_amount > 16:
-                    x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor)
-            elif np.min(p) < self.imbalance_threshold:
-                logging.info("Strong Imbalance is detected. DownSample Large Classes...")
-                x_img_select, y_img_select = [], []
-                for cls_id, num_cls in zip(u, c):
-                    x_img_c, y_img_c = x_img[y_img == cls_id, :], y_img[y_img == cls_id]
-                    if num_cls > self.resample_factor * minority_amount:
-                        x_img_c, _, y_img_c, _ = train_test_split(
-                            x_img_c, y_img_c, train_size=self.resample_factor * minority_amount)
-                    x_img_select.append(x_img_c)
-                    y_img_select.append(y_img_c)
-
-                x_img, y_img = np.concatenate(x_img_select, axis=0), np.concatenate(y_img_select, axis=0)
-            elif reduction_factor > 0 and minority_amount > 16:
-                x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor, stratify=y_img)
+            x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor)
 
             if x is None:
                 x = x_img
@@ -190,13 +155,13 @@ class StructuredClassifierLayer:
             self.data_reduction
         ))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)
-        self.clf.fit(x_train, y_train)
+        self.enc.fit(x_train, y_train)
         self.is_fitted = True
         if validation_tags is None:
             return 0
         else:
             x_val, y_val = self.get_x_y(validation_tags)
-            return self.clf.evaluate(x_val, y_val)
+            return self.enc.evaluate(x_val, y_val)
 
     def save(self, model_path):
         model_path = os.path.join(
@@ -204,7 +169,7 @@ class StructuredClassifierLayer:
             self.layer_type + "-" + self.name
         )
         check_n_make_dir(model_path)
-        self.clf.save(model_path)
+        self.enc.save(model_path)
         self.opt["index"] = self.index
         save_dict(self.opt, os.path.join(model_path, "opt.json"))
         for p in self.previous:
@@ -212,7 +177,7 @@ class StructuredClassifierLayer:
 
     def load(self, model_path):
         self.opt = load_dict(os.path.join(model_path, "opt.json"))
-        self.clf.load(model_path)
+        self.enc.load(model_path)
 
     def set_index(self, i):
         self.index = i

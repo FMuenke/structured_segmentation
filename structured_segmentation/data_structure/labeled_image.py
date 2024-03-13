@@ -158,24 +158,10 @@ class LabeledImage:
         im_id = os.path.basename(self.image_file)
         color_map = np.copy(color_map)
         height, width = color_map.shape[:2]
-        label = self.load_y_as_color_map((height, width))
-        if "unlabeled" in self.color_coding:
-            col_0 = np.zeros((height, width))
-            col_1 = np.zeros((height, width))
-            col_2 = np.zeros((height, width))
-
-            col_0[label[:, :, 0] == self.color_coding["unlabeled"][1][2]] = 1
-            col_1[label[:, :, 1] == self.color_coding["unlabeled"][1][1]] = 1
-            col_2[label[:, :, 2] == self.color_coding["unlabeled"][1][0]] = 1
-            col = col_0 + col_1 + col_2
-            index_y, index_x = np.where(col == 3)
-            color_map[index_y, index_x, :] = [
-                self.color_coding["unlabeled"][1][2],
-                self.color_coding["unlabeled"][1][1],
-                self.color_coding["unlabeled"][1][0]
-            ]
+        img = self.load_x()
+        img = cv2.resize(img, (width, height))
         border = 255 * np.ones((height, 10, 3))
-        result = np.concatenate([label, border, color_map], axis=1)
+        result = np.concatenate([img, border, color_map], axis=1)
         res_file = os.path.join(res_path, im_id[:-4] + ".png")
         cv2.imwrite(res_file, result)
 

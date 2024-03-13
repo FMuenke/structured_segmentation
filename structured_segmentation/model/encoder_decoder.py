@@ -22,11 +22,10 @@ class EncoderDecoder(Model):
                  kernel_size=5,
                  stride_size=2,
                  features_to_use="gray-color",
-                 norm_input=None,
+                 norm_input="min_max_scaling",
                  coder_type="kernel",
                  kernel_shape="ellipse",
-                 clf="extra_tree",
-                 clf_options=None,
+                 clf="hgb",
                  data_reduction=0.66):
         self.depth = depth
         self.kernel_size = kernel_size
@@ -37,7 +36,6 @@ class EncoderDecoder(Model):
         self.kernel_shape = kernel_shape
 
         self.clf = clf
-        self.clf_options = clf_options
         self.data_reduction = data_reduction
         super(EncoderDecoder, self).__init__()
         self.model = self.build(
@@ -70,7 +68,7 @@ class EncoderDecoder(Model):
                 strides=(self.stride_size, self.stride_size),
                 kernel_shape=self.kernel_shape,
                 down_scale=(d + 1),
-                clf=self.clf, clf_options=self.clf_options,
+                clf=self.clf,
                 data_reduction=self.data_reduction
             )
 
@@ -82,7 +80,8 @@ class EncoderDecoder(Model):
                 strides=(self.stride_size, self.stride_size),
                 kernel_shape=self.kernel_shape,
                 down_scale=(self.depth - d - 1),
-                clf=self.clf, clf_options=self.clf_options,
+                clf=self.clf,
                 data_reduction=self.data_reduction
             )
+        
         return Graph(layer_stack=x_layer)

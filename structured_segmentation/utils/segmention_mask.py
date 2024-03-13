@@ -19,7 +19,8 @@ def convert_cls_to_color(cls_map, color_coding, unsupervised=False):
     return color_map
 
 
-def side_by_side(img, color_map):
+def side_by_side(img, gtr_map, color_map):
     color_map = cv2.resize(color_map, (img.shape[1], img.shape[0]))
+    gtr_map = cv2.resize(gtr_map, (img.shape[1], img.shape[0]))
     border = np.ones((img.shape[0], 10, 3)) * 255
-    return np.concatenate([img, border, color_map], axis=1)
+    return np.concatenate([img, border, gtr_map, border, color_map], axis=1)
