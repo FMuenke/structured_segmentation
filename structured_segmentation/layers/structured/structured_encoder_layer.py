@@ -129,7 +129,8 @@ class StructuredEncoderLayer:
             x_img = np.reshape(x_img, (h_img * w_img, -1))
             y_img = np.reshape(y_img, h_img * w_img)
 
-            x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor)
+            if reduction_factor > 0:
+                x_img, _, y_img, _ = train_test_split(x_img, y_img, test_size=reduction_factor)
 
             if x is None:
                 x = x_img

@@ -15,16 +15,17 @@ class Ensemble(Model):
                  image_width=None,
                  image_height=None,
                  initial_image_down_scale=None,
-                 output_aggregation_options="boosting",
                  kernel=5,
                  strides=2,
                  max_down_scale=3,
                  features_to_use="gray-color",
                  tree_type="kernel",
                  norm_input=None,
+                 enc="pca_8",
                  clf="extra_tree",
                  kernel_shape="ellipse",
                  data_reduction=0.20):
+        
         self.kernel = kernel
         self.strides = strides
         self.max_down_scale = max_down_scale
@@ -34,17 +35,17 @@ class Ensemble(Model):
         self.data_reduction = data_reduction
         self.tree_type = tree_type
 
+        self.enc = enc
         self.clf = clf
         super(Ensemble, self).__init__()
 
         self.model = self.build(
             image_width,
             image_height,
-            initial_image_down_scale,
-            output_aggregation_options
+            initial_image_down_scale
         )
 
-    def build(self, width=None, height=None, initial_down_scale=None, output_option="voting"):
+    def build(self, width=None, height=None, initial_down_scale=None):
 
         trees = []    
         for scale in range(0, self.max_down_scale):
@@ -67,23 +68,18 @@ class Ensemble(Model):
                 strides=(self.strides, self.strides),
                 kernel_shape=self.kernel_shape,
                 down_scale=scale,
-                enc=self.clf,
+                enc=self.enc,
                 data_reduction=self.data_reduction
             )
             trees.append(tree)
 
 
-        if output_option == "voting":
-            trees = VotingLayer(INPUTS=trees, name="voting")
-        elif output_option == "boosting":
-            bottle_neck = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
-            trees = StructuredClassifierLayer(
-                INPUTS=bottle_neck,
-                kernel=(1, 1),
-                name="boosting",
-                clf="hgb",
-                data_reduction=self.data_reduction,
-            )
-        else:
-            raise Exception("Unknown Option : {}".format(output_option))
+        bottle_neck = BottleNeckLayer(INPUTS=trees, name="cls_preparation")
+        trees = StructuredClassifierLayer(
+            INPUTS=bottle_neck,
+            kernel=(1, 1),
+            name="boosting",
+            clf=self.clf,
+            data_reduction=self.data_reduction,
+        )
         return Graph(layer_stack=trees)

@@ -30,9 +30,17 @@ def encoder_initialize(opt):
         return PCA(n_components=8)
     elif opt["type"] == "pca_16":
         return PCA(n_components=16)
-    elif opt["type"] == "iso":
+    elif opt["type"] == "iso_4":
+        return Isomap(n_components=4, n_jobs=-1)
+    elif opt["type"] == "iso_8":
+        return Isomap(n_components=8, n_jobs=-1)
+    elif opt["type"] == "iso_16":
         return Isomap(n_components=16, n_jobs=-1)
-    elif opt["type"] == "locally_linear":
+    elif opt["type"] == "locally_linear_4":
+        return LocallyLinearEmbedding(n_components=4, n_jobs=-1)
+    elif opt["type"] == "locally_linear_8":
+        return LocallyLinearEmbedding(n_components=8, n_jobs=-1)
+    elif opt["type"] == "locally_linear_16":
         return LocallyLinearEmbedding(n_components=16, n_jobs=-1)
     elif opt["type"] == "origami":
         return Origami()
@@ -48,13 +56,13 @@ class InternalEncoder(InternalClassifier):
             return "ENC: {}".format(self.opt["type"])
 
     def predict_proba(self, x):
-        if hasattr(self.classifier, "predict_proba"):
-            prob_pos = self.classifier.predict_proba(x)
-        elif hasattr(self.classifier, "transform"):
+        if hasattr(self.model, "predict_proba"):
+            prob_pos = self.model.predict_proba(x)
+        elif hasattr(self.model, "transform"):
             x = x.astype(np.float32)
-            prob_pos = self.classifier.transform(x)
+            prob_pos = self.model.transform(x)
         else:  # use decision function
-            prob_pos = self.classifier.predict(x)
+            prob_pos = self.model.predict(x)
             prob_pos = np.expand_dims(prob_pos, axis=1)
         return prob_pos
     
