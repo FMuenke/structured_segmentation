@@ -156,9 +156,6 @@ class ObjectSelectionLayer:
         for p in self.previous:
             p.fit(train_tags, validation_tags)
 
-        if self.clf.is_fitted():
-            return None
-
         print("Collecting Features for Stage: {}".format(self))
         print("Data is reduced by factor: {}".format(self.data_reduction))
         x_train, y_train = self.get_x_y(train_tags, reduction_factor=self.data_reduction)

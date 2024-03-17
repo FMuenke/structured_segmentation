@@ -5,6 +5,7 @@ This modul contains all code to build the encoder decoder model
 from structured_segmentation.layers import InputLayer
 from structured_segmentation.layers import NormalizationLayer
 from structured_segmentation.layers import StructuredClassifierLayer
+from structured_segmentation.layers import ObjectSelectionLayer
 from structured_segmentation.model.model import Model
 
 from structured_segmentation.model.graph import Graph

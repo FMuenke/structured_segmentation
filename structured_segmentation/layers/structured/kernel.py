@@ -70,14 +70,6 @@ class Kernel:
             self.stride_y
         )
     
-    def normalize_kernel(self, tensor):
-        # Compute the L2 norm along the last dimension
-        norms = np.linalg.norm(tensor, axis=-1, keepdims=True)
-        norms[norms == 0] = 1e-6
-        # Normalize the vectors
-        normalized_vectors = tensor / norms
-        return normalized_vectors
-    
     def rotate_largest_entry_to_top(self, look_up_tensors):
         # Find the index of the largest entry along the last dimension
         tensor = look_up_tensors[0]
@@ -91,13 +83,10 @@ class Kernel:
     def get_kernel(self, tensor):
         if len(tensor.shape) < 3:
             tensor = np.expand_dims(tensor, axis=2)
-        num_f = tensor.shape[2]
         look_up_tensors = []
-        for f_n in range(num_f):
+        for f_n in range(tensor.shape[2]):
             f_map = [convolve(tensor[:, :, [f_n]], look) for look in self.look_ups]
             f_map = np.concatenate(f_map, axis=2)
-            if "norm" in self.kernel_shape:
-                f_map = self.normalize_kernel(f_map)
             look_up_tensors.append(f_map)
         if "rot" in self.kernel_shape:
                 look_up_tensors = self.rotate_largest_entry_to_top(look_up_tensors)

@@ -95,7 +95,6 @@ class EmbeddingLayer:
             else:
                 x = np.append(x, x_img, axis=0)
         x = x.astype(np.float32)
-        print(x.shape)
         return x
 
     def fit(self, train_tags, validation_tags):
