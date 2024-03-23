@@ -1,7 +1,7 @@
 import numpy as np
+import cv2
 
-from structured_segmentation.data_structure.matrix_container import MatrixContainer
-from structured_segmentation.data_structure.image_container import ImageContainer
+from structured_segmentation.layers.input_layer.features.color_space import convert_to_color_space
 
 
 class LeungMalik:
@@ -17,20 +17,16 @@ class LeungMalik:
     def _build_feature_tensor(self, image):
         feature_maps = []
         for f_kernel_idx in range(self.lm_filters.shape[2]):
-            mat_h = MatrixContainer(image)
-            feature_maps.append(mat_h.apply_convolution(self.lm_filters[:, :, f_kernel_idx]))
+            mat = np.copy(image)
+            mat = mat.astype("float")
+            feature_maps.append(cv2.filter2D(mat, -1, self.lm_filters[:, :, f_kernel_idx]))
         return np.stack(feature_maps, axis=2)
 
     def _compute(self, channels):
-        tensors = []
-        for c in channels:
-            f_tensor = self._build_feature_tensor(c)
-            tensors.append(f_tensor)
-        return tensors
+        return [self._build_feature_tensor(c) for c in channels]
 
     def compute(self, image):
-        img_h = ImageContainer(image)
-        channels = img_h.prepare_image_for_processing(self.color_space)
+        channels = convert_to_color_space(image, self.color_space)
         feature_tensors = self._compute(channels)
         return np.concatenate(feature_tensors, axis=2)
 

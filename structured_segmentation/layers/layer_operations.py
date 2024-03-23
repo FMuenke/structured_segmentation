@@ -2,9 +2,11 @@ import cv2
 import numpy as np
 
 
-def resize(data, width, height, interpolation="nearest"):
+def resize(data, width, height, interpolation="area"):
     if interpolation == "nearest":
         data = cv2.resize(data, (width, height), interpolation=cv2.INTER_NEAREST)
+    if interpolation == "area":
+        data = cv2.resize(data, (width, height), interpolation=cv2.INTER_AREA)
     elif interpolation == "linear":
         data = cv2.resize(data, (width, height), interpolation=cv2.INTER_LINEAR)
     elif interpolation == "cubic":

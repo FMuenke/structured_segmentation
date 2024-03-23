@@ -1,7 +1,7 @@
 import numpy as np
 from skimage import feature
 
-from structured_segmentation.data_structure.image_container import ImageContainer
+from structured_segmentation.layers.input_layer.features.color_space import convert_to_color_space
 
 
 class LocalBinaryPattern:
@@ -27,7 +27,6 @@ class LocalBinaryPattern:
         return lbp_maps
 
     def compute(self, image):
-        img = ImageContainer(image)
-        channels = img.prepare_image_for_processing(self.color_space)
+        channels = convert_to_color_space(image, self.color_space)
         lbp_maps = self._compute(channels)
         return np.concatenate(lbp_maps, axis=2)

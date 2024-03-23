@@ -23,7 +23,7 @@ class EncoderDecoder(Model):
                  kernel_size=5,
                  stride_size=2,
                  features_to_use="gray-color",
-                 norm_input="min_max_scaling",
+                 norm_input=None,
                  coder_type="kernel",
                  kernel_shape="ellipse",
                  clf="hgb",

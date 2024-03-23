@@ -148,8 +148,6 @@ class ObjectSelectionLayer:
                         y = np.append(y, y_p, axis=0)
 
         x = x.astype(np.float32)
-        x[np.isnan(x)] = 0
-        x[np.isinf(x)] = 0
         return x, y
 
     def fit(self, train_tags, validation_tags):

@@ -9,7 +9,6 @@ import numpy as np
 from PIL import Image
 import cv2
 import logging
-from structured_segmentation.data_structure.image_container import ImageContainer
 
 
 def get_file_name(base_path, data_id, extensions):
@@ -230,5 +229,8 @@ class LabeledImage:
         """
         im_id = os.path.basename(self.image_file)
         vis_file = os.path.join(vis_path, im_id)
-        img_cont = ImageContainer(self.load_x())
-        cv2.imwrite(vis_file, img_cont.overlay(color_map))
+        img_cont = self.load_x()
+        height, width = img_cont.shape[:2]
+        color_map = cv2.resize(color_map, (int(width), int(height)), interpolation=cv2.INTER_NEAREST)
+        overlay = cv2.addWeighted(img_cont.astype(np.uint8), 0.5, color_map.astype(np.uint8), 0.5, 0)
+        cv2.imwrite(vis_file, overlay)

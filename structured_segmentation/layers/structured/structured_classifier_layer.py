@@ -8,7 +8,6 @@ from sklearn.model_selection import train_test_split
 
 from structured_segmentation.layers.structured.kernel import Kernel
 from structured_segmentation.learner.internal_classifier import InternalClassifier
-from structured_segmentation.layers.layer_operations import resize
 from structured_segmentation.utils.utils import check_n_make_dir, save_dict, load_dict
 
 
@@ -70,21 +69,18 @@ class StructuredClassifierLayer:
             self.opt["kernel"]
         )
 
-    def inference(self, x_input, interpolation="nearest"):
+    def inference(self, x_input):
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
         x_img = np.reshape(x_img, (x_height * x_width, -1))
         probs = self.clf.predict_proba(x_img)
         n_classes = probs.shape[1]
-        y_img = []
-        for i in range(n_classes):
-            y_i_img = np.reshape(probs[:, i], (x_height, x_width, 1))
-            y_img.append(y_i_img)
+        y_img = [np.reshape(probs[:, i], (x_height, x_width, 1)) for i in range(n_classes) ]
         y_img = np.concatenate(y_img, axis=2)
 
-        x_img_pass = resize(x_pass, width=o_width, height=o_height, interpolation="nearest")
-        y_img = resize(y_img, width=o_width, height=o_height, interpolation=interpolation)
+        x_img_pass = cv2.resize(x_pass, (o_width, o_height), interpolation=cv2.INTER_AREA)
+        y_img = cv2.resize(y_img, (o_width, o_height), interpolation=cv2.INTER_NEAREST)
 
         if len(x_img_pass.shape) < 3:
             x_img_pass = np.expand_dims(x_img_pass, axis=2)
@@ -100,8 +96,7 @@ class StructuredClassifierLayer:
         x_img = np.reshape(x_img, (x_height * x_width, -1))
         y_img = self.clf.predict(x_img)
         y_img = np.reshape(y_img, (x_height, x_width))
-        y_img = resize(y_img, width=o_width, height=o_height, interpolation="nearest")
-        return y_img
+        return cv2.resize(y_img, (o_width, o_height), interpolation=cv2.INTER_NEAREST)
 
     def get_features(self, x_input):
         x = []
@@ -115,7 +110,7 @@ class StructuredClassifierLayer:
         o_height, o_width = x.shape[:2]
         new_height = np.max([int(o_height / 2 ** self.down_scale), 2])
         new_width = np.max([int(o_width / 2 ** self.down_scale), 2])
-        x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
+        x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_AREA)
         x = self.kernel.get_kernel(x)
         x = x.astype(np.float32)
         x[np.isnan(x)] = 0

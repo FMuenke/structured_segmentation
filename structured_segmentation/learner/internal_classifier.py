@@ -6,9 +6,11 @@ import logging
 
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, SGDClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, AdaBoostClassifier, HistGradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
@@ -58,14 +60,13 @@ def classifier_initialize(opt):
         return init_lr(opt["type"])
     elif "mlp" in opt["type"]:
         return init_mlp(opt["type"])
-    elif "ada" == opt["type"]:
-        return AdaBoostClassifier()
-    elif opt["type"] in ["neighbours", "knn"]:
-        return KNeighborsClassifier(n_neighbors=opt["n_neighbours"])
+    elif "lda" in opt["type"]:
+        return LinearDiscriminantAnalysis()
     elif opt["type"] == "nb":
         return GaussianNB()
     elif opt["type"] == "sgd":
-        return SGDClassifier(class_weight="balanced", loss="log_loss", penalty="l1", max_iter=10000, n_jobs=-1)
+        return SGDClassifier(
+            class_weight="balanced", loss="log_loss", penalty="l1", max_iter=10000, n_jobs=-1)
     elif opt["type"] == "hgb":
         return HistGradientBoostingClassifier(max_iter=1000, class_weight="balanced")
     elif opt["type"] == "extra_tree":
@@ -91,6 +92,15 @@ class InternalClassifier:
         print("[INFO] Fitting - {} (Samples: {} / Features: {})".format(
             self.opt["type"], x_train.shape[0], x_train.shape[1]))
         t0 = time()
+
+        # Remove classes with too few samples
+        n_samples = 4
+        unique_labels, label_counts = np.unique(y_train, return_counts=True)
+        labels_to_remove = unique_labels[label_counts < n_samples]
+        indices_to_remove = np.isin(y_train, labels_to_remove)
+        
+        x_train = x_train[~indices_to_remove]
+        y_train = y_train[~indices_to_remove]
         self.model.fit(x_train, y_train)
         print("[INFO] done in %0.3fs" % (time() - t0))
 
@@ -122,7 +132,8 @@ class InternalClassifier:
         if len(y_pred.shape) > 1:
             if y_pred.shape[1] > 10:
                 self.report = "Macro F1-Score:\n"
-                self.report += str(f1_score(y_true=y_test, y_pred=y_pred, average="micro", zero_division=0))
+                self.report += str(f1_score(
+                    y_true=y_test, y_pred=y_pred, average="micro", zero_division=0))
         if verbose:
             print("[INFO] done in %0.3fs" % (time() - t0))
             print(self.report)

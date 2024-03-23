@@ -4,10 +4,10 @@ import os
 from structured_segmentation.layers.input_layer.features.color_space import ColorSpace
 from structured_segmentation.layers.input_layer.features.local_binary_pattern import LocalBinaryPattern
 from structured_segmentation.layers.input_layer.features.leung_malik import LeungMalik
-from structured_segmentation.layers.input_layer.features.filter_operators import FilterOperator
 from structured_segmentation.layers.input_layer.features.gradients import Gradients
 from structured_segmentation.layers.input_layer.features.laplacian import Laplacian
 from structured_segmentation.layers.input_layer.features.gaussian import Gaussian
+from structured_segmentation.layers.input_layer.features.gabor import Gabor
 
 from structured_segmentation.utils.utils import check_n_make_dir, save_dict
 
@@ -38,19 +38,33 @@ def resize_image(image, height, width, down_scale):
     return image
 
 
+def init_features(config):
+    color_space, feature_type = config.split("-")
+    feature_options = {
+            "color": ColorSpace,
+            "lm": LeungMalik,
+            "lbp": LocalBinaryPattern,
+            "gradient": Gradients,
+            "laplacian": Laplacian,
+            "gabor": Gabor,
+            "gaussian": Gaussian,
+        }
+    return feature_options[feature_type](color_space=color_space)
+
+
 class InputLayer:
     layer_type = "INPUT_LAYER"
 
     def __init__(self, name, features_to_use, height=None, width=None, initial_down_scale=None):
         self.name = name
-        if type(features_to_use) is not list:
-            features_to_use = [features_to_use]
         self.features_to_use = features_to_use
         self.height = height
         self.width = width
         self.down_scale = initial_down_scale
 
         self.index = 0
+
+        self.features = init_features(features_to_use)
 
         self.opt = {
             "name": name,
@@ -78,58 +92,8 @@ class InputLayer:
 
     def inference(self, image, interpolation="nearest"):
         image = resize_image(image, self.height, self.width, self.down_scale)
-
-        tensors = []
-        for f_type in self.features_to_use:
-            if "raw" in f_type:
-                if len(image.shape) < 3:
-                    image = np.expand_dims(image, axis=2)
-                tensors.append(image)
-            if "lbp" in f_type:
-                color_space, descriptor_type = f_type.split("-")
-                if descriptor_type == "lbp":
-                    lbp = LocalBinaryPattern(color_space=color_space)
-                else:
-                    name, radius, num_points = descriptor_type.split(".")
-                    lbp = LocalBinaryPattern(
-                        color_space=color_space,
-                        radius=int(radius),
-                        num_points=int(num_points)
-                    )
-                f = lbp.compute(image)
-                tensors.append(f)
-            if "color" in f_type:
-                color_space, descriptor_type = f_type.split("-")
-                col = ColorSpace(color_space=color_space)
-                f = col.compute(image)
-                tensors.append(f)
-            if "lm" in f_type:
-                color_space, descriptor_type = f_type.split("-")
-                lm = LeungMalik(color_space=color_space)
-                f = lm.compute(image)
-                tensors.append(f)
-            if "filter" in f_type:
-                color_space, filter_type, descriptor_type = f_type.split("-")
-                fo = FilterOperator(color_space=color_space, filter_name=filter_type)
-                f = fo.compute(image)
-                tensors.append(f)
-            if "gradient" in f_type:
-                color_space, descriptor_type = f_type.split("-")
-                gr = Gradients(color_space=color_space)
-                f = gr.compute(image)
-                tensors.append(f)
-            if "laplacian" in f_type:
-                color_space, descriptor_type = f_type.split("-")
-                gr = Laplacian(color_space=color_space)
-                f = gr.compute(image)
-                tensors.append(f)
-            if "gaussian" in f_type:
-                color_space, descriptor_type = f_type.split("-")
-                gr = Gaussian(color_space=color_space)
-                f = gr.compute(image)
-                tensors.append(f)
-        data = np.concatenate(tensors, axis=2)
-        return data
+        return self.features.compute(image)
+        
 
     def set_index(self, i):
         self.index = i

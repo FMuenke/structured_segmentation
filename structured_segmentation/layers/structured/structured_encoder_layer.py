@@ -63,7 +63,7 @@ class StructuredEncoderLayer:
             self.opt["kernel"]
         )
 
-    def inference(self, x_input, interpolation="nearest"):
+    def inference(self, x_input):
         x_img, x_pass = self.get_features(x_input)
         o_height, o_width = x_pass.shape[:2]
         x_height, x_width = x_img.shape[:2]
@@ -76,8 +76,8 @@ class StructuredEncoderLayer:
             y_img.append(y_i_img)
         y_img = np.concatenate(y_img, axis=2)
 
-        x_img_pass = resize(x_pass, width=o_width, height=o_height, interpolation="nearest")
-        y_img = resize(y_img, width=o_width, height=o_height, interpolation=interpolation)
+        x_img_pass = resize(x_pass, width=o_width, height=o_height, interpolation="area")
+        y_img = resize(y_img, width=o_width, height=o_height, interpolation="nearest")
 
         if len(x_img_pass.shape) < 3:
             x_img_pass = np.expand_dims(x_img_pass, axis=2)
@@ -108,7 +108,7 @@ class StructuredEncoderLayer:
         o_height, o_width = x.shape[:2]
         new_height = np.max([int(o_height / 2 ** self.down_scale), 2])
         new_width = np.max([int(o_width / 2 ** self.down_scale), 2])
-        x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
+        x = cv2.resize(x, (new_width, new_height), interpolation=cv2.INTER_AREA)
         x = self.kernel.get_kernel(x)
         x = x.astype(np.float32)
         x[np.isnan(x)] = 0
