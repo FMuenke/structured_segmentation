@@ -23,10 +23,7 @@ class Gabor:
         return np.stack(filtered, axis=2)
 
     def _compute(self, channels):
-        f_maps = []
-        for c in channels:
-            f_map = self.build_f_maps(c)
-            f_maps.append(f_map)
+        f_maps = [self.build_f_maps(channels[:, :, c]) for c in range(channels.shape[2])]
         return f_maps
 
     def compute(self, image):

@@ -90,7 +90,7 @@ class InputLayer:
     def load(self, model_path):
         pass
 
-    def inference(self, image, interpolation="nearest"):
+    def inference(self, image):
         image = resize_image(image, self.height, self.width, self.down_scale)
         return self.features.compute(image)
         

@@ -13,13 +13,14 @@ class LocalBinaryPattern:
 
     def _compute(self, channels):
         lbp_maps = []
-        for c in channels:
+        for c in range(channels.shape[2]):
             lbp_map = feature.local_binary_pattern(
-                c,
+                channels[:, :, c],
                 self.num_points,
                 self.radius,
                 method="uniform"
             )
+            
             if self.normalise:
                 lbp_map = 255 * (lbp_map - np.min(lbp_map)) / (np.max(lbp_map) - np.min(lbp_map))
             lbp_map = np.expand_dims(lbp_map, axis=2)

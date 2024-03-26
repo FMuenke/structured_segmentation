@@ -23,7 +23,7 @@ class LeungMalik:
         return np.stack(feature_maps, axis=2)
 
     def _compute(self, channels):
-        return [self._build_feature_tensor(c) for c in channels]
+        return [self._build_feature_tensor(channels[:, :, c]) for c in range(channels.shape[2])]
 
     def compute(self, image):
         channels = convert_to_color_space(image, self.color_space)

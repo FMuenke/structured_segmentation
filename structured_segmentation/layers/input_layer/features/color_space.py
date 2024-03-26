@@ -6,7 +6,7 @@ def log_geometric_mean_chromaticity(image):
     """
     This function returns the log_geometric_mean_chromaticity colorspace
     """
-    image = image.astype(np.int)
+    image = image.astype(np.int32)
     blue = np.add(image[:, :, 0], 1)
     green = np.add(image[:, :, 1], 1)
     red = np.add(image[:, :, 2], 1)
@@ -60,9 +60,9 @@ def opponent(image):
     return np.stack([opp_1, opp_2, opp_3], axis=2)
 
 def rgb(image):
-    blue = image[:, :, 0].astype(np.float)
-    green = image[:, :, 1].astype(np.float)
-    red = image[:, :, 2].astype(np.float)
+    blue = image[:, :, 0].astype(np.float32)
+    green = image[:, :, 1].astype(np.float32)
+    red = image[:, :, 2].astype(np.float32)
     red_norm = 100 * np.divide(red, (red + green + blue + 1e-5))
     green_norm = 100 * np.divide(green, (red + green + blue + 1e-5))
     blue_norm = 100 * np.divide(blue, (red + green + blue + 1e-5))
