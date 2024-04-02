@@ -5,6 +5,7 @@ from structured_segmentation.layers.input_layer.features.color_space import Colo
 from structured_segmentation.layers.input_layer.features.local_binary_pattern import LocalBinaryPattern
 from structured_segmentation.layers.input_layer.features.leung_malik import LeungMalik
 from structured_segmentation.layers.input_layer.features.gradients import Gradients
+from structured_segmentation.layers.input_layer.features.oriented_gradients import OrientedGradients
 from structured_segmentation.layers.input_layer.features.laplacian import Laplacian
 from structured_segmentation.layers.input_layer.features.gaussian import Gaussian
 from structured_segmentation.layers.input_layer.features.gabor import Gabor
@@ -45,6 +46,7 @@ def init_features(config):
             "lm": LeungMalik,
             "lbp": LocalBinaryPattern,
             "gradient": Gradients,
+            "oriented_gradient": OrientedGradients,
             "laplacian": Laplacian,
             "gabor": Gabor,
             "gaussian": Gaussian,
