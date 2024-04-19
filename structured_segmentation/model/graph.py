@@ -17,7 +17,7 @@ from structured_segmentation.layers import ObjectSelectionLayer
 
 
 class Graph:
-    def __init__(self, layer_stack):
+    def __init__(self, layer_stack=None):
         self.graph = layer_stack
         self.description = dict()
 
