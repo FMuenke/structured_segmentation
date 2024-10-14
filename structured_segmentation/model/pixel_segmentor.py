@@ -9,7 +9,7 @@ class PixelSegmentor(Model):
                  image_height=None,
                  initial_image_down_scale=None,
                  features_to_use="gray-color",
-                 clf="extra_tree",
+                 clf="hgb",
                  kernel=5,
                  stride=2,
                  kernel_shape="ellipse",
